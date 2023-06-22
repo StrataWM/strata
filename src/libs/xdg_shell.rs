@@ -1,16 +1,15 @@
+use crate::libs::structs::Strata;
 use smithay::{
 	delegate_xdg_shell,
 	desktop::{
 		Space,
 		Window,
 	},
-	reexports::{
-		wayland_server::{
-			protocol::{
-				wl_surface::WlSurface, wl_seat,
-			},
-		},
+	reexports::wayland_server::protocol::{
+		wl_seat,
+		wl_surface::WlSurface,
 	},
+	utils::Serial,
 	wayland::{
 		compositor::with_states,
 		shell::xdg::{
@@ -21,10 +20,8 @@ use smithay::{
 			XdgShellState,
 			XdgToplevelSurfaceData,
 		},
-	}, utils::Serial,
+	},
 };
-
-use crate::libs::structs::Strata;
 
 impl XdgShellHandler for Strata {
 	fn xdg_shell_state(&mut self) -> &mut XdgShellState {
@@ -34,110 +31,19 @@ impl XdgShellHandler for Strata {
 	fn new_toplevel(&mut self, surface: ToplevelSurface) {
 		let window = Window::new(surface);
 		self.space.map_element(window, (0, 0), false);
+		self.refresh_geometry();
 	}
 
-	fn new_popup(&mut self, _surface: PopupSurface, _positioner: PositionerState) {
-		// TODO: Popup handling using PopupManager
+	fn toplevel_destroyed(&mut self, surface: ToplevelSurface) {
+		self.refresh_geometry();
 	}
 
-	// fn move_request(&mut self, surface: ToplevelSurface, seat: wl_seat::WlSeat, serial: Serial) {
-	//     let seat = Seat::from_resource(&seat).unwrap();
+	fn new_popup(&mut self, _surface: PopupSurface, _positioner: PositionerState) {}
 
-	//     let wl_surface = surface.wl_surface();
-
-	//     if let Some(start_data) = check_grab(&seat, wl_surface, serial) {
-	//         let pointer = seat.get_pointer().unwrap();
-
-	//         let window = self
-	//             .space
-	//             .elements()
-	//             .find(|w| w.toplevel().wl_surface() == wl_surface)
-	//             .unwrap()
-	//             .clone();
-	//         let initial_window_location = self.space.element_location(&window).unwrap();
-
-	//         let grab = MoveSurfaceGrab {
-	//             start_data,
-	//             window,
-	//             initial_window_location,
-	//         };
-
-	//         pointer.set_grab(self, grab, serial, Focus::Clear);
-	//     }
-	// }
-
-	// fn resize_request(
-	//     &mut self,
-	//     surface: ToplevelSurface,
-	//     seat: wl_seat::WlSeat,
-	//     serial: Serial,
-	//     edges: xdg_toplevel::ResizeEdge,
-	// ) {
-	//     let seat = Seat::from_resource(&seat).unwrap();
-
-	//     let wl_surface = surface.wl_surface();
-
-	//     if let Some(start_data) = check_grab(&seat, wl_surface, serial) {
-	//         let pointer = seat.get_pointer().unwrap();
-
-	//         let window = self
-	//             .space
-	//             .elements()
-	//             .find(|w| w.toplevel().wl_surface() == wl_surface)
-	//             .unwrap()
-	//             .clone();
-	//         let initial_window_location = self.space.element_location(&window).unwrap();
-	//         let initial_window_size = window.geometry().size;
-
-	//         surface.with_pending_state(|state| {
-	//             state.states.set(xdg_toplevel::State::Resizing);
-	//         });
-
-	//         surface.send_pending_configure();
-
-	//         let grab = ResizeSurfaceGrab::start(
-	//             start_data,
-	//             window,
-	//             edges.into(),
-	//             Rectangle::from_loc_and_size(initial_window_location, initial_window_size),
-	//         );
-
-	//         pointer.set_grab(self, grab, serial, Focus::Clear);
-	//     }
-	// }
-
-	fn grab(&mut self, _surface: PopupSurface, _seat: wl_seat::WlSeat, _serial: Serial) {
-	    // TODO popup grabs
-	}
+	fn grab(&mut self, _surface: PopupSurface, _seat: wl_seat::WlSeat, _serial: Serial) {}
 }
-
-// Xdg Shell
 delegate_xdg_shell!(Strata);
 
-// fn check_grab(
-//     seat: &Seat<Strata>,
-//     surface: &WlSurface,
-//     serial: Serial,
-// ) -> Option<PointerGrabStartData<Strata>> {
-//     let pointer = seat.get_pointer()?;
-
-//     // Check that this surface has a click grab.
-//     if !pointer.has_grab(serial) {
-//         return None;
-//     }
-
-//     let start_data = pointer.grab_start_data()?;
-
-//     let (focus, _) = start_data.focus.as_ref()?;
-//     // If the focus was for a different surface, ignore the request.
-//     if !focus.id().same_client_as(&surface.id()) {
-//         return None;
-//     }
-
-//     Some(start_data)
-// }
-
-// Should be called on `WlSurface::commit`
 pub fn handle_commit(space: &Space<Window>, surface: &WlSurface) -> Option<()> {
 	let window = space
 		.elements()

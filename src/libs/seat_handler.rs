@@ -21,12 +21,7 @@ impl SeatHandler for Strata {
     }
     fn focus_changed(&mut self, _seat: &smithay::input::Seat<Self>, _focused: Option<&WlSurface>) {}
 }
-
 delegate_seat!(Strata);
-
-//
-// Wl Data Device
-//
 
 impl DataDeviceHandler for Strata {
     type SelectionUserData = ();
@@ -39,9 +34,4 @@ impl ClientDndGrabHandler for Strata {}
 impl ServerDndGrabHandler for Strata {}
 
 delegate_data_device!(Strata);
-
-//
-// Wl Output & Xdg Output
-//
-
 delegate_output!(Strata);
