@@ -1,6 +1,7 @@
 mod libs;
 pub use libs::{
 	backends::winit::init_winit,
+	parse_config::parse_config,
 	structs::{
 		CalloopData,
 		Strata,
@@ -12,11 +13,11 @@ use smithay::reexports::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-	if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_default_env() {
-		tracing_subscriber::fmt().with_env_filter(env_filter).init();
-	} else {
-		tracing_subscriber::fmt().init();
-	}
+	// if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_default_env() {
+	// 	tracing_subscriber::fmt().with_env_filter(env_filter).init();
+	// } else {
+	// 	tracing_subscriber::fmt().init();
+	// }
 
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new()?;
 
@@ -30,6 +31,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let mut args = std::env::args().skip(1);
 	let flag = args.next();
 	let arg = args.next();
+
+	parse_config();
 
 	std::process::Command::new("kitty").spawn().ok();
 	std::process::Command::new("kitty").spawn().ok();

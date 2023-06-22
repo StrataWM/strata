@@ -1,6 +1,7 @@
 pub mod backends;
 pub mod compositor;
 pub mod input;
+pub mod parse_config;
 pub mod seat_handler;
 pub mod state;
 pub mod structs;

@@ -1,0 +1,7 @@
+condense_wildcard_suffixes = true
+force_multiline_blocks = true
+format_code_in_doc_comments = true
+format_strings = true
+hard_tabs = true
+imports_layout = "Vertical"
+imports_granularity = "Crate"
