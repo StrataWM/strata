@@ -1050,6 +1050,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "profiling"
+version = "1.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "332cd62e95873ea4f41f3dfd6bbbfc5b52aec892d7e8d534197c4720a0bbbab2"
+dependencies = [
+ "profiling-procmacros",
+]
+
+[[package]]
+name = "profiling-procmacros"
+version = "1.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a10adb8d151bb1280afb8bed41ae5db26be1b056964947133c7525b0bf39c0b0"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1253,7 +1272,7 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 [[package]]
 name = "smithay"
 version = "0.3.0"
-source = "git+https://github.com/smithay/smithay?rev=3aab047#3aab0476a437393ac6224e5eb914e3790c736789"
+source = "git+https://github.com/smithay/smithay?rev=bb451a5#bb451a5683c9f8b7ace710678c8c77028a10cd3b"
 dependencies = [
  "appendlist",
  "ash",
@@ -1277,6 +1296,7 @@ dependencies = [
  "nix 0.26.2",
  "once_cell",
  "pkg-config",
+ "profiling",
  "rand",
  "scan_fmt",
  "scopeguard",
@@ -1327,7 +1347,6 @@ dependencies = [
  "clap",
  "colored",
  "dirs",
- "lazy_static",
  "serde_derive",
  "smithay",
  "toml",
