@@ -1,3 +1,4 @@
+use crate::libs::structs::Keybind;
 use colored::Colorize;
 use dirs::config_dir;
 use std::{
@@ -6,7 +7,16 @@ use std::{
 };
 use toml::Value;
 
-pub fn parse_config() {
+impl Keybind {
+	fn new(key: &str, cmd: &str) -> Self {
+		Self {
+			key: key.to_string(),
+			cmd: cmd.to_string(),
+		}
+	}
+}
+
+pub fn parse_config() -> Vec<Keybind> {
 	let conf_path = match config_dir() {
 		Some(mut path) => {
 			path.push("strata");
@@ -21,7 +31,7 @@ pub fn parse_config() {
 					.red()
 					.bold()
 			);
-			return;
+			return vec![];
 		}
 	};
 
@@ -41,9 +51,12 @@ pub fn parse_config() {
 
 	let keybinds = config["keybinds"]["bind"].as_array().unwrap();
 
+	let mut return_keybinds = vec![];
+
 	for bind in keybinds {
 		let key = bind["key"].as_str().unwrap();
 		let cmd = bind["command"].as_str().unwrap();
-		println!("Key: {}\nCommand: {}\n", key, cmd);
+		return_keybinds.push(Keybind::new(key, cmd));
 	}
+	return return_keybinds;
 }

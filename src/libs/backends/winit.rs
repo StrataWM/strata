@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+	process::Command,
+	time::Duration,
+};
 
 use smithay::{
 	backend::{
@@ -21,12 +24,15 @@ use smithay::{
 		PhysicalProperties,
 		Subpixel,
 	},
-	reexports::calloop::{
-		timer::{
-			TimeoutAction,
-			Timer,
+	reexports::{
+		calloop::{
+			timer::{
+				TimeoutAction,
+				Timer,
+			},
+			EventLoop,
 		},
-		EventLoop,
+		wayland_server::Display,
 	},
 	utils::{
 		Rectangle,
@@ -34,24 +40,18 @@ use smithay::{
 	},
 };
 
-use crate::libs::structs::{
+pub use crate::libs::structs::{
 	CalloopData,
+	Cli,
+	Commands,
 	Strata,
 };
 
-pub fn init_winit(
-	event_loop: &mut EventLoop<CalloopData>,
-	data: &mut CalloopData,
-) -> Result<(), Box<dyn std::error::Error>> {
-	let display = &mut data.display;
-	let state = &mut data.state;
-
+pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
+	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new()?;
+	let mut display: Display<Strata> = Display::new()?;
 	let (mut backend, mut winit) = winit::init()?;
-
-	let mode = Mode {
-		size: backend.window_size().physical_size,
-		refresh: 60_000,
-	};
+	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
 
 	let output = Output::new(
 		"winit".to_string(),
@@ -63,12 +63,12 @@ pub fn init_winit(
 		},
 	);
 	let _global = output.create_global::<Strata>(&display.handle());
-	output.change_current_state(
-		Some(mode),
-		Some(Transform::Flipped180),
-		None,
-		Some((0, 0).into()),
-	);
+
+	let state = Strata::new(&mut event_loop, &mut display);
+	let mut data = CalloopData { state, display };
+	let state = &mut data.state;
+
+	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
 
 	state.space.map_output(&output, (0, 0));
@@ -80,21 +80,23 @@ pub fn init_winit(
 	let mut full_redraw = 0u8;
 
 	let timer = Timer::immediate();
-	event_loop
-		.handle()
-		.insert_source(timer, move |_, _, data| {
-			winit_dispatch(
-				&mut backend,
-				&mut winit,
-				data,
-				&output,
-				&mut damage_tracker,
-				&mut full_redraw,
-			)
-			.unwrap();
-			TimeoutAction::ToDuration(Duration::from_millis(16))
-		})?;
+	event_loop.handle().insert_source(timer, move |_, _, data| {
+		winit_dispatch(
+			&mut backend,
+			&mut winit,
+			data,
+			&output,
+			&mut damage_tracker,
+			&mut full_redraw,
+		)
+		.unwrap();
+		TimeoutAction::ToDuration(Duration::from_millis(16))
+	})?;
 
+	Command::new("kitty").spawn().ok();
+	Command::new("kitty").spawn().ok();
+
+	event_loop.run(None, &mut data, move |_| {})?;
 	Ok(())
 }
 
@@ -112,15 +114,7 @@ pub fn winit_dispatch(
 	let res = winit.dispatch_new_events(|event| {
 		match event {
 			WinitEvent::Resized { size, .. } => {
-				output.change_current_state(
-					Some(Mode {
-						size,
-						refresh: 60_000,
-					}),
-					None,
-					None,
-					None,
-				);
+				output.change_current_state(Some(Mode { size, refresh: 60_000 }), None, None, None);
 			}
 			WinitEvent::Input(event) => state.process_input_event(event),
 			_ => (),
@@ -155,12 +149,9 @@ pub fn winit_dispatch(
 	backend.submit(Some(&[damage]))?;
 
 	state.space.elements().for_each(|window| {
-		window.send_frame(
-			output,
-			state.start_time.elapsed(),
-			Some(Duration::ZERO),
-			|_, _| Some(output.clone()),
-		)
+		window.send_frame(output, state.start_time.elapsed(), Some(Duration::ZERO), |_, _| {
+			Some(output.clone())
+		})
 	});
 
 	state.space.refresh();

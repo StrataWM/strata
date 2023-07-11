@@ -12,6 +12,8 @@ toml = "0.7.4"
 serde_derive = "1.0.164"
 dirs = "5.0.1"
 colored = "2.0.0"
+clap = { version = "4.3.11", features = ["derive"] }
+lazy_static = "1.4.0"
 
 [dependencies.smithay]
 git = "https://github.com/smithay/smithay"
