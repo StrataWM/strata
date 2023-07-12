@@ -1,16 +1,15 @@
 [package]
-name = "strata"
+name = "stratawm"
 version = "0.0.1"
 edition = "2021"
 authors = ["Anant Narayan <anantnrg@gmail.com>"]
 license = "GNU GPL v3"
 description = "A modular, dynamic and sleek Wayland compositor with batteries included."
 readme = "README.md"
-homepage = "https://github.com/stratawm/strata"
-repository = "https://github.com/stratawm/strata"
+homepage = "https://github.com/stratawm/stratawm"
+repository = "https://github.com/stratawm/stratawm"
 keywords = ["smithay", "compositor", "wayland", "linux", "linux-utilities", "wm", "windows", "manager"]
 categories = ["linux-utilities"]
-
 
 [dependencies]
 tracing-subscriber = {features = ["env-filter"], version = "0.3.17"}
