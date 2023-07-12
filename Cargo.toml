@@ -2,8 +2,15 @@
 name = "strata"
 version = "0.0.1"
 edition = "2021"
+authors = ["Anant Narayan <anantnrg@gmail.com>"]
+license = "GNU GPL v3"
+description = "A modular, dynamic and sleek Wayland compositor with batteries included."
+readme = "README.md"
+homepage = "https://github.com/stratawm/strata"
+repository = "https://github.com/stratawm/strata"
+keywords = ["smithay", "compositor", "wayland", "linux", "linux-utilities", "wm", "windows", "manager"]
+categories = ["linux-utilities"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 tracing-subscriber = {features = ["env-filter"], version = "0.3.17"}
