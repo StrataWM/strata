@@ -39,7 +39,7 @@ impl XdgShellHandler for Strata {
 		self.refresh_geometry();
 	}
 
-	fn toplevel_destroyed(&mut self, surface: ToplevelSurface) {
+	fn toplevel_destroyed(&mut self, _surface: ToplevelSurface) {
 		self.refresh_geometry();
 	}
 

@@ -19,6 +19,7 @@ serde_derive = "1.0.164"
 dirs = "5.0.1"
 colored = "2.0.0"
 clap = { version = "4.3.11", features = ["derive"] }
+anyhow = "1.0.71"
 
 [dependencies.smithay]
 git = "https://github.com/smithay/smithay"

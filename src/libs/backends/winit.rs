@@ -42,8 +42,6 @@ use smithay::{
 
 pub use crate::libs::structs::{
 	CalloopData,
-	Cli,
-	Commands,
 	Strata,
 };
 
