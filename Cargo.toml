@@ -29,3 +29,4 @@ chrono = "0.4.26"
 git = "https://github.com/smithay/smithay"
 version = "0.3"
 rev = "bb451a5"
+features = ["renderer_glow"]

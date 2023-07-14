@@ -14,7 +14,7 @@ pub fn log_info(msg: &str) {
 	let local_time: DateTime<Local> = utc_time.with_timezone(&Local);
 
 	let log = format!(
-		"[{}-{}-{} {} {INFO} {}]: {msg}",
+		"[{}-{}-{} {} INFO {}]: {msg}",
 		local_time.month(),
 		local_time.day(),
 		utc_time.year(),
@@ -30,7 +30,7 @@ pub fn log_error(msg: &str) {
 	let local_time: DateTime<Local> = utc_time.with_timezone(&Local);
 
 	let log = format!(
-		"[{}-{}-{} {} {ERROR} {}]: {msg}",
+		"[{}-{}-{} {} ERROR {}]: {msg}",
 		local_time.month(),
 		local_time.day(),
 		utc_time.year(),
@@ -46,7 +46,7 @@ pub fn log_warn(msg: &str) {
 	let local_time: DateTime<Local> = utc_time.with_timezone(&Local);
 
 	let log = format!(
-		"[{}-{}-{} {} {WARN} {}]: {msg}",
+		"[{}-{}-{} {} WARN {}]: {msg}",
 		local_time.month(),
 		local_time.day(),
 		utc_time.year(),
@@ -62,7 +62,7 @@ pub fn log_debug(msg: &str) {
 	let local_time: DateTime<Local> = utc_time.with_timezone(&Local);
 
 	let log = format!(
-		"[{}-{}-{} {} {DEBUG} {}]: {msg}",
+		"[{}-{}-{} {} DEBUG {}]: {msg}",
 		local_time.month(),
 		local_time.day(),
 		utc_time.year(),

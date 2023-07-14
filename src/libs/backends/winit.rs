@@ -3,12 +3,23 @@ use std::{
 	time::Duration,
 };
 
+use crate::libs::decorations::{
+	borders::BorderShader,
+	CustomRenderElements,
+};
+pub use crate::libs::structs::{
+	CalloopData,
+	Strata,
+};
 use smithay::{
 	backend::{
 		renderer::{
 			damage::OutputDamageTracker,
-			element::surface::WaylandSurfaceRenderElement,
-			gles::GlesRenderer,
+			element::{
+				surface::WaylandSurfaceRenderElement,
+				AsRenderElements,
+			},
+			glow::GlowRenderer,
 		},
 		winit::{
 			self,
@@ -17,6 +28,10 @@ use smithay::{
 			WinitEventLoop,
 			WinitGraphicsBackend,
 		},
+	},
+	desktop::{
+		layer_map_for_output,
+		LayerSurface,
 	},
 	output::{
 		Mode,
@@ -36,14 +51,10 @@ use smithay::{
 	},
 	utils::{
 		Rectangle,
+		Scale,
 		Transform,
 	},
-};
-
-use crate::libs::log::*;
-pub use crate::libs::structs::{
-	CalloopData,
-	Strata,
+	wayland::shell::wlr_layer::Layer,
 };
 
 pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
@@ -66,6 +77,8 @@ pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
 	let state = Strata::new(&mut event_loop, &mut display);
 	let mut data = CalloopData { state, display };
 	let state = &mut data.state;
+
+	BorderShader::init(backend.renderer());
 
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
@@ -100,7 +113,7 @@ pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn winit_dispatch(
-	backend: &mut WinitGraphicsBackend<GlesRenderer>,
+	backend: &mut WinitGraphicsBackend<GlowRenderer>,
 	winit: &mut WinitEventLoop,
 	data: &mut CalloopData,
 	output: &Output,
@@ -135,7 +148,45 @@ pub fn winit_dispatch(
 	let damage = Rectangle::from_loc_and_size((0, 0), size);
 
 	backend.bind()?;
-	smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlesRenderer>, _, _>(
+
+	let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
+	let layer_map = layer_map_for_output(output);
+	let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
+		.layers()
+		.rev()
+		.partition(|s| matches!(s.layer(), Layer::Background | Layer::Bottom));
+
+	renderelements.extend(
+		upper
+			.into_iter()
+			.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
+			.flat_map(|(loc, surface)| {
+				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
+					surface,
+					backend.renderer(),
+					loc.to_physical_precise_round(1),
+					Scale::from(1.0),
+					1.0,
+				)
+			}),
+	);
+
+	renderelements.extend(
+		lower
+			.into_iter()
+			.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
+			.flat_map(|(loc, surface)| {
+				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
+					surface,
+					backend.renderer(),
+					loc.to_physical_precise_round(1),
+					Scale::from(1.0),
+					1.0,
+				)
+			}),
+	);
+
+	smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlowRenderer>, _, _>(
 		output,
 		backend.renderer(),
 		1.0,
@@ -155,6 +206,7 @@ pub fn winit_dispatch(
 
 	state.space.refresh();
 	display.flush_clients()?;
+	BorderShader::cleanup(backend.renderer());
 
 	Ok(())
 }

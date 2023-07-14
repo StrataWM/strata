@@ -1,4 +1,5 @@
 pub mod backends;
+pub mod decorations;
 pub mod compositor;
 pub mod ctl;
 pub mod input;

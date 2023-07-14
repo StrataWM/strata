@@ -672,6 +672,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "glow"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "807edf58b70c0b5b2181dd39fe1839dbdb3ba02645630dc5f753e23da307f762"
+dependencies = [
+ "js-sys",
+ "slotmap",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1494,6 +1506,7 @@ dependencies = [
  "encoding",
  "gbm",
  "gl_generator",
+ "glow",
  "indexmap",
  "input",
  "lazy_static",
