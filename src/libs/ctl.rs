@@ -5,10 +5,7 @@ use std::{
 		metadata,
 		remove_file,
 	},
-	io::{
-		Read,
-		Write,
-	},
+	io::Read,
 	os::unix::net::{
 		UnixListener,
 		UnixStream,
@@ -41,7 +38,7 @@ fn handle_stream(mut unix_stream: UnixStream) -> anyhow::Result<()> {
 
 	match &command.as_str() {
 		&"launch winit" => {
-			init_winit();
+			let _ = init_winit();
 		}
 		&"launch udev" => {
 			println!("TTY-Udev is not implement yet");

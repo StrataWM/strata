@@ -40,12 +40,14 @@ use smithay::{
 	},
 };
 
+use crate::libs::log::*;
 pub use crate::libs::structs::{
 	CalloopData,
 	Strata,
 };
 
 pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
+	log_info("konichiva from winit");
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new()?;
 	let mut display: Display<Strata> = Display::new()?;
 	let (mut backend, mut winit) = winit::init()?;

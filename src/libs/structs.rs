@@ -51,6 +51,6 @@ pub struct Keybind {
 	pub cmd: String,
 }
 
-pub enum Action {
-	Spawn(String),
-}
+// pub enum Action {
+// 	Spawn(String),
+// }
