@@ -20,7 +20,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	// }
 
 	let _ = parse_config();
-	log_info("hello from main uwu");
 	let _ = ctl();
 
 	Ok(())

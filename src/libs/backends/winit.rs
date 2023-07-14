@@ -47,7 +47,6 @@ pub use crate::libs::structs::{
 };
 
 pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
-	log_info("konichiva from winit");
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new()?;
 	let mut display: Display<Strata> = Display::new()?;
 	let (mut backend, mut winit) = winit::init()?;
