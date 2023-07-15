@@ -3,7 +3,6 @@ use chrono::Local;
 pub use libs::{
 	backends::winit::init_winit,
 	ctl::ctl,
-	log::*,
 	parse_config::parse_config,
 	structs::{
 		CalloopData,
