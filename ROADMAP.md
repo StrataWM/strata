@@ -1,16 +1,16 @@
 # Roadmap for Strata
 
-- [x] Implement tiling
+- [x] ~~Implement tiling~~
 
-- [x] Implement basic config parsing
+- [x] ~~Implement basic config parsing~~
 
-- [x] Implement CTL
+- [x] ~~Implement CTL~~
 
-- [x] Implement basic logging to the console
+- [x] ~~Implement basic logging to the console~~
 
-- [x] Implement advanced logging to the console using the [`tracing`](https://docs.rs/tracing/latest/tracing/) crate
+- [x] ~~Implement advanced logging to the console using the [`tracing`](https://docs.rs/tracing/latest/tracing/) crate~~
 
-- [x] Implement logging to files
+- [x] ~~Implement logging to files~~
 
 - [ ] Add decorations
 
