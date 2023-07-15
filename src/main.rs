@@ -9,10 +9,7 @@ pub use libs::{
 		Strata,
 	},
 };
-use log::{
-	error,
-	info,
-};
+use log::info;
 use std::{
 	env::var,
 	error::Error,

@@ -1,9 +1,6 @@
 use crate::libs::backends::winit::init_winit;
 use anyhow::Context;
-use log::{
-	error,
-	info,
-};
+use log::info;
 use std::{
 	fs::{
 		metadata,
