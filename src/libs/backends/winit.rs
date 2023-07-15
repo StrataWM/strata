@@ -149,42 +149,42 @@ pub fn winit_dispatch(
 
 	backend.bind()?;
 
-	let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
-	let layer_map = layer_map_for_output(output);
-	let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
-		.layers()
-		.rev()
-		.partition(|s| matches!(s.layer(), Layer::Background | Layer::Bottom));
+	// let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
+	// let layer_map = layer_map_for_output(output);
+	// let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
+	// 	.layers()
+	// 	.rev()
+	// 	.partition(|s| matches!(s.layer(), Layer::Background | Layer::Bottom));
 
-	renderelements.extend(
-		upper
-			.into_iter()
-			.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
-			.flat_map(|(loc, surface)| {
-				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
-					surface,
-					backend.renderer(),
-					loc.to_physical_precise_round(1),
-					Scale::from(1.0),
-					1.0,
-				)
-			}),
-	);
+	// renderelements.extend(
+	// 	upper
+	// 		.into_iter()
+	// 		.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
+	// 		.flat_map(|(loc, surface)| {
+	// 			AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
+	// 				surface,
+	// 				backend.renderer(),
+	// 				loc.to_physical_precise_round(1),
+	// 				Scale::from(1.0),
+	// 				1.0,
+	// 			)
+	// 		}),
+	// );
 
-	renderelements.extend(
-		lower
-			.into_iter()
-			.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
-			.flat_map(|(loc, surface)| {
-				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
-					surface,
-					backend.renderer(),
-					loc.to_physical_precise_round(1),
-					Scale::from(1.0),
-					1.0,
-				)
-			}),
-	);
+	// renderelements.extend(
+	// 	lower
+	// 		.into_iter()
+	// 		.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
+	// 		.flat_map(|(loc, surface)| {
+	// 			AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
+	// 				surface,
+	// 				backend.renderer(),
+	// 				loc.to_physical_precise_round(1),
+	// 				Scale::from(1.0),
+	// 				1.0,
+	// 			)
+	// 		}),
+	// );
 
 	smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlowRenderer>, _, _>(
 		output,

@@ -1,5 +1,9 @@
 use crate::libs::backends::winit::init_winit;
 use anyhow::Context;
+use log::{
+	error,
+	info,
+};
 use std::{
 	fs::{
 		metadata,
@@ -16,9 +20,9 @@ pub fn ctl() -> anyhow::Result<()> {
 	let socket_path: &str = "/tmp/strata_socket";
 
 	if metadata(socket_path).is_ok() {
-		println!("A socket is already present. Deleting...");
+		info!("A socket is already present. Deleting it ...");
 		remove_file(socket_path)
-			.with_context(|| format!("could not delete previous socket at {:?}", socket_path))?;
+			.with_context(|| format!("Could not delete previous socket at {:?}", socket_path))?;
 	}
 
 	let unix_listener =
@@ -33,15 +37,18 @@ pub fn ctl() -> anyhow::Result<()> {
 }
 
 fn handle_stream(mut unix_stream: UnixStream) -> anyhow::Result<()> {
+	info!("Connection established to Strata CTL!");
 	let mut command = String::new();
 	unix_stream.read_to_string(&mut command).context("Failed at reading the unix stream")?;
 
 	match &command.as_str() {
 		&"launch winit" => {
+			info!("Received to signal to launch using Winit backend. Launching...");
 			let _ = init_winit();
 		}
 		&"launch udev" => {
 			println!("TTY-Udev is not implement yet");
+			info!("TTY-Udev is not implement yet");
 		}
 		&_ => {}
 	}
