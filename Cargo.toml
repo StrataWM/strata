@@ -27,5 +27,5 @@ tracing-appender = "0.2.2"
 [dependencies.smithay]
 git = "https://github.com/smithay/smithay"
 version = "0.3"
-rev = "bb451a5"
+rev = "4f62e13"
 features = ["renderer_glow"]
