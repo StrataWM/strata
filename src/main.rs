@@ -11,8 +11,12 @@ pub use libs::{
 		Strata,
 	},
 };
-use log::info;
+use log::{
+	error,
+	info,
+};
 use notify::{
+	event,
 	recommended_watcher,
 	RecommendedWatcher,
 	RecursiveMode::NonRecursive,
@@ -23,12 +27,16 @@ use std::{
 	error::Error,
 	io::stdout,
 	path::Path,
-	sync::mpsc::channel,
+	sync::{
+		mpsc::channel,
+		Arc,
+		Mutex,
+	},
 	time::Duration,
 };
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 lazy_static! {
-	static ref CONFIG: Config = parse_config();
+	pub static ref CONFIG: Arc<Mutex<Config>> = Arc::new(Mutex::new(parse_config()));
 }
 
 #[tokio::main]
@@ -53,10 +61,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		tracing_subscriber::fmt().with_writer(log_appender).init();
 	}
 
-	let mut watcher = recommended_watcher(|res| {
+	let mut watcher = recommended_watcher(|res: Result<notify::Event, notify::Error>| {
 		match res {
-			Ok(event) => println!("event: {:?}", event),
-			Err(e) => println!("watch error: {:?}", e),
+			Ok(event) => {
+				info!("Config changed! Reloading!");
+				let updated_config = parse_config();
+				let mut config_guard = CONFIG.lock().expect("Error locking config");
+				*config_guard = updated_config;
+			}
+			Err(e) => error!("watch error: {:?}", e),
 		}
 	})?;
 

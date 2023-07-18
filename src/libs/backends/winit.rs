@@ -3,14 +3,18 @@ use std::{
 	time::Duration,
 };
 
-use crate::libs::decorations::{
-	borders::BorderShader,
-	CustomRenderElements,
-};
 pub use crate::libs::structs::{
 	CalloopData,
 	Strata,
 };
+use crate::{
+	libs::decorations::{
+		borders::BorderShader,
+		CustomRenderElements,
+	},
+	CONFIG,
+};
+use log::warn;
 use smithay::{
 	backend::{
 		renderer::{
@@ -62,6 +66,7 @@ pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
 	let mut display: Display<Strata> = Display::new()?;
 	let (mut backend, mut winit) = winit::init()?;
 	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
+	let config = CONFIG.lock().unwrap();
 
 	let output = Output::new(
 		"winit".to_string(),
@@ -105,8 +110,13 @@ pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
 		TimeoutAction::ToDuration(Duration::from_millis(16))
 	})?;
 
-	Command::new("kitty").spawn().ok();
-	Command::new("kitty").spawn().ok();
+	let autostart_cmds = &config.autostart.cmd;
+	for cmd in autostart_cmds {
+		let cmd = &cmd.cmd;
+		let args: Vec<_> = cmd.split(" ").collect();
+		Command::new("/bin/sh").arg("-c").args(&args[0..]).spawn().ok();
+		warn!("Command: {:?}", args);
+	}
 
 	event_loop.run(None, &mut data, move |_| {})?;
 	Ok(())
