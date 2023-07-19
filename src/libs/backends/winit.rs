@@ -157,56 +157,61 @@ pub fn winit_dispatch(
 	let size = backend.window_size().physical_size;
 	let damage = Rectangle::from_loc_and_size((0, 0), size);
 
-	backend.bind()?;
+	backend.bind().unwrap();
 
-	// let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
-	// let layer_map = layer_map_for_output(output);
-	// let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
-	// 	.layers()
-	// 	.rev()
-	// 	.partition(|s| matches!(s.layer(), Layer::Background | Layer::Bottom));
+	let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
+	let layer_map = layer_map_for_output(output);
+	let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
+		.layers()
+		.rev()
+		.partition(|s| matches!(s.layer(), Layer::Background | Layer::Bottom));
 
-	// renderelements.extend(
-	// 	upper
-	// 		.into_iter()
-	// 		.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
-	// 		.flat_map(|(loc, surface)| {
-	// 			AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
-	// 				surface,
-	// 				backend.renderer(),
-	// 				loc.to_physical_precise_round(1),
-	// 				Scale::from(1.0),
-	// 				1.0,
-	// 			)
-	// 		}),
-	// );
+	renderelements.extend(
+		upper
+			.into_iter()
+			.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
+			.flat_map(|(loc, surface)| {
+				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
+					surface,
+					backend.renderer(),
+					loc.to_physical_precise_round(1),
+					Scale::from(1.0),
+					1.0,
+				)
+			}),
+	);
 
-	// renderelements.extend(
-	// 	lower
-	// 		.into_iter()
-	// 		.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
-	// 		.flat_map(|(loc, surface)| {
-	// 			AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
-	// 				surface,
-	// 				backend.renderer(),
-	// 				loc.to_physical_precise_round(1),
-	// 				Scale::from(1.0),
-	// 				1.0,
-	// 			)
-	// 		}),
-	// );
+	// renderelements.extend(render_elements(backend.renderer()));
 
-	smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlowRenderer>, _, _>(
-		output,
-		backend.renderer(),
-		1.0,
-		0,
-		[&state.space],
-		&[],
-		damage_tracker,
-		[0.131, 0.141, 0.242, 1.0],
-	)?;
-	backend.submit(Some(&[damage]))?;
+	renderelements.extend(
+		lower
+			.into_iter()
+			.filter_map(|surface| layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface)))
+			.flat_map(|(loc, surface)| {
+				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
+					surface,
+					backend.renderer(),
+					loc.to_physical_precise_round(1),
+					Scale::from(1.0),
+					1.0,
+				)
+			}),
+	);
+
+	// smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlowRenderer>, _, _>(
+	// 	output,
+	// 	backend.renderer(),
+	// 	1.0,
+	// 	0,
+	// 	[&state.space],
+	// 	&[],
+	// 	damage_tracker,
+	// 	[0.131, 0.141, 0.242, 1.0],
+	// )?;
+	damage_tracker
+		.render_output(backend.renderer(), 0, &renderelements, [0.131, 0.141, 0.242, 1.0])
+		.unwrap();
+	backend.submit(Some(&[damage])).unwrap();
 
 	state.space.elements().for_each(|window| {
 		window.send_frame(output, state.start_time.elapsed(), Some(Duration::ZERO), |_, _| {

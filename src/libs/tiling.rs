@@ -1,48 +1,78 @@
-use crate::libs::structs::Strata;
+use crate::{
+	libs::structs::{
+		CompWorkspace,
+		Dwindle,
+		HorizontalOrVertical,
+		StrataWindow,
+		Workspace,
+	},
+	CONFIG,
+};
+use log::{
+	debug,
+	info,
+};
+use smithay::{
+	desktop::layer_map_for_output,
+	reexports::wayland_protocols::xdg::shell::server::xdg_toplevel,
+	utils::{
+		Logical,
+		Physical,
+		Point,
+		Rectangle,
+		Size,
+	},
+};
+use std::{
+	cell::RefCell,
+	rc::Rc,
+};
 
-impl Strata {
-	pub fn refresh_geometry(&mut self) {
-		let space = &mut self.space;
+pub fn refresh_geometry(workspace: &mut CompWorkspace) {
+	let config = CONFIG.lock().unwrap();
+	let gaps = (config.general.win_gaps, config.general.out_gaps);
 
-		space.refresh();
-		let output = space.outputs().next().cloned().unwrap();
-		let output_geometry = space.output_geometry(&output).unwrap();
-		let output_width = output_geometry.size.w;
-		let output_height = output_geometry.size.h;
-		let gap = 6;
-		let elements_count = space.elements().count() as i32;
+	let output = layer_map_for_output(workspace.outputs().next().unwrap()).non_exclusive_zone();
+	let output_full = workspace.outputs().next().unwrap().current_mode().unwrap().size;
 
-		let mut resizes = vec![];
-
-		for (i, window) in space.elements().enumerate() {
-			let (mut x, mut y) = (gap, gap);
-			let (mut width, mut height) = (output_width - gap * 2, output_height - gap * 2);
-
-			if elements_count > 1 {
-				width -= gap;
-				width /= 2;
-			}
-
-			if i > 0 {
-				height /= elements_count - 1;
-				x += width + gap;
-				y += height * (i as i32 - 1);
-			}
-
-			if i > 1 {
-				height -= gap;
-				y += gap;
-			}
-			resizes.push((window.clone(), (width, height), (x, y)));
+	match &mut workspace.layout_tree {
+		Dwindle::Empty => {}
+		Dwindle::Window(w) => {
+			w.borrow_mut().rec = Rectangle {
+				loc: Point::from((gaps.0 + gaps.1 + output.loc.x, gaps.0 + gaps.1 + output.loc.y)),
+				size: Size::from((
+					output.size.w - ((gaps.0 + gaps.1) * 2),
+					output.size.h - ((gaps.0 + gaps.1) * 2),
+				)),
+			};
 		}
-
-		for (window, dimensions, position) in resizes {
-			window.toplevel().with_pending_state(|state| {
-				state.size = Some(dimensions.into());
-			});
-			window.toplevel().send_configure();
-
-			space.map_element(window, position, false);
+		Dwindle::Split { split, ratio, left, right } => {
+			if let Dwindle::Window(w) = left.as_mut() {
+				generate_layout(
+					right.as_mut(),
+					w,
+					Rectangle {
+						loc: Point::from((gaps.0 + output.loc.x, gaps.0 + output.loc.y)),
+						size: Size::from((
+							output.size.w - (gaps.0 * 2),
+							output.size.h - (gaps.0 * 2),
+						)),
+					},
+					*split,
+					*ratio,
+					Size::from((output_full.w - gaps.0, output_full.h - gaps.0)),
+					gaps,
+				)
+			}
 		}
+	}
+	debug!("{:#?}", workspace.layout_tree);
+
+	for strata_window in workspace.strata_windows() {
+		let xdg_toplevel = strata_window.window.toplevel();
+		xdg_toplevel.with_pending_state(|state| {
+			state.size = Some(strata_window.rec.size);
+		});
+		xdg_toplevel.send_configure();
 	}
 }

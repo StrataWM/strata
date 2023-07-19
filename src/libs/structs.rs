@@ -8,9 +8,14 @@ use smithay::{
 		Seat,
 		SeatState,
 	},
+	output::Output,
 	reexports::{
 		calloop::LoopSignal,
 		wayland_server::Display,
+	},
+	utils::{
+		Logical,
+		Rectangle,
 	},
 	wayland::{
 		compositor::CompositorState,
@@ -20,11 +25,16 @@ use smithay::{
 		shm::ShmState,
 	},
 };
-use std::ffi::OsString;
+use std::{
+	cell::RefCell,
+	ffi::OsString,
+	rc::Rc,
+};
 
 pub struct Strata {
 	pub start_time: std::time::Instant,
 	pub socket_name: OsString,
+	pub workspaces: CompWorkspaces,
 
 	pub space: Space<Window>,
 	pub loop_signal: LoopSignal,
@@ -45,6 +55,36 @@ pub struct CalloopData {
 	pub display: Display<Strata>,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct StrataWindow {
+	pub window: Window,
+	pub rec: Rectangle<i32, Logical>,
+}
+
+pub struct CompWorkspace {
+	pub windows: Vec<Rc<RefCell<StrataWindow>>>,
+	pub outputs: Vec<Output>,
+	pub layout_tree: Dwindle,
+}
+
+pub struct CompWorkspaces {
+	pub workspaces: Vec<Workspace>,
+	pub current: u8,
+}
+
+#[derive(Clone)]
+pub enum Dwindle {
+	Empty,
+	Window(Rc<RefCell<StrataWindow>>),
+	Split { split: HorizontalOrVertical, ratio: f32, left: Box<Dwindle>, right: Box<Dwindle> },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum HorizontalOrVertical {
+	Horizontal,
+	Vertical,
+}
+
 // Config structs
 #[derive(Debug, Deserialize)]
 pub struct AutostartCmd {
@@ -58,8 +98,9 @@ pub struct Autostart {
 
 #[derive(Debug, Deserialize)]
 pub struct General {
-	pub win_gaps: u32,
-	pub out_gaps: u32,
+	pub win_gaps: i32,
+	pub out_gaps: i32,
+	pub workspaces: u32,
 }
 
 #[derive(Debug, Deserialize)]
