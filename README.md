@@ -6,6 +6,12 @@
     </p>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/github/languages/top/stratawm/stratawm?style=for-the-badge"/>
+  <img src="https://img.shields.io/github/commit-activity/m/stratawm/stratawm?style=for-the-badge"/>
+  <img src="https://img.shields.io/github/stars/stratawm/stratawm?style=for-the-badge"/>
+</p>
+
 # How it works
 Strata is made to be modular. It is done this way so that you, the user can mix'n'match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
 
