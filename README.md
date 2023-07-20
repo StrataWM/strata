@@ -1,5 +1,10 @@
-# Strata
-Strata is a modular,dynamic and sleek tiling Wayland compositor with batteries included.
+<p align="center">
+    <h1 align="center">Strata</h1>
+    <p align="center">
+        <img src="https://github.com/StrataWM/.github/blob/main/assets/strata_logo.png" style="width: 25%;"></img>
+        <h3 align="center">A Modular, Sleek and Dynamic Wayland Compositor with batteries included!</h3>
+    </p>
+</p>
 
 # How it works
 Strata is made to be modular. It is done this way so that you, the user can mix'n'match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
