@@ -15,8 +15,10 @@ use crate::{
 		structs::{
 			CompWorkspace,
 			CompWorkspaces,
+			Dwindle,
 			StrataWindow,
 		},
+		tiling::refresh_geometry,
 	},
 	CONFIG,
 };
@@ -59,7 +61,7 @@ impl StrataWindow {
 
 impl CompWorkspace {
 	pub fn new() -> Self {
-		Workspace { windows: Vec::new(), outputs: Vec::new(), layout_tree: BinaryTree::new() }
+		CompWorkspace { windows: Vec::new(), outputs: Vec::new(), layout_tree: Dwindle::new() }
 	}
 
 	pub fn windows(&self) -> impl Iterator<Item = Ref<'_, Window>> {
@@ -73,9 +75,8 @@ impl CompWorkspace {
 	pub fn add_window(&mut self, window: Rc<RefCell<StrataWindow>>) {
 		self.windows.retain(|w| w.borrow().window != window.borrow().window);
 		self.windows.push(window.clone());
-		// self.layout_tree.insert(window, self.layout_tree.next_split(), 0.5);
-		// bsp_update_layout(self);
-		
+		self.layout_tree.insert(window, self.layout_tree.next_split(), 0.5);
+		refresh_geometry(self);
 	}
 
 	pub fn remove_window(&mut self, window: &Window) -> Option<Rc<RefCell<StrataWindow>>> {
@@ -88,8 +89,8 @@ impl CompWorkspace {
 				true
 			}
 		});
-		// self.layout_tree.remove(window);
-		bsp_update_layout(self);
+		self.layout_tree.remove(window);
+		refresh_geometry(self);
 		removed
 	}
 
@@ -174,16 +175,16 @@ impl CompWorkspace {
 	}
 }
 
-impl Default for Workspace {
+impl Default for CompWorkspace {
 	fn default() -> Self {
 		Self::new()
 	}
 }
 
-impl Workspaces {
-	pub fn new(workspaceamount: u8) -> Self {
-		Workspaces {
-			workspaces: (0..workspaceamount).map(|_| Workspace::new()).collect(),
+impl CompWorkspaces {
+	pub fn new(workspaceamount: u32) -> Self {
+		CompWorkspaces {
+			workspaces: (0..workspaceamount).map(|_| CompWorkspace::new()).collect(),
 			current: 0,
 		}
 	}
@@ -192,15 +193,15 @@ impl Workspaces {
 		self.workspaces.iter().flat_map(|w| w.outputs())
 	}
 
-	pub fn iter(&mut self) -> impl Iterator<Item = &mut Workspace> {
+	pub fn iter(&mut self) -> impl Iterator<Item = &mut CompWorkspace> {
 		self.workspaces.iter_mut()
 	}
 
-	pub fn current_mut(&mut self) -> &mut Workspace {
+	pub fn current_mut(&mut self) -> &mut CompWorkspace {
 		&mut self.workspaces[self.current as usize]
 	}
 
-	pub fn current(&self) -> &Workspace {
+	pub fn current(&self) -> &CompWorkspace {
 		&self.workspaces[self.current as usize]
 	}
 
@@ -208,7 +209,7 @@ impl Workspaces {
 		self.workspaces.iter().flat_map(|w| w.windows())
 	}
 
-	pub fn workspace_from_window(&mut self, window: &Window) -> Option<&mut Workspace> {
+	pub fn workspace_from_window(&mut self, window: &Window) -> Option<&mut CompWorkspace> {
 		self.workspaces.iter_mut().find(|w| w.contains_window(window))
 	}
 
@@ -219,11 +220,11 @@ impl Workspaces {
 		let mut removed = None;
 		if let Some(ws) = self.workspace_from_window(window) {
 			removed = ws.remove_window(window);
-			bsp_update_layout(ws)
+			refresh_geometry(ws)
 		}
 		if let Some(removed) = removed {
 			self.workspaces[workspace as usize].add_window(removed);
-			bsp_update_layout(&mut self.workspaces[workspace as usize])
+			refresh_geometry(&mut self.workspaces[workspace as usize])
 		}
 	}
 }

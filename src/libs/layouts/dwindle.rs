@@ -39,7 +39,7 @@ impl Dwindle {
 		&mut self,
 		window: Rc<RefCell<StrataWindow>>,
 		splitnew: HorizontalOrVertical,
-		ratio: f32,
+		rationew: f32,
 	) {
 		match self {
 			Dwindle::Empty => {

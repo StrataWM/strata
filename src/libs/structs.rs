@@ -68,7 +68,7 @@ pub struct CompWorkspace {
 }
 
 pub struct CompWorkspaces {
-	pub workspaces: Vec<Workspace>,
+	pub workspaces: Vec<CompWorkspace>,
 	pub current: u8,
 }
 

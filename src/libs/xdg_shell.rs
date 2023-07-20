@@ -1,4 +1,9 @@
-use crate::libs::structs::Strata;
+use crate::libs::structs::{
+	CompWorkspaces,
+	Strata,
+	StrataWindow,
+};
+use log::warn;
 use smithay::{
 	delegate_xdg_decoration,
 	delegate_xdg_shell,
@@ -27,6 +32,11 @@ use smithay::{
 		},
 	},
 };
+use std::{
+	cell::RefCell,
+	rc::Rc,
+	sync::Mutex,
+};
 
 impl XdgShellHandler for Strata {
 	fn xdg_shell_state(&mut self) -> &mut XdgShellState {
@@ -35,15 +45,24 @@ impl XdgShellHandler for Strata {
 
 	fn new_toplevel(&mut self, surface: ToplevelSurface) {
 		let window = Window::new(surface);
-		self.space.map_element(window, (0, 0), false);
-		self.refresh_geometry();
+		self.workspaces.current_mut().add_window(Rc::new(RefCell::new(StrataWindow {
+			window: window.clone(),
+			rec: window.geometry(),
+		})));
 	}
 
-	fn toplevel_destroyed(&mut self, _surface: ToplevelSurface) {
-		self.refresh_geometry();
+	fn toplevel_destroyed(&mut self, surface: ToplevelSurface) {
+		let window =
+			self.workspaces.all_windows().find(|w| w.toplevel() == &surface).unwrap().clone();
+
+		self.workspaces.workspace_from_window(&window).unwrap().remove_window(&window);
 	}
 
-	fn new_popup(&mut self, _surface: PopupSurface, _positioner: PositionerState) {}
+	fn new_popup(&mut self, surface: PopupSurface, positioner: PositionerState) {
+		surface.with_pending_state(|state| {
+			state.geometry = positioner.get_geometry();
+		});
+	}
 
 	fn grab(&mut self, _surface: PopupSurface, _seat: wl_seat::WlSeat, _serial: Serial) {}
 }

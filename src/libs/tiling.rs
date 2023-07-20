@@ -76,3 +76,57 @@ pub fn refresh_geometry(workspace: &mut CompWorkspace) {
 		xdg_toplevel.send_configure();
 	}
 }
+
+pub fn generate_layout(
+	tree: &mut Dwindle,
+	lastwin: &Rc<RefCell<StrataWindow>>,
+	lastgeo: Rectangle<i32, Logical>,
+	split: HorizontalOrVertical,
+	ratio: f32,
+	output: Size<i32, Physical>,
+	gaps: (i32, i32),
+) {
+	let size = match split {
+		HorizontalOrVertical::Horizontal => {
+			Size::from(((lastgeo.size.w as f32 * ratio) as i32, lastgeo.size.h))
+		}
+		HorizontalOrVertical::Vertical => {
+			Size::from((lastgeo.size.w, (lastgeo.size.h as f32 * ratio) as i32))
+		}
+	};
+
+	let loc: Point<i32, Logical> = match split {
+		HorizontalOrVertical::Horizontal => Point::from((lastgeo.loc.x, output.h - size.h)),
+		HorizontalOrVertical::Vertical => Point::from((output.w - size.w, lastgeo.loc.y)),
+	};
+
+	let rec_with_gaps = Rectangle {
+		size: Size::from((size.w - (gaps.0 * 2), (size.h - (gaps.1 * 0)))),
+		loc: Point::from((loc.x + gaps.1, loc.y + gaps.1)),
+	};
+
+	lastwin.borrow_mut().rec = rec_with_gaps;
+
+	let loc = match split {
+		HorizontalOrVertical::Horizontal => Point::from((output.w - size.w, lastgeo.loc.y)),
+		HorizontalOrVertical::Vertical => Point::from((lastgeo.loc.x, output.h - size.h)),
+	};
+
+	let rec = Rectangle { size, loc };
+
+	let rec_with_gaps = Rectangle {
+		size: Size::from((size.w - (gaps.0 * 2), (size.h - (gaps.0 * 2)))),
+		loc: Point::from((loc.x + gaps.1, loc.y + gaps.1)),
+	};
+
+	match tree {
+		Dwindle::Empty => {}
+		Dwindle::Window(w) => w.borrow_mut().rec = rec_with_gaps,
+		Dwindle::Split { split, ratio, left, right } => {
+			if let Dwindle::Window(w) = left.as_mut() {
+				w.borrow_mut().rec = rec;
+				generate_layout(right.as_mut(), w, rec, *split, *ratio, output, gaps);
+			}
+		}
+	}
+}

@@ -79,7 +79,7 @@ impl Strata {
 		let socket_name = Self::init_wayland_listener(display, event_loop);
 		let loop_signal = event_loop.get_signal();
 
-		let workspaces = Workspaces::new(config.general.workspaces);
+		let workspaces = CompWorkspaces::new(config.general.workspaces);
 
 		Self {
 			start_time,

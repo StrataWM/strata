@@ -16,9 +16,7 @@ use log::{
 	info,
 };
 use notify::{
-	event,
 	recommended_watcher,
-	RecommendedWatcher,
 	RecursiveMode::NonRecursive,
 	Watcher,
 };
@@ -28,7 +26,6 @@ use std::{
 	io::stdout,
 	path::Path,
 	sync::{
-		mpsc::channel,
 		Arc,
 		Mutex,
 	},

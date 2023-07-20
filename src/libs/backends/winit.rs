@@ -8,9 +8,12 @@ pub use crate::libs::structs::{
 	Strata,
 };
 use crate::{
-	libs::decorations::{
-		borders::BorderShader,
-		CustomRenderElements,
+	libs::{
+		decorations::{
+			borders::BorderShader,
+			CustomRenderElements,
+		},
+		workspaces,
 	},
 	CONFIG,
 };
@@ -35,6 +38,7 @@ use smithay::{
 	},
 	desktop::{
 		layer_map_for_output,
+		space::SpaceElement,
 		LayerSurface,
 	},
 	output::{
@@ -78,19 +82,23 @@ pub fn init_winit() -> Result<(), Box<dyn std::error::Error>> {
 		},
 	);
 	let _global = output.create_global::<Strata>(&display.handle());
+	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
+	output.set_preferred(mode);
 
 	let state = Strata::new(&mut event_loop, &mut display);
 	let mut data = CalloopData { state, display };
 	let state = &mut data.state;
 
-	BorderShader::init(backend.renderer());
-
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
 
-	state.space.map_output(&output, (0, 0));
-
 	let mut damage_tracker = OutputDamageTracker::from_output(&output);
+
+	BorderShader::init(backend.renderer());
+
+	for workspace in state.workspaces.iter() {
+		workspace.add_output(output.clone());
+	}
 
 	std::env::set_var("WAYLAND_DISPLAY", &state.socket_name);
 
@@ -160,6 +168,8 @@ pub fn winit_dispatch(
 	backend.bind().unwrap();
 
 	let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
+	let workspace = state.workspaces.current_mut();
+	let output = workspace.outputs().next().unwrap();
 	let layer_map = layer_map_for_output(output);
 	let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
 		.layers()
@@ -181,7 +191,7 @@ pub fn winit_dispatch(
 			}),
 	);
 
-	// renderelements.extend(render_elements(backend.renderer()));
+	renderelements.extend(workspace.render_elements(backend.renderer()));
 
 	renderelements.extend(
 		lower
@@ -198,29 +208,19 @@ pub fn winit_dispatch(
 			}),
 	);
 
-	// smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlowRenderer>, _, _>(
-	// 	output,
-	// 	backend.renderer(),
-	// 	1.0,
-	// 	0,
-	// 	[&state.space],
-	// 	&[],
-	// 	damage_tracker,
-	// 	[0.131, 0.141, 0.242, 1.0],
-	// )?;
 	damage_tracker
 		.render_output(backend.renderer(), 0, &renderelements, [0.131, 0.141, 0.242, 1.0])
 		.unwrap();
 	backend.submit(Some(&[damage])).unwrap();
 
-	state.space.elements().for_each(|window| {
+	workspace.windows().for_each(|window| {
 		window.send_frame(output, state.start_time.elapsed(), Some(Duration::ZERO), |_, _| {
 			Some(output.clone())
 		})
 	});
 
-	state.space.refresh();
-	display.flush_clients()?;
+	workspace.windows().for_each(|e| e.refresh());
+	display.flush_clients().unwrap();
 	BorderShader::cleanup(backend.renderer());
 
 	Ok(())
