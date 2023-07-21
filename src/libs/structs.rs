@@ -1,5 +1,12 @@
 use serde_derive::Deserialize;
 use smithay::{
+	backend::{
+		renderer::{
+			damage::OutputDamageTracker,
+			glow::GlowRenderer,
+		},
+		winit::WinitGraphicsBackend,
+	},
 	desktop::{
 		Space,
 		Window,
@@ -31,9 +38,10 @@ use std::{
 	rc::Rc,
 };
 
-pub struct Strata {
+pub struct Strata<BackendData: Backend + 'static> {
 	pub start_time: std::time::Instant,
 	pub socket_name: OsString,
+	pub backend_data: BackendData,
 	pub workspaces: CompWorkspaces,
 
 	pub space: Space<Window>,
@@ -44,15 +52,20 @@ pub struct Strata {
 	pub xdg_shell_state: XdgShellState,
 	pub shm_state: ShmState,
 	pub output_manager_state: OutputManagerState,
-	pub seat_state: SeatState<Strata>,
+	pub seat_state: SeatState<Strata<BackendData>>,
 	pub data_device_state: DataDeviceState,
 
 	pub seat: Seat<Self>,
+	pub seat_name: String,
 }
 
-pub struct CalloopData {
-	pub state: Strata,
-	pub display: Display<Strata>,
+pub trait Backend {
+	fn seat_name(&self) -> String;
+}
+
+pub struct CalloopData<BackendData: Backend + 'static> {
+	pub state: Strata<BackendData>,
+	pub display: Display<Strata<BackendData>>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -83,6 +96,11 @@ pub enum Dwindle {
 pub enum HorizontalOrVertical {
 	Horizontal,
 	Vertical,
+}
+
+pub struct WinitData {
+	backend: WinitGraphicsBackend<GlowRenderer>,
+	damage_tracker: OutputDamageTracker,
 }
 
 // Config structs

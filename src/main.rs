@@ -29,7 +29,6 @@ use std::{
 		Arc,
 		Mutex,
 	},
-	time::Duration,
 };
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 lazy_static! {
@@ -60,7 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	let mut watcher = recommended_watcher(|res: Result<notify::Event, notify::Error>| {
 		match res {
-			Ok(event) => {
+			Ok(..) => {
 				info!("Config changed! Reloading!");
 				let updated_config = parse_config();
 				let mut config_guard = CONFIG.lock().expect("Error locking config");
@@ -70,7 +69,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		}
 	})?;
 
-	watcher.watch(Path::new(&config_path), NonRecursive);
+	let _ = watcher.watch(Path::new(&config_path), NonRecursive);
 	info!("Initializing Strata WM");
 	info!("Parsing config...");
 	info!("Initializing socket interface...");

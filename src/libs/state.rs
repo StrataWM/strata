@@ -1,5 +1,6 @@
 use crate::{
 	libs::structs::{
+		Backend,
 		CalloopData,
 		CompWorkspaces,
 		Strata,
@@ -56,8 +57,12 @@ use std::{
 	sync::Arc,
 };
 
-impl Strata {
-	pub fn new(event_loop: &mut EventLoop<CalloopData>, display: &mut Display<Self>) -> Self {
+impl<BackendData: Backend> Strata<BackendData> {
+	pub fn new(
+		event_loop: &mut EventLoop<CalloopData<BackendData>>,
+		display: &mut Display<Self>,
+		backend_data: BackendData,
+	) -> Self {
 		let config = CONFIG.lock().unwrap();
 		let start_time = std::time::Instant::now();
 
@@ -69,8 +74,8 @@ impl Strata {
 		let output_manager_state = OutputManagerState::new_with_xdg_output::<Self>(&dh);
 		let mut seat_state = SeatState::new();
 		let data_device_state = DataDeviceState::new::<Self>(&dh);
-
-		let mut seat: Seat<Self> = seat_state.new_wl_seat(&dh, "strata");
+		let seat_name = backend_data.seat_name();
+		let mut seat: Seat<Self> = seat_state.new_wl_seat(&dh, seat_name.clone());
 
 		seat.add_keyboard(Default::default(), 0, 0).unwrap();
 		seat.add_pointer();
@@ -84,6 +89,8 @@ impl Strata {
 		Self {
 			start_time,
 			workspaces,
+			backend_data,
+			seat_name,
 
 			space,
 			loop_signal,
@@ -100,8 +107,8 @@ impl Strata {
 	}
 
 	fn init_wayland_listener(
-		display: &mut Display<Strata>,
-		event_loop: &mut EventLoop<CalloopData>,
+		display: &mut Display<Strata<BackendData>>,
+		event_loop: &mut EventLoop<CalloopData<BackendData>>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();

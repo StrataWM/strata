@@ -1,9 +1,7 @@
 use crate::libs::structs::{
-	CompWorkspaces,
 	Strata,
 	StrataWindow,
 };
-use log::warn;
 use smithay::{
 	delegate_xdg_decoration,
 	delegate_xdg_shell,
@@ -35,10 +33,9 @@ use smithay::{
 use std::{
 	cell::RefCell,
 	rc::Rc,
-	sync::Mutex,
 };
 
-impl XdgShellHandler for Strata {
+impl<BackendData> XdgShellHandler for Strata<BackendData> {
 	fn xdg_shell_state(&mut self) -> &mut XdgShellState {
 		&mut self.xdg_shell_state
 	}
@@ -66,7 +63,7 @@ impl XdgShellHandler for Strata {
 
 	fn grab(&mut self, _surface: PopupSurface, _seat: wl_seat::WlSeat, _serial: Serial) {}
 }
-delegate_xdg_shell!(Strata);
+delegate_xdg_shell!(Strata<BackendData>);
 
 pub fn handle_commit(space: &Space<Window>, surface: &WlSurface) -> Option<()> {
 	let window = space.elements().find(|w| w.toplevel().wl_surface() == surface).cloned()?;
@@ -88,7 +85,7 @@ pub fn handle_commit(space: &Space<Window>, surface: &WlSurface) -> Option<()> {
 	Some(())
 }
 
-impl XdgDecorationHandler for Strata {
+impl<BackendData> XdgDecorationHandler for Strata<BackendData> {
 	fn new_decoration(&mut self, toplevel: ToplevelSurface) {
 		toplevel.with_pending_state(|state| {
 			// Advertise server side decoration
@@ -107,4 +104,4 @@ impl XdgDecorationHandler for Strata {
 	fn unset_mode(&mut self, _toplevel: ToplevelSurface) {}
 }
 
-delegate_xdg_decoration!(Strata);
+delegate_xdg_decoration!(Strata<BackendData>);

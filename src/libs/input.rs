@@ -25,7 +25,7 @@ use smithay::{
 
 use crate::libs::structs::Strata;
 
-impl Strata {
+impl<BackendData> Strata<BackendData> {
 	pub fn process_input_event<I: InputBackend>(&mut self, event: InputEvent<I>) {
 		match event {
 			InputEvent::Keyboard { event, .. } => {

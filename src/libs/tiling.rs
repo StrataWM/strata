@@ -4,17 +4,12 @@ use crate::{
 		Dwindle,
 		HorizontalOrVertical,
 		StrataWindow,
-		Workspace,
 	},
 	CONFIG,
 };
-use log::{
-	debug,
-	info,
-};
+use log::debug;
 use smithay::{
 	desktop::layer_map_for_output,
-	reexports::wayland_protocols::xdg::shell::server::xdg_toplevel,
 	utils::{
 		Logical,
 		Physical,
