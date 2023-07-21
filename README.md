@@ -8,9 +8,8 @@
   <img src="https://img.shields.io/github/stars/stratawm/stratawm?style=for-the-badge"/>
 </p>
 
-# How it works
-Strata is made to be modular. It is done this way so that you, the user can mix'n'match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
-
+## What's Strata?
+Strata is a dynamic and sleek Wayland compositor and window manager for GNU/Linux systems. Its written completely in [Rust](https://rust-lang.org) using the [Smithay](https://github.com/smithay/smithay) library. Strata is made to be modular. It is done this way so that you, the user can mix'n'match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
 ```
 ╭───────────────╮       ╭───────────╮       ╭──────────╮
 │ Hotkey Daemon │ ────> │ StrataCTL │ ────> │ StrataWM │
