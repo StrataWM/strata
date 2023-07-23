@@ -1,4 +1,5 @@
 use crate::libs::{
+	ctl::ctl,
 	decorations::CustomRenderElements,
 	structs::{
 		backends::WinitData,
@@ -105,6 +106,7 @@ pub fn init_winit() {
 		})
 		.unwrap();
 
+	ctl(state).expect("");
 	for cmd in &CONFIG.autostart.cmd {
 		let cmd = &cmd.cmd;
 		let args: Vec<_> = cmd.split(" ").collect();
@@ -137,7 +139,6 @@ pub fn winit_dispatch(
 
 	if let Err(WinitError::WindowClosed) = res {
 		state.loop_signal.stop();
-		
 	} else {
 		res.unwrap();
 	}
