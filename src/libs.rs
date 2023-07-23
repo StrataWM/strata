@@ -1,13 +1,10 @@
 pub mod backends;
-pub mod compositor;
 pub mod ctl;
 pub mod decorations;
-pub mod input;
+pub mod handlers;
 pub mod layouts;
 pub mod parse_config;
-pub mod seat_handler;
 pub mod state;
 pub mod structs;
 pub mod tiling;
 pub mod workspaces;
-pub mod xdg_shell;

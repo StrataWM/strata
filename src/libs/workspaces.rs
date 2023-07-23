@@ -1,26 +1,16 @@
-use std::{
-	cell::{
-		Ref,
-		RefCell,
-	},
-	rc::Rc,
-};
-
-use crate::{
-	libs::{
-		decorations::{
-			borders::BorderShader,
-			AsGlowRenderer,
-		},
-		structs::{
-			CompWorkspace,
-			CompWorkspaces,
+use crate::libs::{
+	decorations::AsGlowRenderer,
+	structs::{
+		config::CONFIG,
+		state::BorderShader,
+		workspaces::{
 			Dwindle,
 			StrataWindow,
+			Workspace,
+			Workspaces,
 		},
-		tiling::refresh_geometry,
 	},
-	CONFIG,
+	tiling::refresh_geometry,
 };
 use smithay::{
 	backend::renderer::{
@@ -46,6 +36,13 @@ use smithay::{
 		Transform,
 	},
 };
+use std::{
+	cell::{
+		Ref,
+		RefCell,
+	},
+	rc::Rc,
+};
 
 impl StrataWindow {
 	fn bbox(&self) -> Rectangle<i32, Logical> {
@@ -59,9 +56,9 @@ impl StrataWindow {
 	}
 }
 
-impl CompWorkspace {
+impl Workspace {
 	pub fn new() -> Self {
-		CompWorkspace { windows: Vec::new(), outputs: Vec::new(), layout_tree: Dwindle::new() }
+		Workspace { windows: Vec::new(), outputs: Vec::new(), layout_tree: Dwindle::new() }
 	}
 
 	pub fn windows(&self) -> impl Iterator<Item = Ref<'_, Window>> {
@@ -104,11 +101,10 @@ impl CompWorkspace {
 	where
 		<R as Renderer>::TextureId: Texture + 'static,
 	{
-		let config = CONFIG.lock().unwrap();
 		let mut render_elements: Vec<C> = Vec::new();
 		for element in &self.windows {
 			let window = &element.borrow().window;
-			if config.window_decorations.border_width > 0 {
+			if CONFIG.window_decorations.border_width > 0 {
 				render_elements.push(C::from(BorderShader::element(
 					renderer.glow_renderer_mut(),
 					window,
@@ -161,6 +157,7 @@ impl CompWorkspace {
 	) -> Option<(Ref<'_, Window>, Point<i32, Logical>)> {
 		let point = point.into();
 		self.windows.iter().filter(|e| e.borrow().bbox().to_f64().contains(point)).find_map(|e| {
+			// we need to offset the point to the location where the surface is actually drawn
 			let render_location = e.borrow().render_location();
 			if e.borrow().window.is_in_input_region(&(point - render_location.to_f64())) {
 				Some((Ref::map(e.borrow(), |hw| &hw.window), render_location))
@@ -175,16 +172,16 @@ impl CompWorkspace {
 	}
 }
 
-impl Default for CompWorkspace {
+impl Default for Workspace {
 	fn default() -> Self {
 		Self::new()
 	}
 }
 
-impl CompWorkspaces {
-	pub fn new(workspaceamount: u32) -> Self {
-		CompWorkspaces {
-			workspaces: (0..workspaceamount).map(|_| CompWorkspace::new()).collect(),
+impl Workspaces {
+	pub fn new(workspaceamount: u8) -> Self {
+		Workspaces {
+			workspaces: (0..workspaceamount).map(|_| Workspace::new()).collect(),
 			current: 0,
 		}
 	}
@@ -193,15 +190,15 @@ impl CompWorkspaces {
 		self.workspaces.iter().flat_map(|w| w.outputs())
 	}
 
-	pub fn iter(&mut self) -> impl Iterator<Item = &mut CompWorkspace> {
+	pub fn iter(&mut self) -> impl Iterator<Item = &mut Workspace> {
 		self.workspaces.iter_mut()
 	}
 
-	pub fn current_mut(&mut self) -> &mut CompWorkspace {
+	pub fn current_mut(&mut self) -> &mut Workspace {
 		&mut self.workspaces[self.current as usize]
 	}
 
-	pub fn current(&self) -> &CompWorkspace {
+	pub fn current(&self) -> &Workspace {
 		&self.workspaces[self.current as usize]
 	}
 
@@ -209,7 +206,7 @@ impl CompWorkspaces {
 		self.workspaces.iter().flat_map(|w| w.windows())
 	}
 
-	pub fn workspace_from_window(&mut self, window: &Window) -> Option<&mut CompWorkspace> {
+	pub fn workspace_from_window(&mut self, window: &Window) -> Option<&mut Workspace> {
 		self.workspaces.iter_mut().find(|w| w.contains_window(window))
 	}
 

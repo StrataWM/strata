@@ -1,34 +1,14 @@
-use crate::libs::structs::{
+use smithay::desktop::Window;
+use std::{
+	cell::RefCell,
+	rc::Rc,
+};
+
+use crate::libs::structs::workspaces::{
 	Dwindle,
 	HorizontalOrVertical,
 	StrataWindow,
 };
-use smithay::desktop::Window;
-use std::{
-	cell::RefCell,
-	fmt::{
-		Debug,
-		Result,
-	},
-	rc::Rc,
-};
-
-impl Debug for Dwindle {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result {
-		match self {
-			Self::Empty => write!(f, "Empty"),
-			Self::Window(w) => w.borrow().rec.fmt(f),
-			Self::Split { split, ratio, left, right } => {
-				f.debug_struct("Split")
-					.field("split", split)
-					.field("ratio", ratio)
-					.field("left", left)
-					.field("right", right)
-					.finish()
-			}
-		}
-	}
-}
 
 impl Dwindle {
 	pub fn new() -> Self {
@@ -51,9 +31,9 @@ impl Dwindle {
 					right: Box::new(Dwindle::Window(window)),
 					split: splitnew,
 					ratio: rationew,
-				}
+				};
 			}
-			Dwindle::Split { split: _, ratio: _, left: _, right } => {
+			Dwindle::Split { left: _, right, split: _, ratio: _ } => {
 				right.insert(window, splitnew, rationew);
 			}
 		}

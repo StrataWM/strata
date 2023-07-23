@@ -1,13 +1,17 @@
-use crate::{
-	libs::structs::{
-		CompWorkspace,
+use std::{
+	cell::RefCell,
+	rc::Rc,
+};
+
+use crate::libs::structs::{
+	config::CONFIG,
+	workspaces::{
 		Dwindle,
 		HorizontalOrVertical,
 		StrataWindow,
+		Workspace,
 	},
-	CONFIG,
 };
-use log::debug;
 use smithay::{
 	desktop::layer_map_for_output,
 	utils::{
@@ -18,15 +22,9 @@ use smithay::{
 		Size,
 	},
 };
-use std::{
-	cell::RefCell,
-	rc::Rc,
-};
 
-pub fn refresh_geometry(workspace: &mut CompWorkspace) {
-	let config = CONFIG.lock().unwrap();
-	let gaps = (config.general.win_gaps, config.general.out_gaps);
-
+pub fn refresh_geometry(workspace: &mut Workspace) {
+	let gaps = (CONFIG.general.out_gaps, CONFIG.general.in_gaps);
 	let output = layer_map_for_output(workspace.outputs().next().unwrap()).non_exclusive_zone();
 	let output_full = workspace.outputs().next().unwrap().current_mode().unwrap().size;
 
@@ -41,7 +39,7 @@ pub fn refresh_geometry(workspace: &mut CompWorkspace) {
 				)),
 			};
 		}
-		Dwindle::Split { split, ratio, left, right } => {
+		Dwindle::Split { left, right, split, ratio } => {
 			if let Dwindle::Window(w) = left.as_mut() {
 				generate_layout(
 					right.as_mut(),
@@ -61,8 +59,6 @@ pub fn refresh_geometry(workspace: &mut CompWorkspace) {
 			}
 		}
 	}
-	debug!("{:#?}", workspace.layout_tree);
-
 	for strata_window in workspace.strata_windows() {
 		let xdg_toplevel = strata_window.window.toplevel();
 		xdg_toplevel.with_pending_state(|state| {
@@ -96,7 +92,7 @@ pub fn generate_layout(
 	};
 
 	let rec_with_gaps = Rectangle {
-		size: Size::from((size.w - (gaps.0 * 2), (size.h - (gaps.1 * 0)))),
+		size: Size::from((size.w - (gaps.1 * 2), (size.h - (gaps.1 * 2)))),
 		loc: Point::from((loc.x + gaps.1, loc.y + gaps.1)),
 	};
 
@@ -108,19 +104,17 @@ pub fn generate_layout(
 	};
 
 	let rec = Rectangle { size, loc };
-
 	let rec_with_gaps = Rectangle {
-		size: Size::from((size.w - (gaps.0 * 2), (size.h - (gaps.0 * 2)))),
+		size: Size::from((size.w - (gaps.1 * 2), (size.h - (gaps.1 * 2)))),
 		loc: Point::from((loc.x + gaps.1, loc.y + gaps.1)),
 	};
-
 	match tree {
 		Dwindle::Empty => {}
 		Dwindle::Window(w) => w.borrow_mut().rec = rec_with_gaps,
 		Dwindle::Split { split, ratio, left, right } => {
 			if let Dwindle::Window(w) = left.as_mut() {
 				w.borrow_mut().rec = rec;
-				generate_layout(right.as_mut(), w, rec, *split, *ratio, output, gaps);
+				generate_layout(right.as_mut(), w, rec, *split, *ratio, output, gaps)
 			}
 		}
 	}
