@@ -1,27 +1,31 @@
-use crate::{
-	libs::structs::{
+use crate::libs::structs::{
+	config::CONFIG,
+	state::{
 		Backend,
 		CalloopData,
-		CompWorkspaces,
-		Strata,
+		StrataState,
 	},
-	CONFIG,
+	workspaces::{
+		FocusTarget,
+		Workspaces,
+	},
 };
 use smithay::{
 	desktop::{
-		Space,
-		WindowSurfaceType,
+		layer_map_for_output,
+		PopupManager,
+		Window,
 	},
 	input::{
-		pointer::PointerHandle,
-		Seat,
+		keyboard::XkbConfig,
 		SeatState,
 	},
 	reexports::{
 		calloop::{
 			generic::Generic,
-			EventLoop,
 			Interest,
+			LoopHandle,
+			LoopSignal,
 			Mode,
 			PostAction,
 		},
@@ -31,7 +35,6 @@ use smithay::{
 				ClientId,
 				DisconnectReason,
 			},
-			protocol::wl_surface::WlSurface,
 			Display,
 		},
 	},
@@ -46,7 +49,17 @@ use smithay::{
 		},
 		data_device::DataDeviceState,
 		output::OutputManagerState,
-		shell::xdg::XdgShellState,
+		primary_selection::PrimarySelectionState,
+		shell::{
+			wlr_layer::{
+				Layer,
+				WlrLayerShellState,
+			},
+			xdg::{
+				decoration::XdgDecorationState,
+				XdgShellState,
+			},
+		},
 		shm::ShmState,
 		socket::ListeningSocketSource,
 	},
@@ -55,67 +68,76 @@ use std::{
 	ffi::OsString,
 	os::unix::io::AsRawFd,
 	sync::Arc,
+	time::Instant,
 };
 
-impl<BackendData: Backend> Strata<BackendData> {
+impl<BackendData: Backend> StrataState<BackendData> {
 	pub fn new(
-		event_loop: &mut EventLoop<CalloopData<BackendData>>,
-		display: &mut Display<Self>,
+		mut loop_handle: LoopHandle<'static, CalloopData<BackendData>>,
+		loop_signal: LoopSignal,
+		display: &mut Display<StrataState<BackendData>>,
 		backend_data: BackendData,
 	) -> Self {
-		let config = CONFIG.lock().unwrap();
-		let start_time = std::time::Instant::now();
-
+		let start_time = Instant::now();
 		let dh = display.handle();
-
 		let compositor_state = CompositorState::new::<Self>(&dh);
 		let xdg_shell_state = XdgShellState::new::<Self>(&dh);
+		let xdg_decoration_state = XdgDecorationState::new::<Self>(&dh);
 		let shm_state = ShmState::new::<Self>(&dh, vec![]);
 		let output_manager_state = OutputManagerState::new_with_xdg_output::<Self>(&dh);
 		let mut seat_state = SeatState::new();
 		let data_device_state = DataDeviceState::new::<Self>(&dh);
+		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
 		let seat_name = backend_data.seat_name();
-		let mut seat: Seat<Self> = seat_state.new_wl_seat(&dh, seat_name.clone());
+		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
+		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
 
-		seat.add_keyboard(Default::default(), 0, 0).unwrap();
+		if !CONFIG.general.kb_repeat.is_empty() {
+			seat.add_keyboard(
+				XkbConfig::default(),
+				CONFIG.general.kb_repeat[0],
+				CONFIG.general.kb_repeat[1],
+			)
+			.expect("Couldn't parse XKB config");
+		} else {
+			seat.add_keyboard(XkbConfig::default(), 200, 50).expect("Couldn't parse XKB config");
+		}
 		seat.add_pointer();
-
-		let space = Space::default();
-		let socket_name = Self::init_wayland_listener(display, event_loop);
-		let loop_signal = event_loop.get_signal();
-
-		let workspaces = CompWorkspaces::new(config.general.workspaces);
+		let workspaces = Workspaces::new(CONFIG.general.workspaces);
+		let socket_name = Self::init_wayland_listener(&mut loop_handle, display);
 
 		Self {
-			start_time,
-			workspaces,
+			loop_handle,
+			dh,
 			backend_data,
+			start_time,
 			seat_name,
-
-			space,
-			loop_signal,
 			socket_name,
-
 			compositor_state,
 			xdg_shell_state,
+			xdg_decoration_state,
+			loop_signal,
 			shm_state,
 			output_manager_state,
+			popup_manager: PopupManager::default(),
 			seat_state,
 			data_device_state,
+			primary_selection_state,
+			layer_shell_state,
 			seat,
+			workspaces,
+			pointer_location: Point::from((0.0, 0.0)),
 		}
 	}
 
 	fn init_wayland_listener(
-		display: &mut Display<Strata<BackendData>>,
-		event_loop: &mut EventLoop<CalloopData<BackendData>>,
+		handle: &mut LoopHandle<'static, CalloopData<BackendData>>,
+		display: &mut Display<StrataState<BackendData>>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
-		let handle = event_loop.handle();
 
-		event_loop
-			.handle()
+		handle
 			.insert_source(listening_socket, move |client_stream, _, state| {
 				state
 					.display
@@ -123,7 +145,7 @@ impl<BackendData: Backend> Strata<BackendData> {
 					.insert_client(client_stream, Arc::new(ClientState::default()))
 					.unwrap();
 			})
-			.expect("Failed to init the Wayland event source.");
+			.expect("Failed to init the wayland event source.");
 
 		handle
 			.insert_source(
@@ -138,16 +160,35 @@ impl<BackendData: Backend> Strata<BackendData> {
 		socket_name
 	}
 
-	pub fn surface_under_pointer(
-		&self,
-		pointer: &PointerHandle<Self>,
-	) -> Option<(WlSurface, Point<i32, Logical>)> {
-		let pos = pointer.current_location();
-		self.space.element_under(pos).and_then(|(window, location)| {
-			window
-				.surface_under(pos - location.to_f64(), WindowSurfaceType::ALL)
-				.map(|(s, p)| (s, p + location))
-		})
+	pub fn window_under(&mut self) -> Option<(Window, Point<i32, Logical>)> {
+		let pos = self.pointer_location;
+		self.workspaces.current().window_under(pos).map(|(w, p)| (w.clone(), p))
+	}
+	pub fn surface_under(&self) -> Option<(FocusTarget, Point<i32, Logical>)> {
+		let pos = self.pointer_location;
+		let output = self.workspaces.current().outputs().find(|o| {
+			let geometry = self.workspaces.current().output_geometry(o).unwrap();
+			geometry.contains(pos.to_i32_round())
+		})?;
+		let output_geo = self.workspaces.current().output_geometry(output).unwrap();
+		let layers = layer_map_for_output(output);
+
+		let mut under = None;
+		if let Some(layer) =
+			layers.layer_under(Layer::Overlay, pos).or_else(|| layers.layer_under(Layer::Top, pos))
+		{
+			let layer_loc = layers.layer_geometry(layer).unwrap().loc;
+			under = Some((layer.clone().into(), output_geo.loc + layer_loc))
+		} else if let Some((window, location)) = self.workspaces.current().window_under(pos) {
+			under = Some((window.clone().into(), location));
+		} else if let Some(layer) = layers
+			.layer_under(Layer::Bottom, pos)
+			.or_else(|| layers.layer_under(Layer::Background, pos))
+		{
+			let layer_loc = layers.layer_geometry(layer).unwrap().loc;
+			under = Some((layer.clone().into(), output_geo.loc + layer_loc));
+		};
+		under
 	}
 }
 
@@ -155,7 +196,6 @@ impl<BackendData: Backend> Strata<BackendData> {
 pub struct ClientState {
 	pub compositor_state: CompositorClientState,
 }
-
 impl ClientData for ClientState {
 	fn initialized(&self, _client_id: ClientId) {}
 	fn disconnected(&self, _client_id: ClientId, _reason: DisconnectReason) {}

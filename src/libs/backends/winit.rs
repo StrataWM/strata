@@ -1,19 +1,16 @@
-use crate::{
-	libs::{
-		decorations::{
-			borders::BorderShader,
-			CustomRenderElements,
-		},
-		structs::{
+use crate::libs::{
+	decorations::CustomRenderElements,
+	structs::{
+		backends::WinitData,
+		config::CONFIG,
+		state::{
 			Backend,
+			BorderShader,
 			CalloopData,
-			Strata,
-			WinitData,
+			StrataState,
 		},
 	},
-	CONFIG,
 };
-use log::info;
 use smithay::{
 	backend::{
 		renderer::{
@@ -26,7 +23,6 @@ use smithay::{
 			WinitError,
 			WinitEvent,
 			WinitEventLoop,
-			WinitGraphicsBackend,
 		},
 	},
 	desktop::{
@@ -70,10 +66,8 @@ impl Backend for WinitData {
 
 pub fn init_winit() {
 	let mut event_loop: EventLoop<CalloopData<WinitData>> = EventLoop::try_new().unwrap();
-	let mut display: Display<Strata<WinitData>> = Display::new().unwrap();
+	let mut display: Display<StrataState<WinitData>> = Display::new().unwrap();
 	let (backend, mut winit) = winit::init().unwrap();
-	let config = CONFIG.lock().unwrap();
-
 	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
 	let output = Output::new(
 		"winit".to_string(),
@@ -84,26 +78,23 @@ pub fn init_winit() {
 			model: "Winit".into(),
 		},
 	);
-
-	let _global = output.create_global::<Strata<WinitData>>(&display.handle());
+	let _global = output.create_global::<StrataState<WinitData>>(&display.handle());
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
-
+	output.set_preferred(mode);
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
 	let winitdata = WinitData { backend, damage_tracker: damage_tracked_renderer };
+	let state =
+		StrataState::new(event_loop.handle(), event_loop.get_signal(), &mut display, winitdata);
 
-	let state = Strata::new(&mut event_loop, &mut display);
 	let mut data = CalloopData { display, state };
 	let state = &mut data.state;
 	BorderShader::init(state.backend_data.backend.renderer());
-
 	for workspace in state.workspaces.iter() {
 		workspace.add_output(output.clone());
 	}
 
 	std::env::set_var("WAYLAND_DISPLAY", &state.socket_name);
-
 	let mut full_redraw = 0u8;
-
 	let timer = Timer::immediate();
 
 	event_loop
@@ -114,7 +105,7 @@ pub fn init_winit() {
 		})
 		.unwrap();
 
-	for cmd in &config.autostart.cmd {
+	for cmd in &CONFIG.autostart.cmd {
 		let cmd = &cmd.cmd;
 		let args: Vec<_> = cmd.split(" ").collect();
 		Command::new("/bin/sh").arg("-c").args(&args[0..]).spawn().ok();
@@ -145,8 +136,8 @@ pub fn winit_dispatch(
 	let winitdata = &mut state.backend_data;
 
 	if let Err(WinitError::WindowClosed) = res {
-		// Stop the loop
 		state.loop_signal.stop();
+		
 	} else {
 		res.unwrap();
 	}
@@ -214,5 +205,6 @@ pub fn winit_dispatch(
 
 	workspace.windows().for_each(|e| e.refresh());
 	display.flush_clients().unwrap();
+	state.popup_manager.cleanup();
 	BorderShader::cleanup(winitdata.backend.renderer());
 }

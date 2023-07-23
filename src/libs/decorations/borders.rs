@@ -1,15 +1,12 @@
-use std::{
-	borrow::BorrowMut,
-	cell::RefCell,
-	collections::HashMap,
+use crate::libs::structs::{
+	config::CONFIG,
+	state::BorderShader,
 };
-
 use smithay::{
 	backend::renderer::{
 		element::Element,
 		gles::{
 			element::PixelShaderElement,
-			GlesPixelProgram,
 			GlesRenderer,
 			Uniform,
 			UniformName,
@@ -26,13 +23,14 @@ use smithay::{
 		Size,
 	},
 };
+use std::{
+	borrow::BorrowMut,
+	cell::RefCell,
+	collections::HashMap,
+};
 
 const ROUNDED_BORDER_FRAG: &str = include_str!("shaders/rounded_corners.frag");
 const BORDER_FRAG: &str = include_str!("shaders/borders.frag");
-pub struct BorderShader {
-	rounded: GlesPixelProgram,
-	default: GlesPixelProgram,
-}
 
 struct BorderShaderElements(RefCell<HashMap<Window, PixelShaderElement>>);
 
@@ -82,7 +80,7 @@ impl BorderShader {
 		window: &Window,
 		loc: Point<i32, Logical>,
 	) -> PixelShaderElement {
-		let thickness: f32 = 2.0;
+		let thickness: f32 = CONFIG.window_decorations.border_width as f32;
 		let thickness_loc = (thickness as i32, thickness as i32);
 		let thickness_size = ((thickness * 2.0) as i32, (thickness * 2.0) as i32);
 		let geo = Rectangle::from_loc_and_size(
@@ -102,9 +100,9 @@ impl BorderShader {
 			}
 			elem.clone()
 		} else {
-			let angle = 45.00 * std::f32::consts::PI;
+			let angle = 45 as f32 * std::f32::consts::PI;
 			let gradient_direction = [angle.cos(), angle.sin()];
-			let elem = if 10.00 > 0.0 {
+			let elem = if CONFIG.window_decorations.border_radius > 0.0 {
 				PixelShaderElement::new(
 					Self::get(renderer).rounded.clone(),
 					geo,
@@ -112,10 +110,16 @@ impl BorderShader {
 					1.0,
 					vec![
 						Uniform::new("startColor", [0.880, 1.0, 1.0]),
-						Uniform::new("endColor", [0.580, 0.921, 0.921]),
+						Uniform::new(
+							"endColor",
+							Some([0.580, 0.921, 0.921]).unwrap_or([0.880, 1.0, 1.0]),
+						),
 						Uniform::new("thickness", thickness),
 						Uniform::new("halfThickness", thickness * 0.5),
-						Uniform::new("radius", 12.00 + thickness + 2.0),
+						Uniform::new(
+							"radius",
+							CONFIG.window_decorations.border_radius as f32 + thickness + 2.0,
+						),
 						Uniform::new("gradientDirection", gradient_direction),
 					],
 				)
@@ -127,7 +131,10 @@ impl BorderShader {
 					1.0,
 					vec![
 						Uniform::new("startColor", [0.880, 1.0, 1.0]),
-						Uniform::new("endColor", [0.580, 0.921, 0.921]),
+						Uniform::new(
+							"endColor",
+							Some([0.580, 0.921, 0.921]).unwrap_or([0.880, 1.0, 1.0]),
+						),
 						Uniform::new("thickness", thickness),
 						Uniform::new("halfThickness", thickness * 0.5),
 						Uniform::new("gradientDirection", gradient_direction),

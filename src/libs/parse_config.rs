@@ -1,4 +1,4 @@
-use crate::libs::structs::Config;
+use crate::libs::structs::config::Config;
 use std::{
 	env::var,
 	fs::read_to_string,
