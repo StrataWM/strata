@@ -1581,6 +1581,7 @@ dependencies = [
  "chrono",
  "clap",
  "colored",
+ "crossbeam-channel",
  "log",
  "once_cell",
  "serde",

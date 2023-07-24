@@ -11,7 +11,7 @@
 </p>
 
 ## What's Strata?
-Strata is a dynamic and sleek Wayland compositor and window manager for GNU/Linux systems. Its written completely in [Rust](https://rust-lang.org) using the [Smithay](https://github.com/smithay/smithay) library. Strata is made to be modular. It is done this way so that you, the user can mix'n'match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
+Strata is a dynamic and sleek Wayland compositor and window manager for GNU/Linux systems. It's written completely in [Rust](https://rust-lang.org) using the [Smithay](https://github.com/smithay/smithay) library. Strata is made to be modular. It is done this way so that you, the user can mix N match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
 ```
 ╭───────────────╮       ╭───────────╮       ╭──────────╮
 │ Hotkey Daemon │ ────> │ StrataCTL │ ────> │ StrataWM │
@@ -34,32 +34,24 @@ sudo pacman -S rust
 ```
 
 ## Clone this repo
-First you have to clone this repository. Run
+First, you have to clone this repository. Run
 ```
 git clone https://github.com/stratawm/stratawm
 ```
 Then change into the cloned directory using `cd stratawm`
 
 ## Install using the script
-There is a script which allows you to install both StrataWM and StrataCTL at once. Just run this command
+There is a script that allows you to install both StrataWM and StrataCTL at once. Just run this command
 ```
 ./install.sh
 ```
 
 ## Running Strata
-We can use `stratactl` to launch Strata. First start the server by running 
-```sh
-stratawm &
+We can use `stratactl` to launch Strata. 
 ```
-Then run this
+stratawm -b winit
 ```
-stratactl launch winit
-```
-This will launch Strata using the Winit backend. You can create an alias to start Strata using one command. Just create an alias to this command in your shell
-```
-stratawm &; sleep 1; stratactl launch winit;
-```
-The `sleep 1` is required because otherwise, the shell will execute the second command before the server is started, resulting in an error. You can put this in a file and add it to your $PATH variable. In the file, you can also set other environment variables before starting Strata. You can also add your startup programs to that. Its kinda like an `.xinitrc` file.
+This will launch Strata using the Winit backend. If you want, you could create a shell file and then set all your environment variables before starting Strata.
 
 ## Running locally
 To just test Strata without installing it, run
@@ -70,7 +62,7 @@ cargo run
 **NOTE:** You need StrataCTL to be able to control Strata. Without it, Strata is unusable.
 
 # License
-StrataWM and all its subsidaries are licensed under the GNU GPL v3 License. See [LICENSE](https://github.com/stratawm/stratawm/tree/main/LICENSE) for details.
+StrataWM and all its subsidiaries are licensed under the GNU GPL v3 License. See [LICENSE](https://github.com/stratawm/stratawm/tree/main/LICENSE) for details.
 
 # Contributing
 If you want to contribute to Strata, then create a fork, make your changes and open a pull request. While making any changes, please format your code using the config in the repo ([rustfmt.toml](https://github.com/stratawm/stratawm/tree/main/rustfmt.toml)). A Contributing.md file will be created shortly

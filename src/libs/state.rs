@@ -101,7 +101,7 @@ impl<BackendData: Backend> StrataState<BackendData> {
 			)
 			.expect("Couldn't parse XKB config");
 		} else {
-			seat.add_keyboard(XkbConfig::default(), 200, 50).expect("Couldn't parse XKB config");
+			seat.add_keyboard(XkbConfig::default(), 500, 250).expect("Couldn't parse XKB config");
 		}
 		seat.add_pointer();
 		let workspaces = Workspaces::new(CONFIG.general.workspaces);
