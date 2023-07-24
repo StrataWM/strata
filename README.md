@@ -84,4 +84,4 @@ StrataWM and all its subsidiaries are licensed under the GNU GPL v3 License. See
 
 # Contributing
 
-Refer to [CONTRIBUTING.md](https://github)
+Refer to [CONTRIBUTING.md](https://github.com/stratawm/stratawm/tree/main/CONTRIBUTING.md)
