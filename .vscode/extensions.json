@@ -1,0 +1,3 @@
+{
+	"recommendations": ["tamasfe.even-better-toml", "rust-lang.rust-analyzer", "slevesque.shader"],
+}
