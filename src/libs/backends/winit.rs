@@ -1,5 +1,4 @@
 use crate::libs::{
-	ctl::ctl,
 	decorations::CustomRenderElements,
 	structs::{
 		backends::WinitData,
@@ -56,7 +55,7 @@ use smithay::{
 };
 use std::{
 	process::Command,
-	time::Duration, thread,
+	time::Duration,
 };
 
 impl Backend for WinitData {
@@ -106,13 +105,12 @@ pub fn init_winit() {
 		})
 		.unwrap();
 
+	// Autostart applications
 	for cmd in &CONFIG.autostart.cmd {
 		let cmd = &cmd.cmd;
 		let args: Vec<_> = cmd.split(" ").collect();
 		Command::new("/bin/sh").arg("-c").args(&args[0..]).spawn().ok();
 	}
-
-	let sender = thread::spawn(move || ctl(state).expect(""));
 
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }

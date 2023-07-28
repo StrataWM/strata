@@ -2,14 +2,7 @@ use crate::libs::structs::state::{
 	Backend,
 	StrataState,
 };
-use anyhow::{
-	Context,
-	Ok,
-};
-use crossbeam_channel::{
-	bounded,
-	Receiver,
-};
+use anyhow::Context;
 use log::info;
 use std::{
 	fs::{
@@ -21,11 +14,10 @@ use std::{
 		UnixListener,
 		UnixStream,
 	},
-	thread,
 };
 
 pub fn ctl<BackendData: Backend>(state: &mut StrataState<BackendData>) -> anyhow::Result<()> {
-	let socket_path = "/tmp/strata_socket";
+	let socket_path: &str = "/tmp/strata_socket";
 
 	if metadata(socket_path).is_ok() {
 		info!("A socket is already present. Deleting it ...");
@@ -33,24 +25,6 @@ pub fn ctl<BackendData: Backend>(state: &mut StrataState<BackendData>) -> anyhow
 			.with_context(|| format!("Could not delete previous socket at {:?}", socket_path))?;
 	}
 
-	let (sender, receiver) = bounded(1);
-
-	thread::spawn(move || {
-		if let Err(e) = start_listener(sender, socket_path) {
-			eprintln!("Error while creating new thread");
-		}
-	});
-
-	let s = receiver.recv().unwrap();
-	println!("{}", s);
-
-	Ok(())
-}
-
-fn start_listener(
-	sender: crossbeam_channel::Sender<String>,
-	socket_path: &str,
-) -> anyhow::Result<()> {
 	let unix_listener =
 		UnixListener::bind(socket_path).context("Could not create the unix socket")?;
 
@@ -58,28 +32,19 @@ fn start_listener(
 		let (unix_stream, _socket_address) = unix_listener
 			.accept()
 			.context("Failed at accepting a connection on the unix listener")?;
-		handle_stream(unix_stream, &sender)?;
+		handle_stream(unix_stream, state)?;
 	}
 }
 
-fn handle_stream(
+fn handle_stream<BackendData: Backend>(
 	mut unix_stream: UnixStream,
-	sender: &crossbeam_channel::Sender<String>,
+	state: &mut StrataState<BackendData>,
 ) -> anyhow::Result<()> {
 	info!("Connection established to Strata CTL!");
 	let mut command = String::new();
 	unix_stream.read_to_string(&mut command).context("Failed at reading the unix stream")?;
 
-	sender.send(command).map_err(|e| anyhow::anyhow!("{}", e))?;
-
-	Ok(())
-}
-
-fn parse_command<BackendData: Backend>(
-	state: &mut StrataState<BackendData>,
-	command: &str,
-) -> anyhow::Result<()> {
-	match command {
+	match command.as_str() {
 		ws_id if ws_id.starts_with("window move ") => {
 			let id = ws_id.trim_start_matches("window move ").trim().parse::<u8>().unwrap();
 			info!("Moving to workspace: {}", id);
@@ -111,5 +76,6 @@ fn parse_command<BackendData: Backend>(
 		}
 		&_ => {}
 	}
+
 	Ok(())
 }
