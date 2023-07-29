@@ -1,4 +1,5 @@
 use crate::libs::parse_config::parse_config;
+use mlua::Function;
 use once_cell::sync::Lazy;
 use serde_derive::Deserialize;
 
@@ -65,6 +66,12 @@ pub struct Floating {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Keybinding {
+	pub keys: Vec<String>,
+	pub func: Function,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Config {
 	pub autostart: Autostart,
 	pub general: General,
@@ -72,6 +79,7 @@ pub struct Config {
 	pub tiling: Tiling,
 	pub animations: Animations,
 	pub rules: Rules,
+	pub bindings: Vec<Keybinding>,
 }
 
 pub static CONFIG: Lazy<Config> = Lazy::new(parse_config);
