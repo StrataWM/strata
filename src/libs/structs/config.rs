@@ -3,17 +3,17 @@ use mlua::Function;
 use once_cell::sync::Lazy;
 use serde_derive::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct AutostartCmd {
 	pub cmd: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Autostart {
 	pub cmd: Vec<AutostartCmd>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct General {
 	pub workspaces: u8,
 	pub in_gaps: i32,
@@ -21,7 +21,7 @@ pub struct General {
 	pub kb_repeat: Vec<i32>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct WindowDecorations {
 	pub border_width: u32,
 	pub border_active: String,
@@ -38,40 +38,40 @@ pub struct WindowDecorations {
 	pub shadow_color: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Tiling {
 	pub layout: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Animations {
 	pub anim_enabled: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Workspace {
 	pub workspace: i32,
 	pub class_name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Rules {
 	pub workspace: Vec<Workspace>,
 	pub floating: Vec<Floating>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Floating {
 	pub class_name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Keybinding {
 	pub keys: Vec<String>,
 	pub func: Function,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Config {
 	pub autostart: Autostart,
 	pub general: General,
