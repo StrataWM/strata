@@ -63,7 +63,7 @@
             program = lib.getExe self'.packages.default;
           };
 
-          checks.cosmic-comp = stratawm;
+          checks.stratawm = stratawm;
           packages.default = stratawm;
 
           devShells.default = pkgs.mkShell {
