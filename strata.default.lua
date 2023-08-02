@@ -1,15 +1,39 @@
 local strata = require("strata")
 
-return {
+function close_all_windows()
+    for _, window in ipairs(strata.current_workspace:get_windows()) do
+        window:close()
+    end
+end
+
+function spawn_terminal(title)
+    print("kitty --title " .. title)
+end
+
+bindings = {
+    {
+        keys = { "CTRL", "SHIFT", "Q" },
+        cmd = close_all_windows,
+    },
+    {
+        keys = { "WIN", "RETURN" },
+        cmd = function()
+            spawn_terminal("Terminal")
+        end,
+    },
+}
+
+-- Add other configuration settings...
+config = {
     autostart = {
-        {"kitty", "--title", "Terminal"},
+        { "kitty", "--title", "Terminal" },
         "kagi"
     },
     general = {
         workspaces = 1,
         gaps_in = 8,
         gaps_out = 12,
-        kb_repeat = {500, 250}
+        kb_repeat = { 500, 250 }
     },
     decorations = {
         border = {
@@ -57,19 +81,4 @@ return {
             }
         }
     },
-    bindings = {
-        {
-            keys = {"CTRL", "SHIFT", "Q"},
-            cmd = function()
-              for window in strata.current_workspace.get_windows() 
-              do
-                window.close()
-              end
-            end,
-        },
-        {
-            keys = {"WIN", "RETURN"},
-            cmd = strata.spawn("kitty --title Terminal");
-        }
-    }
 }
