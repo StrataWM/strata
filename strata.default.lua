@@ -6,10 +6,6 @@ function close_all_windows()
     end
 end
 
-function spawn_terminal(title)
-    print("kitty --title " .. title)
-end
-
 bindings = {
     {
         keys = { "CTRL", "SHIFT", "Q" },
@@ -18,12 +14,11 @@ bindings = {
     {
         keys = { "WIN", "RETURN" },
         cmd = function()
-            spawn_terminal("Terminal")
+            strata.spawn("kitty --title Terminal")
         end,
     },
 }
 
--- Add other configuration settings...
 config = {
     autostart = {
         { "kitty", "--title", "Terminal" },
