@@ -22,7 +22,7 @@ bindings = {
 config = {
     autostart = {
         { "kitty", "--title", "Terminal" },
-        "kagi"
+        { "kagi" } 
     },
     general = {
         workspaces = 1,
@@ -76,4 +76,5 @@ config = {
             }
         }
     },
+    bindings = bindings,
 }
