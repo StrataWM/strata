@@ -12,13 +12,13 @@
 
 - [x] ~~Implement logging to files~~
 
-- [ ] Add decorations
+- [x] ~~Add decorations~~
 
-  - [ ] Add borders
+  - [x] ~~Add borders~~
 
-  - [ ] Add rounded corners
+  - [x] ~~Add rounded corners~~
 
-- [ ] Add different layouts (BSP, i3, etc...)
+- [x] ~~Add different layouts (BSP, i3, etc...)~~
 
 - [ ] Implement window transparency
 
