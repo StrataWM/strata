@@ -76,5 +76,4 @@ config = {
             }
         }
     },
-    bindings = bindings,
 }
