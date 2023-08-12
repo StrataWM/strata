@@ -2,7 +2,7 @@ local strata = require("strata")
 
 local function close_all_windows()
 	for _, window in ipairs(strata.current_workspace:get_windows()) do
-		window:close()
+		window:close() -- Rust function
 	end
 end
 
@@ -14,13 +14,13 @@ end
 strata.set_bindings {
 	{
 		keys = { "CTRL", "SHIFT", "Q" },
-		cmd = close_all_windows,
+		action = close_all_windows,
 	},
 	{
 		keys = { "WIN", "RETURN" },
 		-- `strata.cmd` should contain a bunch of common built-in functions that generate callbacks to be used
 		-- here, so that the boilerplate is reduced for most use-cases.
-		cmd = strata.cmd.spawn("kitty --title Terminal"),
+		action = strata.actions.spawn("kitty --title Terminal"),
 	},
 }
 
@@ -48,24 +48,21 @@ strata.set_rules {
 		},
 		action = function(window) window.set_floating() end,
 	},
-
-	-- Here comes the nice stuff: helper functions! This is important, as these functions help make the config file much
-	-- easier to write for the majority of users. Ideally, most people won't ever need to write something detailed like
-	-- what's above.
-
-	-- This one does the same thing as the first rule
-	strata.rules.bind_to_workspace(1, "firefox"),
-
-	-- Nothing preventing us from some more sugar, to make things even less verbose:
-	strata.rules.bind_to_workspace {
-		{ 1, "firefox" },
-		{ 2, "neovide" },
-		{ 10, "slack" },
-	},
-
-	-- This does the same thing as the first trigger of the second rule
-	strata.rules.set_floating("mpv"),
 }
+
+-- Here comes the nice stuff: helper functions! This is important, as these functions help make the config file much
+-- easier to write for the majority of users. Ideally, most people won't ever need to write something detailed like
+-- what's above.
+
+-- This one does the same thing as the first rule, and then some
+strata.rules.bind_to_workspace {
+	{ 1, "firefox" },
+	{ 2, "neovide" },
+	{ 10, "slack" },
+}
+
+-- This sets a class as floating by default
+strata.rules.set_floating { "mpv" }
 
 -- Same as above, this is a function call. I think as it stands it should *overwrite* the whole config every time it's
 -- called. For a "merge" behavior, we could have a `strata.update_config()` function instead. This can one day be useful
