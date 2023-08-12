@@ -93,18 +93,18 @@ impl<BackendData: Backend> StrataState<BackendData> {
 		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
 
-		if !CONFIG.general.kb_repeat.is_empty() {
+		if !CONFIG.lock().unwrap().general.kb_repeat.is_empty() {
 			seat.add_keyboard(
 				XkbConfig::default(),
-				CONFIG.general.kb_repeat[0],
-				CONFIG.general.kb_repeat[1],
+				CONFIG.lock().unwrap().general.kb_repeat[0],
+				CONFIG.lock().unwrap().general.kb_repeat[1],
 			)
 			.expect("Couldn't parse XKB config");
 		} else {
 			seat.add_keyboard(XkbConfig::default(), 500, 250).expect("Couldn't parse XKB config");
 		}
 		seat.add_pointer();
-		let workspaces = Workspaces::new(CONFIG.general.workspaces);
+		let workspaces = Workspaces::new(CONFIG.lock().unwrap().general.workspaces);
 		let socket_name = Self::init_wayland_listener(&mut loop_handle, display);
 
 		Self {

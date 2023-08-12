@@ -1,19 +1,21 @@
-use crate::libs::parse_config::parse_config;
-use mlua::Function;
-use once_cell::sync::Lazy;
+use lazy_static::lazy_static;
 use serde_derive::Deserialize;
+use std::sync::Mutex;
+lazy_static! {
+	pub static ref CONFIG: Mutex<Config> = Mutex::new(Config::default());
+}
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct AutostartCmd {
 	pub cmd: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Autostart {
 	pub cmd: Vec<AutostartCmd>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct General {
 	pub workspaces: u8,
 	pub in_gaps: i32,
@@ -21,7 +23,7 @@ pub struct General {
 	pub kb_repeat: Vec<i32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct WindowDecorations {
 	pub border_width: u32,
 	pub border_active: String,
@@ -38,48 +40,44 @@ pub struct WindowDecorations {
 	pub shadow_color: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Tiling {
 	pub layout: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Animations {
 	pub anim_enabled: bool,
 }
 
-#[derive(Debug)]
-pub struct Workspace {
-	pub workspace: i32,
+#[derive(Debug, Deserialize, Clone)]
+pub struct Triggers {
+	pub event: String,
 	pub class_name: String,
+	pub workspace: Option<i32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rules {
-	pub workspace: Vec<Workspace>,
-	pub floating: Vec<Floating>,
+	pub triggers: Triggers,
+	pub action: String,
 }
 
-#[derive(Debug)]
-pub struct Floating {
-	pub class_name: String,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Keybinding {
 	pub keys: Vec<String>,
-	pub func: Function,
+	pub func: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Config {
 	pub autostart: Autostart,
 	pub general: General,
 	pub window_decorations: WindowDecorations,
 	pub tiling: Tiling,
 	pub animations: Animations,
-	pub rules: Rules,
+	pub rules: Vec<Rules>,
 	pub bindings: Vec<Keybinding>,
 }
 
-pub static CONFIG: Lazy<Config> = Lazy::new(parse_config);
+unsafe impl Send for Config {}
