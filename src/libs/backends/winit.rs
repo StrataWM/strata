@@ -107,7 +107,6 @@ pub fn init_winit() {
 
 	// Autostart applications
 	for cmd in &CONFIG.lock().unwrap().autostart.cmd {
-		let cmd = &cmd.cmd;
 		let args: Vec<_> = cmd.split(" ").collect();
 		Command::new("/bin/sh").arg("-c").args(&args[0..]).spawn().ok();
 	}

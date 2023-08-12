@@ -38,6 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		tracing_subscriber::fmt().with_writer(log_appender).init();
 	}
 
+    let _ = parse_config();
 	let args = Args::parse();
 
 	init_with_backend(&args.backend);

@@ -23,7 +23,6 @@ categories = ["linux-utilities"]
 [dependencies]
 tracing-subscriber = { features = ["env-filter"], version = "0.3.17" }
 bitflags = "2.2.1"
-serde_derive = "1.0.164"
 colored = "2.0.0"
 clap = { version = "4.3.11", features = ["derive"] }
 anyhow = "1.0.71"
@@ -31,7 +30,7 @@ log = "0.4.19"
 tokio = { version = "1.29.1", features = ["full"] }
 chrono = "0.4.26"
 tracing-appender = "0.2.2"
-serde = "1.0.171"
+serde = { version = "1.0.183", features = ["derive"] }
 smithay-drm-extras = { git = "https://github.com/Smithay/smithay.git" }
 once_cell = "1.18.0"
 crossbeam-channel = "0.5.8"

@@ -5,6 +5,7 @@ use mlua::{
 	Result,
 	Table,
 	Value,
+    LuaSerdeExt,
 };
 use std::{
 	env::var,
@@ -55,56 +56,61 @@ impl Stratacmd {
 		}
 		Ok(())
 	}
+
 	pub fn set_rules(lua: &Lua, rules: Table) -> Result<()> {
 		for rule in rules.sequence_values::<Table>() {
 			let table: Table = rule?.clone();
+            let action: Function = table.get("action").ok().unwrap();
 			let rules_triggers: Table = table.clone().get::<&str, Table>("triggers").ok().unwrap();
-			for trigger in rules_triggers.sequence_values::<Table>() {
-				let trigger = trigger?.clone();
-				let triggers_event: String = trigger.get("event").ok().unwrap();
-				let triggers_classname: String = trigger.get("class_name").ok().unwrap();
-				let triggers_workspace: Option<Option<i32>> = trigger.get("workspace")?;
-				let trigger = match triggers_workspace {
-					Some(value) => {
-						Triggers {
-							event: triggers_event.clone(),
-							class_name: triggers_classname.clone(),
-							workspace: value.clone(),
-						}
-					}
-					None => {
-						Triggers {
-							event: triggers_event.clone(),
-							class_name: triggers_classname.clone(),
-							workspace: None,
-						}
-					}
-				};
+			for trigger in rules_triggers.sequence_values::<Value>() {
+                let triggers: Triggers= lua.from_value(trigger?)?;
 				let action_name: String = format!(
 					"{}{}{}",
-					trigger.clone().event,
-					trigger.class_name,
-					trigger.workspace.unwrap()
+					triggers.clone().event,
+					triggers.clone().class_name,
+					triggers.workspace.unwrap_or(-1)
 				);
-				let action: Function = table.get("action").ok().unwrap();
-				println!("{:#?} {:#?}", trigger, action);
 				let _ = lua
 					.globals()
 					.get::<&str, Table>("package")?
 					.get::<&str, Table>("loaded")?
 					.get::<&str, Table>("strata")?
 					.get::<&str, Table>("bindings")?
-					.set(action_name.clone(), action)?;
+					.set(action_name.clone(), action.clone())?;
 				CONFIG
 					.lock()
 					.unwrap()
 					.rules
-					.push(Rules { triggers: trigger.clone(), action: action_name });
+					.push(Rules { triggers: triggers.clone(), action: action_name });
 			}
 		}
 
 		Ok(())
 	}
+
+
+    pub fn set_config(lua: &Lua, configs: Table) -> Result<()> {
+        for autostart in configs.clone().get::<&str,Table>("autostart")?.sequence_values::<Table>(){
+            for value in autostart?.clone().sequence_values::<Value>(){
+                let cmd:String = lua.from_value(value?.clone())?;
+                CONFIG.lock().unwrap().autostart.cmd.push(cmd)
+            }
+
+        };
+        let general:General = lua.from_value(configs.clone().get::<&str,Value>("general")?)?;
+        CONFIG.lock().unwrap().general = general;
+        let decorations :WindowDecorations= lua.from_value(configs.clone().get("decorations")?)?;
+        CONFIG.lock().unwrap().window_decorations = decorations;
+        let tiling:Tiling= lua.from_value(configs.clone().get("tiling")?)?;
+        CONFIG.lock().unwrap().tiling = tiling;
+        let animation:Animations= lua.from_value(configs.clone().get("animations")?)?;
+        CONFIG.lock().unwrap().animations = animation;
+        let bindings = configs.clone().get::<&str, Table>("bindings")?;
+        let _ = Stratacmd::set_bindings(&lua, bindings);
+        let rules = configs.clone().get::<&str, Table>("rules")?;
+        let _ = Stratacmd::set_bindings(&lua, rules);
+        Ok(())
+    }
 }
 
 pub fn parse_config() -> Result<()> {
@@ -126,8 +132,11 @@ pub fn parse_config() -> Result<()> {
 
 	strata_mod.set("set_bindings", lua.create_function(Stratacmd::set_bindings).ok().unwrap())?;
 	strata_mod.set("set_rules", lua.create_function(Stratacmd::set_rules).ok().unwrap())?;
+	strata_mod.set("set_config", lua.create_function(Stratacmd::set_config).ok().unwrap())?;
 
 	lua.load(&config_str).exec().ok();
+    let configs = CONFIG.lock().unwrap();
+    println!("{:#?}", configs);
 
 	Ok(())
 }

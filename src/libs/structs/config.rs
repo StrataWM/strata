@@ -1,24 +1,21 @@
 use lazy_static::lazy_static;
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::sync::Mutex;
 lazy_static! {
 	pub static ref CONFIG: Mutex<Config> = Mutex::new(Config::default());
 }
 
-#[derive(Debug, Deserialize)]
-pub struct AutostartCmd {
-	pub cmd: String,
-}
-
 #[derive(Debug, Deserialize, Default)]
 pub struct Autostart {
-	pub cmd: Vec<AutostartCmd>,
+	pub cmd: Vec<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct General {
 	pub workspaces: u8,
+    #[serde(rename="gaps_in")]
 	pub in_gaps: i32,
+    #[serde(rename="gaps_out")]
 	pub out_gaps: i32,
 	pub kb_repeat: Vec<i32>,
 }
@@ -33,7 +30,9 @@ pub struct WindowDecorations {
 	pub blur_enable: bool,
 	pub blur_size: u32,
 	pub blur_passes: u32,
+    #[serde(rename="blur_optimize")]
 	pub blur_optimization: bool,
+    #[serde(rename="shadow_enabled")]
 	pub shadows_enabled: bool,
 	pub shadow_size: u32,
 	pub shadow_blur: u32,
@@ -47,6 +46,7 @@ pub struct Tiling {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Animations {
+    #[serde(rename="enabled")]
 	pub anim_enabled: bool,
 }
 
@@ -81,3 +81,4 @@ pub struct Config {
 }
 
 unsafe impl Send for Config {}
+
