@@ -6,22 +6,16 @@ pub use libs::{
 	parse_config::parse_config,
 	structs::{
 		args::Args,
-		state::{
-			CalloopData,
-			StrataState,
-		},
+		state::{CalloopData, StrataState},
 	},
 };
 use log::info;
-use std::{
-	env::var,
-	error::Error,
-	io::stdout,
-};
+use std::{env::var, error::Error, io::stdout};
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+	let _ = tokio::spawn(async move { parse_config() });
 	let log_dir =
 		format!("{}/.strata/stratawm", var("HOME").expect("This variable should be set!!!"));
 	let file_appender = tracing_appender::rolling::never(
