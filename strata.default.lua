@@ -17,7 +17,7 @@ strata.set_bindings {
 	},
 	{
 		keys = { "WIN", "SPACE" },
-		cmd = strata.cmd.spawn("rofi --show drun")
+		cmd = strata.cmd.spawn("rofi --show drun"),
 	},
 }
 
@@ -29,15 +29,15 @@ strata.set_rules {
 	{
 		triggers = {
 			{ event = "win_open_pre", class_name = "mpv" },
-			{ event = "win_open_pre", workspace = 1,     class_name = { "kitty", "wezterm" } },
+			{ event = "win_open_pre", workspace = 1, class_name = { "kitty", "wezterm" } },
 		},
 		action = function(window) window.set_floating() end,
 	},
 
 	strata.rules.bind_to_workspace(1, "firefox"),
 	strata.rules.bind_to_workspace {
-		{ 1,  "firefox" },
-		{ 2,  "neovide" },
+		{ 1, "firefox" },
+		{ 2, "neovide" },
 		{ 10, "slack" },
 	},
 
@@ -94,20 +94,20 @@ strata.set_config {
 		},
 		{
 			keys = { "WIN", "SPACE" },
-			cmd = strata.cmd.spawn("rofi --show drun")
+			cmd = strata.cmd.spawn("rofi --show drun"),
 		},
-  },
-  rules = {
-		{
-		  triggers = { event = "win_open_pre", class_name = "firefox" },
-		  action = function(window) window.send_to_workspace(1) end,
-		},
-		{
-		  triggers = {
-			  { event = "win_open_pre", class_name = "mpv" },
-			  { event = "win_open_pre", workspace = 1,     class_name = { "kitty", "wezterm" } },
-		  },
-		  action = function(window) window.set_floating() end,
 	},
-}
+	rules = {
+		{
+			triggers = { event = "win_open_pre", class_name = "firefox" },
+			action = function(window) window.send_to_workspace(1) end,
+		},
+		{
+			triggers = {
+				{ event = "win_open_pre", class_name = "mpv" },
+				{ event = "win_open_pre", workspace = 1, class_name = { "kitty", "wezterm" } },
+			},
+			action = function(window) window.set_floating() end,
+		},
+	},
 }
