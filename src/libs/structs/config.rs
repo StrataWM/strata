@@ -16,26 +16,46 @@ pub struct Autostart {
 #[derive(Debug, Default, Deserialize)]
 pub struct General {
 	pub workspaces: u8,
-    #[serde(rename="gaps_in")]
+	#[serde(rename = "gaps_in")]
 	pub in_gaps: i32,
-    #[serde(rename="gaps_out")]
+	#[serde(rename = "gaps_out")]
 	pub out_gaps: i32,
 	pub kb_repeat: Vec<i32>,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct WindowDecorations {
+	pub borders: Borders,
+	pub window: Window,
+	pub blur: Blur,
+	pub shadows: Shadows,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Borders {
 	pub border_width: u32,
 	pub border_active: String,
 	pub border_inactive: String,
 	pub border_radius: f64,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Window {
 	pub window_opacity: f64,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Blur {
 	pub blur_enable: bool,
 	pub blur_size: u32,
 	pub blur_passes: u32,
-    #[serde(rename="blur_optimize")]
+	#[serde(rename = "blur_optimize")]
 	pub blur_optimization: bool,
-    #[serde(rename="shadow_enabled")]
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Shadows {
+	#[serde(rename = "shadow_enabled")]
 	pub shadows_enabled: bool,
 	pub shadow_size: u32,
 	pub shadow_blur: u32,
@@ -49,7 +69,7 @@ pub struct Tiling {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Animations {
-    #[serde(rename="enabled")]
+	#[serde(rename = "enabled")]
 	pub anim_enabled: bool,
 }
 
@@ -84,4 +104,3 @@ pub struct Config {
 }
 
 unsafe impl Send for Config {}
-

@@ -222,7 +222,7 @@ impl<BackendData: Backend> StrataState<BackendData> {
 	pub fn spawn(&mut self, command: &str) {
 		Command::new("/bin/sh")
 			.arg("-c")
-			.arg(command.clone())
+			.arg(command)
 			.spawn()
 			.expect("Failed to spawn command");
 	}

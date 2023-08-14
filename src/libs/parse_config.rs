@@ -2,10 +2,10 @@ use crate::libs::structs::config::*;
 use mlua::{
 	Function,
 	Lua,
+	LuaSerdeExt,
 	Result,
 	Table,
 	Value,
-    LuaSerdeExt,
 };
 use std::{
 	env::var,
@@ -60,10 +60,10 @@ impl Stratacmd {
 	pub fn set_rules(lua: &Lua, rules: Table) -> Result<()> {
 		for rule in rules.sequence_values::<Table>() {
 			let table: Table = rule?.clone();
-            let action: Function = table.get("action").ok().unwrap();
+			let action: Function = table.get("action").ok().unwrap();
 			let rules_triggers: Table = table.clone().get::<&str, Table>("triggers").ok().unwrap();
 			for trigger in rules_triggers.sequence_values::<Value>() {
-                let triggers: Triggers= lua.from_value(trigger?)?;
+				let triggers: Triggers = lua.from_value(trigger?)?;
 				let action_name: String = format!(
 					"{}{}{}",
 					triggers.clone().event,
@@ -88,29 +88,32 @@ impl Stratacmd {
 		Ok(())
 	}
 
+	pub fn set_config(lua: &Lua, configs: Table) -> Result<()> {
+		for autostart in configs.clone().get::<&str, Table>("autostart")?.sequence_values::<Table>()
+		{
+			for value in autostart?.clone().sequence_values::<Value>() {
+				let cmd: String = lua.from_value(value?.clone())?;
+				CONFIG.lock().unwrap().autostart.cmd.push(cmd)
+			}
+		}
+		let general: General = lua.from_value(configs.clone().get::<&str, Value>("general")?)?;
+		println!("General: {:#?}", general);
+		CONFIG.lock().unwrap().general = general;
+		let decorations: WindowDecorations = lua.from_value(configs.clone().get("decorations")?)?;
+		CONFIG.lock().unwrap().window_decorations = decorations;
+		let tiling: Tiling = lua.from_value(configs.clone().get("tiling")?)?;
+		CONFIG.lock().unwrap().tiling = tiling;
+		let animation: Animations = lua.from_value(configs.clone().get("animations")?)?;
+		CONFIG.lock().unwrap().animations = animation;
+		let bindings = configs.clone().get::<&str, Table>("bindings")?;
+		let _ = Stratacmd::set_bindings(&lua, bindings);
+		let rules = configs.clone().get::<&str, Table>("rules")?;
+		let _ = Stratacmd::set_rules(&lua, rules);
 
-    pub fn set_config(lua: &Lua, configs: Table) -> Result<()> {
-        for autostart in configs.clone().get::<&str,Table>("autostart")?.sequence_values::<Table>(){
-            for value in autostart?.clone().sequence_values::<Value>(){
-                let cmd:String = lua.from_value(value?.clone())?;
-                CONFIG.lock().unwrap().autostart.cmd.push(cmd)
-            }
-
-        };
-        let general:General = lua.from_value(configs.clone().get::<&str,Value>("general")?)?;
-        CONFIG.lock().unwrap().general = general;
-        let decorations :WindowDecorations= lua.from_value(configs.clone().get("decorations")?)?;
-        CONFIG.lock().unwrap().window_decorations = decorations;
-        let tiling:Tiling= lua.from_value(configs.clone().get("tiling")?)?;
-        CONFIG.lock().unwrap().tiling = tiling;
-        let animation:Animations= lua.from_value(configs.clone().get("animations")?)?;
-        CONFIG.lock().unwrap().animations = animation;
-        let bindings = configs.clone().get::<&str, Table>("bindings")?;
-        let _ = Stratacmd::set_bindings(&lua, bindings);
-        let rules = configs.clone().get::<&str, Table>("rules")?;
-        let _ = Stratacmd::set_bindings(&lua, rules);
-        Ok(())
-    }
+		let configs = CONFIG.lock().unwrap();
+		println!("{:#?}", configs);
+		Ok(())
+	}
 }
 
 pub fn parse_config() -> Result<()> {
@@ -118,6 +121,7 @@ pub fn parse_config() -> Result<()> {
 	let config_path =
 		format!("{}/.config/strata/strata.lua", var("HOME").expect("This should always be set!!!"));
 	let config_str = read_to_string(config_path).unwrap();
+	println!("{}", config_str);
 
 	// Create a new module
 	let strata_mod = get_or_create_module(&lua, "strata").ok().unwrap();

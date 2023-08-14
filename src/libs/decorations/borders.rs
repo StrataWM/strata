@@ -80,7 +80,7 @@ impl BorderShader {
 		window: &Window,
 		loc: Point<i32, Logical>,
 	) -> PixelShaderElement {
-		let thickness: f32 = CONFIG.lock().unwrap().window_decorations.border_width as f32;
+		let thickness: f32 = CONFIG.lock().unwrap().window_decorations.borders.border_width as f32;
 		let thickness_loc = (thickness as i32, thickness as i32);
 		let thickness_size = ((thickness * 2.0) as i32, (thickness * 2.0) as i32);
 		let geo = Rectangle::from_loc_and_size(
@@ -102,7 +102,7 @@ impl BorderShader {
 		} else {
 			let angle = 45 as f32 * std::f32::consts::PI;
 			let gradient_direction = [angle.cos(), angle.sin()];
-			let elem = if CONFIG.lock().unwrap().window_decorations.border_radius > 0.0 {
+			let elem = if CONFIG.lock().unwrap().window_decorations.borders.border_radius > 0.0 {
 				PixelShaderElement::new(
 					Self::get(renderer).rounded.clone(),
 					geo,
@@ -118,7 +118,7 @@ impl BorderShader {
 						Uniform::new("halfThickness", thickness * 0.5),
 						Uniform::new(
 							"radius",
-							CONFIG.lock().unwrap().window_decorations.border_radius as f32
+							CONFIG.lock().unwrap().window_decorations.borders.border_radius as f32
 								+ thickness + 2.0,
 						),
 						Uniform::new("gradientDirection", gradient_direction),

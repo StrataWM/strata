@@ -6,47 +6,10 @@ local function close_all_windows()
 	end
 end
 
-strata.set_bindings {
-	{
-		keys = { "CTRL", "SHIFT", "Q" },
-		cmd = close_all_windows,
-	},
-	{
-		keys = { "WIN", "RETURN" },
-		cmd = strata.cmd.spawn("kitty --title Terminal"),
-	},
-	{
-		keys = { "WIN", "SPACE" },
-		cmd = strata.cmd.spawn("rofi --show drun"),
-	},
-}
-
-strata.set_rules {
-	{
-		triggers = { event = "win_open_pre", class_name = "firefox" },
-		action = function(window) window.send_to_workspace(1) end,
-	},
-	{
-		triggers = {
-			{ event = "win_open_pre", class_name = "mpv" },
-			{ event = "win_open_pre", workspace = 1, class_name = { "kitty", "wezterm" } },
-		},
-		action = function(window) window.set_floating() end,
-	},
-
-	strata.rules.bind_to_workspace(1, "firefox"),
-	strata.rules.bind_to_workspace {
-		{ 1, "firefox" },
-		{ 2, "neovide" },
-		{ 10, "slack" },
-	},
-
-	strata.rules.set_floating("mpv"),
-}
 
 strata.set_config {
 	autostart = {
-		{ "kitty", "--title", "Terminal" },
+		"kitty --title Terminal",
 	},
 	general = {
 		workspaces = 9,
@@ -111,3 +74,42 @@ strata.set_config {
 		},
 	},
 }
+
+strata.set_bindings {
+	{
+		keys = { "CTRL", "SHIFT", "Q" },
+		cmd = close_all_windows,
+	},
+	{
+		keys = { "WIN", "RETURN" },
+		cmd = strata.cmd.spawn("kitty --title Terminal"),
+	},
+	{
+		keys = { "WIN", "SPACE" },
+		cmd = strata.cmd.spawn("rofi --show drun"),
+	},
+}
+
+strata.set_rules {
+	{
+		triggers = { event = "win_open_pre", class_name = "firefox" },
+		action = function(window) window.send_to_workspace(1) end,
+	},
+	{
+		triggers = {
+			{ event = "win_open_pre", class_name = "mpv" },
+			{ event = "win_open_pre", workspace = 1, class_name = { "kitty", "wezterm" } },
+		},
+		action = function(window) window.set_floating() end,
+	},
+
+	strata.rules.bind_to_workspace(1, "firefox"),
+	strata.rules.bind_to_workspace {
+		{ 1, "firefox" },
+		{ 2, "neovide" },
+		{ 10, "slack" },
+	},
+
+	strata.rules.set_floating("mpv"),
+}
+
