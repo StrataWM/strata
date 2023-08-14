@@ -135,8 +135,6 @@ pub fn parse_config() -> Result<()> {
 	strata_mod.set("set_config", lua.create_function(Stratacmd::set_config).ok().unwrap())?;
 
 	lua.load(&config_str).exec().ok();
-    let configs = CONFIG.lock().unwrap();
-    println!("{:#?}", configs);
 
 	Ok(())
 }

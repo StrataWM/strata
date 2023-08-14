@@ -1,8 +1,11 @@
 use lazy_static::lazy_static;
 use serde::Deserialize;
-use std::sync::Mutex;
+use std::sync::{
+	Arc,
+	Mutex,
+};
 lazy_static! {
-	pub static ref CONFIG: Mutex<Config> = Mutex::new(Config::default());
+	pub static ref CONFIG: Arc<Mutex<Config>> = Arc::new(Mutex::new(Config::default()));
 }
 
 #[derive(Debug, Deserialize, Default)]

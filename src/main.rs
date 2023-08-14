@@ -15,7 +15,7 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	let _ = tokio::spawn(async move { parse_config() });
+	let _ = tokio::spawn(async move { parse_config() }).await.unwrap();
 	let log_dir =
 		format!("{}/.strata/stratawm", var("HOME").expect("This variable should be set!!!"));
 	let file_appender = tracing_appender::rolling::never(
