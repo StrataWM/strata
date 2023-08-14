@@ -6,10 +6,9 @@ local function close_all_windows()
 	end
 end
 
-
 strata.set_config {
 	autostart = {
-		"kitty --title Terminal",
+		{ "kitty --title Terminal" },
 	},
 	general = {
 		workspaces = 9,
@@ -62,13 +61,13 @@ strata.set_config {
 	},
 	rules = {
 		{
-			triggers = { event = "win_open_pre", class_name = "firefox" },
+			triggers = { { event = "win_open_pre", class_name = "firefox" } },
 			action = function(window) window.send_to_workspace(1) end,
 		},
 		{
 			triggers = {
 				{ event = "win_open_pre", class_name = "mpv" },
-				{ event = "win_open_pre", workspace = 1, class_name = { "kitty", "wezterm" } },
+				{ event = "win_open_pre", workspace = 1, class_name = "kitty" },
 			},
 			action = function(window) window.set_floating() end,
 		},
@@ -112,4 +111,3 @@ strata.set_rules {
 
 	strata.rules.set_floating("mpv"),
 }
-
