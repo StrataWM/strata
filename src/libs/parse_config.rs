@@ -97,7 +97,6 @@ impl Stratacmd {
 			}
 		}
 		let general: General = lua.from_value(configs.clone().get::<&str, Value>("general")?)?;
-		println!("General: {:#?}", general);
 		CONFIG.lock().unwrap().general = general;
 		let decorations: WindowDecorations = lua.from_value(configs.clone().get("decorations")?)?;
 		CONFIG.lock().unwrap().window_decorations = decorations;
@@ -110,8 +109,6 @@ impl Stratacmd {
 		let rules = configs.clone().get::<&str, Table>("rules")?;
 		let _ = Stratacmd::set_rules(&lua, rules);
 
-		let configs = CONFIG.lock().unwrap();
-		println!("{:#?}", configs);
 		Ok(())
 	}
 }
@@ -121,7 +118,6 @@ pub fn parse_config() -> Result<()> {
 	let config_path =
 		format!("{}/.config/strata/strata.lua", var("HOME").expect("This should always be set!!!"));
 	let config_str = read_to_string(config_path).unwrap();
-	println!("{}", config_str);
 
 	// Create a new module
 	let strata_mod = get_or_create_module(&lua, "strata").ok().unwrap();
@@ -138,7 +134,7 @@ pub fn parse_config() -> Result<()> {
 	strata_mod.set("set_rules", lua.create_function(Stratacmd::set_rules).ok().unwrap())?;
 	strata_mod.set("set_config", lua.create_function(Stratacmd::set_config).ok().unwrap())?;
 
-	lua.load(&config_str).exec().ok();
+	lua.load(&config_str).exec()?;
 
 	Ok(())
 }

@@ -202,8 +202,6 @@ pub fn winit_dispatch(
 		})
 	});
 
-	println!("Printing");
-
 	workspace.windows().for_each(|e| e.refresh());
 	display.flush_clients().unwrap();
 	state.popup_manager.cleanup();
