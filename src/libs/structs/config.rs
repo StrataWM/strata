@@ -1,85 +1,106 @@
-use crate::libs::parse_config::parse_config;
-use mlua::Function;
-use once_cell::sync::Lazy;
-use serde_derive::Deserialize;
-
-#[derive(Debug)]
-pub struct AutostartCmd {
-	pub cmd: String,
+use lazy_static::lazy_static;
+use serde::Deserialize;
+use std::sync::{
+	Arc,
+	Mutex,
+};
+lazy_static! {
+	pub static ref CONFIG: Arc<Mutex<Config>> = Arc::new(Mutex::new(Config::default()));
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Autostart {
-	pub cmd: Vec<AutostartCmd>,
+	pub cmd: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct General {
 	pub workspaces: u8,
+	#[serde(rename = "gaps_in")]
 	pub in_gaps: i32,
+	#[serde(rename = "gaps_out")]
 	pub out_gaps: i32,
 	pub kb_repeat: Vec<i32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct WindowDecorations {
+	pub borders: Borders,
+	pub window: Window,
+	pub blur: Blur,
+	pub shadows: Shadows,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Borders {
 	pub border_width: u32,
 	pub border_active: String,
 	pub border_inactive: String,
 	pub border_radius: f64,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Window {
 	pub window_opacity: f64,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Blur {
 	pub blur_enable: bool,
 	pub blur_size: u32,
 	pub blur_passes: u32,
+	#[serde(rename = "blur_optimize")]
 	pub blur_optimization: bool,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Shadows {
+	#[serde(rename = "shadow_enabled")]
 	pub shadows_enabled: bool,
 	pub shadow_size: u32,
 	pub shadow_blur: u32,
 	pub shadow_color: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Tiling {
 	pub layout: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Animations {
+	#[serde(rename = "enabled")]
 	pub anim_enabled: bool,
 }
 
-#[derive(Debug)]
-pub struct Workspace {
-	pub workspace: i32,
+#[derive(Debug, Deserialize, Clone)]
+pub struct Triggers {
+	pub event: String,
 	pub class_name: String,
+	pub workspace: Option<i32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rules {
-	pub workspace: Vec<Workspace>,
-	pub floating: Vec<Floating>,
+	pub triggers: Triggers,
+	pub action: String,
 }
 
-#[derive(Debug)]
-pub struct Floating {
-	pub class_name: String,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Keybinding {
 	pub keys: Vec<String>,
-	pub func: Function,
+	pub func: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Config {
 	pub autostart: Autostart,
 	pub general: General,
 	pub window_decorations: WindowDecorations,
 	pub tiling: Tiling,
 	pub animations: Animations,
-	pub rules: Rules,
+	pub rules: Vec<Rules>,
 	pub bindings: Vec<Keybinding>,
 }
 
-pub static CONFIG: Lazy<Config> = Lazy::new(parse_config);
+unsafe impl Send for Config {}

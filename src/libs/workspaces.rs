@@ -55,7 +55,6 @@ impl StrataWindow {
 		self.rec.loc - self.window.geometry().loc
 	}
 }
-
 impl Workspace {
 	pub fn new() -> Self {
 		Workspace { windows: Vec::new(), outputs: Vec::new(), layout_tree: Dwindle::new() }
@@ -104,7 +103,7 @@ impl Workspace {
 		let mut render_elements: Vec<C> = Vec::new();
 		for element in &self.windows {
 			let window = &element.borrow().window;
-			if CONFIG.window_decorations.border_width > 0 {
+			if CONFIG.lock().unwrap().window_decorations.borders.border_width > 0 {
 				render_elements.push(C::from(BorderShader::element(
 					renderer.glow_renderer_mut(),
 					window,

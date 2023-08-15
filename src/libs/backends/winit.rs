@@ -106,8 +106,7 @@ pub fn init_winit() {
 		.unwrap();
 
 	// Autostart applications
-	for cmd in &CONFIG.autostart.cmd {
-		let cmd = &cmd.cmd;
+	for cmd in &CONFIG.lock().unwrap().autostart.cmd {
 		let args: Vec<_> = cmd.split(" ").collect();
 		Command::new("/bin/sh").arg("-c").args(&args[0..]).spawn().ok();
 	}
@@ -202,8 +201,6 @@ pub fn winit_dispatch(
 			Some(output.clone())
 		})
 	});
-
-	println!("Printing");
 
 	workspace.windows().for_each(|e| e.refresh());
 	display.flush_clients().unwrap();
