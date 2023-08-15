@@ -24,7 +24,10 @@ use smithay::{
 };
 
 pub fn refresh_geometry(workspace: &mut Workspace) {
-	let gaps = (CONFIG.read().general.gaps_out, CONFIG.read().general.gaps_in);
+	let gaps = {
+		let options = CONFIG.options.read();
+		(options.general.gaps_out, options.general.gaps_in)
+	};
 	let output = layer_map_for_output(workspace.outputs().next().unwrap()).non_exclusive_zone();
 	let output_full = workspace.outputs().next().unwrap().current_mode().unwrap().size;
 

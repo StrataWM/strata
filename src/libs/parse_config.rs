@@ -32,8 +32,8 @@ impl StrataApi {
 				.get::<&str, Table>("bindings")?
 				.set(keys.clone().concat(), cmd)?;
 			CONFIG
-				.write()
 				.bindings
+				.write()
 				.push(Keybinding { keys: keys.clone(), action: keys.clone().concat() });
 		}
 		Ok(())
@@ -60,8 +60,8 @@ impl StrataApi {
 					.get::<&str, Table>("bindings")?
 					.set(action_name.clone(), action.clone())?;
 				CONFIG
-					.write()
 					.rules
+					.write()
 					.push(Rules { triggers: triggers.clone(), action: action_name });
 			}
 		}
@@ -71,15 +71,24 @@ impl StrataApi {
 
 	pub fn set_config(lua: &Lua, configs: Table) -> Result<()> {
 		{
-			config.autostart = lua.from_value(configs.get("autostart")?)?;
-			config.general = lua.from_value(configs.get("general")?)?;
-			config.window_decorations = lua.from_value(configs.get("decorations")?)?;
-			config.tiling = lua.from_value(configs.get("tiling")?)?;
-			config.animations = lua.from_value(configs.get("animations")?)?;
-		}
+			let mut options = CONFIG.options.write();
 
-		StrataApi::set_bindings(&lua, configs.get::<&str, Table>("bindings")?)?;
-		StrataApi::set_rules(&lua, configs.get::<&str, Table>("rules")?)?;
+			options.autostart = lua.from_value(configs.get("autostart")?)?;
+			options.general = lua.from_value(configs.get("general")?)?;
+			options.window_decorations = lua.from_value(configs.get("decorations")?)?;
+			options.tiling = lua.from_value(configs.get("tiling")?)?;
+			options.animations = lua.from_value(configs.get("animations")?)?;
+		}
+		{
+			let mut rules = CONFIG.rules.write();
+			rules.clear();
+			rules.append(&mut lua.from_value(configs.get("rules")?)?);
+		}
+		{
+			let mut bindings = CONFIG.bindings.write();
+			bindings.clear();
+			bindings.append(&mut lua.from_value(configs.get("bindings")?)?);
+		}
 
 		Ok(())
 	}
