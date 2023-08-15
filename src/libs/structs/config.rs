@@ -1,25 +1,18 @@
 use lazy_static::lazy_static;
+use mlua::Function;
+use parking_lot::RwLock;
 use serde::Deserialize;
-use std::sync::{
-	Arc,
-	Mutex,
-};
-lazy_static! {
-	pub static ref CONFIG: Arc<Mutex<Config>> = Arc::new(Mutex::new(Config::default()));
-}
+use std::sync::Arc;
 
-#[derive(Debug, Deserialize, Default)]
-pub struct Autostart {
-	pub cmd: Vec<String>,
+lazy_static! {
+	pub static ref CONFIG: Arc<Config> = Arc::new(Config::default());
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct General {
 	pub workspaces: u8,
-	#[serde(rename = "gaps_in")]
-	pub in_gaps: i32,
-	#[serde(rename = "gaps_out")]
-	pub out_gaps: i32,
+	pub gaps_in: i32,
+	pub gaps_out: i32,
 	pub kb_repeat: Vec<i32>,
 }
 
@@ -33,33 +26,31 @@ pub struct WindowDecorations {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Borders {
-	pub border_width: u32,
-	pub border_active: String,
-	pub border_inactive: String,
-	pub border_radius: f64,
+	pub width: u32,
+	pub active: String,
+	pub inactive: String,
+	pub radius: f64,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Window {
-	pub window_opacity: f64,
+	pub opacity: f64,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Blur {
-	pub blur_enable: bool,
-	pub blur_size: u32,
-	pub blur_passes: u32,
-	#[serde(rename = "blur_optimize")]
-	pub blur_optimization: bool,
+	pub enable: bool,
+	pub size: u32,
+	pub passes: u32,
+	pub optimize: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Shadows {
-	#[serde(rename = "shadow_enabled")]
-	pub shadows_enabled: bool,
-	pub shadow_size: u32,
-	pub shadow_blur: u32,
-	pub shadow_color: String,
+	pub enabled: bool,
+	pub size: u32,
+	pub blur: u32,
+	pub color: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -69,8 +60,7 @@ pub struct Tiling {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Animations {
-	#[serde(rename = "enabled")]
-	pub anim_enabled: bool,
+	pub enable: bool,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -80,21 +70,23 @@ pub struct Triggers {
 	pub workspace: Option<i32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Rules {
 	pub triggers: Triggers,
 	pub action: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Keybinding {
 	pub keys: Vec<String>,
-	pub func: String,
+	pub action: String, // FIXME
 }
 
-#[derive(Debug, Default)]
-pub struct Config {
-	pub autostart: Autostart,
+pub type Cmd = Vec<String>;
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Options {
+	pub autostart: Vec<Cmd>,
 	pub general: General,
 	pub window_decorations: WindowDecorations,
 	pub tiling: Tiling,
@@ -103,4 +95,9 @@ pub struct Config {
 	pub bindings: Vec<Keybinding>,
 }
 
-unsafe impl Send for Config {}
+#[derive(Debug, Default)]
+pub struct Config {
+	pub options: RwLock<Options>,
+	pub rules: RwLock<Vec<Rules>>,
+	pub bindings: RwLock<Vec<Keybinding>>,
+}

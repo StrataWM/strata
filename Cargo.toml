@@ -34,8 +34,9 @@ serde = { version = "1.0.183", features = ["derive"] }
 smithay-drm-extras = { git = "https://github.com/Smithay/smithay.git" }
 once_cell = "1.18.0"
 crossbeam-channel = "0.5.8"
-mlua = { version = "0.9.0-rc.2", features = ["lua54", "vendored", "serialize", "send"] }
+mlua = { version = "0.9.0-rc.2", features = ["luajit", "vendored", "serialize", "send", "macros", "parking_lot"] }
 lazy_static = "1.4.0"
+parking_lot = "0.12.1"
 
 [dependencies.smithay]
 git = "https://github.com/smithay/smithay"
