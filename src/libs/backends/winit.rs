@@ -106,9 +106,8 @@ pub fn init_winit() {
 		.unwrap();
 
 	// Autostart applications
-	for cmd in &CONFIG.lock().unwrap().autostart.cmd {
-		let args: Vec<_> = cmd.split(" ").collect();
-		Command::new("/bin/sh").arg("-c").args(&args[0..]).spawn().ok();
+	for cmd in &CONFIG.options.read().autostart {
+		Command::new("/bin/sh").arg("-c").args(cmd).spawn().ok();
 	}
 
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
