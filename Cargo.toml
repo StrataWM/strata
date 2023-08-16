@@ -39,9 +39,10 @@ lazy_static = "1.4.0"
 parking_lot = "0.12.1"
 
 [dependencies.smithay]
+default-features = false
 git = "https://github.com/smithay/smithay"
 version = "0.3"
-rev = "b77ef9a"
+rev = "c569c8732172137169e95e69bd620f81a8a32f2b"
 features = [
     "backend_winit",
     "wayland_frontend",
@@ -50,4 +51,19 @@ features = [
     "backend_drm",
     "renderer_multi",
     "renderer_glow",
+    "backend_drm",
+    "backend_gbm",
+    "backend_egl",
+    "backend_libinput",
+    "backend_session_libseat",
+    "backend_udev",
+    "backend_winit",
+    "backend_vulkan",
+    "backend_x11",
+    "desktop",
+    "use_system_lib",
+    "renderer_glow",
+    "renderer_multi",
+    "wayland_frontend",
+    "xwayland",
 ]

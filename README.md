@@ -12,21 +12,40 @@
 
 ## What's Strata?
 
-Strata is a dynamic and sleek Wayland compositor and window manager for GNU/Linux systems. It's written completely in [Rust](https://rust-lang.org) using the [Smithay](https://github.com/smithay/smithay) library. Strata is made to be modular. It is done this way so that you, the user can mix N match different components to make Strata work the way you want. Strata follows this architecture, which is inspired by [BSPWM](https://github.com/baskerville/bspwm):
+Strata is a cutting-edge, robust and sleek Wayland compositor written in [Rust](https://rust-lang.org) using the [Smithay](https://github.com/smithay/smithay) library. It is designed to be minimal and flexible yet customizable. Strata is configured in [Lua](https://www.lua.org/), a lightweight, high-level, multi-paradigm programming language. Lua allows you to customize Strata to a level which may be difficult to do in other config formats such as TOML or YAML.
 
-```
-╭───────────────╮       ╭───────────╮       ╭──────────╮
-│ Hotkey Daemon │ ────> │ StrataCTL │ ────> │ StrataWM │
-╰───────────────╯       ╰───────────╯       ╰──────────╯
-```
-
-This makes it possible so that you can interchange components, for example, instead of using Kagi, the official Strata hotkey daemon, you can use [SWHKD](https://github.com/waycrate/swhkd) or even make your own. As Strata grows in complexity, this architecture will, hopefully, prove to be useful.
 
 # Getting Started
 
-## Installing Rust
+## 1. Dependencies
 
-To use Strata, you have to install Rust:
+To compile and use Strata, you need some dependencies which have to be installed using a package manager, such as `pacman` or `apt`, depending on your distro. The required dependencies are listed below:
+
+* `udev`
+* `wayland` 
+* `wayland-protocols` 
+* `libinput` 
+* `libxkbcommon` 
+* `libglvnd` 
+* `seatd` 
+* `dbus-glib `
+* `mesa`
+
+If you're on Arch or any Arch based distro (such as Artix, Garuda, Manjaro, etc), you can install these using the following command:
+
+```sh
+sudo pacman -S udev wayland wayland-protocols libinput libxkbcommon libglvnd seatd dbus-glib mesa
+```
+
+If you're on Debian, or Debian based distros such as Ubuntu, Mate, Zorin, etc... you can install these using this command:
+
+```sh
+sudo apt-get install libudev-dev libgbm-dev libxkbcommon-dev libegl1-mesa-dev libwayland-dev libinput-dev libdbus-1-dev libsystemd-dev libseat-dev
+```
+
+## 2. Installing Rust
+
+To compile Strata, you have to install Rust:
 
 ### All Linux distros
 
@@ -40,43 +59,33 @@ curl https://sh.rustup.rs -sSf | sh
 sudo pacman -S rust
 ```
 
-## Clone this repo
 
-First, you have to clone this repository. Run
+## 3. Compiling
+ ### 3.1 Clone the repository
+ ```sh
+ git clone https://github.com/stratawm/stratawm
+ ```
 
-```
-git clone https://github.com/stratawm/stratawm
-```
+ ### 3.2 Compile and Install
+ To install, `cd` into the cloned repo and then run:
+ ```sh
+ cargo install --path .
+ ```
+ This'll install it for your user. If you want to install it globally (which is not recommended right now), then run:
+ ```sh
+ sudo cargo install --path .
+ ```
+You can sit back and relax while it installs Strata. It might take a bit of time since it has to compile the source code and all the dependencies but if your system is a bit better than a potato, this won't take much time.
 
-Then change into the cloned directory using `cd stratawm`
-
-## Install using the script
-
-There is a script that allows you to install both StrataWM and StrataCTL at once. Just run this command
-
-```
-./install.sh
-```
-
-## Running Strata
-
-We can use `stratactl` to launch Strata.
-
-```
-stratawm -b winit
-```
-
-This will launch Strata using the Winit backend. If you want, you could create a shell file and then set all your environment variables before starting Strata.
-
-## Running locally
-
-To just test Strata without installing it, run
+## Executing
+To start Strata, you can run this command from a terminal
 
 ```sh
-cargo run
+stratawm --backend winit
 ```
 
-**NOTE:** You need StrataCTL to be able to control Strata. Without it, Strata is unusable.
+This will start Strata using the `winit` backend. For this to work, another X11 window manager or another Wayland should be running. Support for launching from the TTY will be added shortly.
+
 
 # License
 
