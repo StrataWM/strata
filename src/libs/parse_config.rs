@@ -1,6 +1,5 @@
 use crate::libs::structs::config::*;
 use mlua::{
-	chunk,
 	Function,
 	Lua,
 	LuaSerdeExt,
