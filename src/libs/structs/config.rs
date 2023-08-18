@@ -1,5 +1,4 @@
 use lazy_static::lazy_static;
-use mlua::Function;
 use parking_lot::RwLock;
 use serde::Deserialize;
 use std::sync::Arc;

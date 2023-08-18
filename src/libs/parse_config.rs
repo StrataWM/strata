@@ -100,27 +100,30 @@ impl StrataApi {
 
 pub fn parse_config() -> Result<()> {
 	let lua = Lua::new();
-	let config_path =
-		format!("{}/.config/strata/strata.lua", var("HOME").expect("This should always be set!!!"));
-	let config_str = read_to_string(config_path).unwrap();
+	let lib_path = "/usr/lib/stratawm/lua"; // TODO: properly handle install location somehow
+	let config_path = format!(
+		"{home}/.config/strata/strata.lua",
+		home = var("HOME").expect("This should always be set!!!")
+	);
+	let config_str = read_to_string(config_path)?;
 
 	// Create a new module
-	let api_submod = get_or_create_sub_module(&lua, "api").ok().unwrap();
-	let _submod = get_or_create_sub_module(&lua, "bindings").ok().unwrap();
+	let api_submod = get_or_create_sub_module(&lua, "api").unwrap(); // TODO: remove unwrap
 
 	// Create "spawn api" for strata.api that can triggers Function as needed.
-	api_submod.set("spawn", lua.create_function(StrataApi::spawn).ok().unwrap())?;
-	api_submod.set("set_bindings", lua.create_function(StrataApi::set_bindings).ok().unwrap())?;
-	api_submod.set("set_rules", lua.create_function(StrataApi::set_rules).ok().unwrap())?;
-	api_submod.set("set_config", lua.create_function(StrataApi::set_config).ok().unwrap())?;
-	api_submod.set("get_config", lua.create_function(StrataApi::get_config).ok().unwrap())?;
+	api_submod.set("spawn", lua.create_function(StrataApi::spawn)?)?;
+	api_submod.set("set_bindings", lua.create_function(StrataApi::set_bindings)?)?;
+	api_submod.set("set_rules", lua.create_function(StrataApi::set_rules)?)?;
+	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
+	api_submod.set("get_config", lua.create_function(StrataApi::get_config)?)?;
 
+	lua.load(&format!("package.path = ';{}/?.lua' .. package.path", lib_path)).exec()?;
 	lua.load(&config_str).exec()?;
 
 	Ok(())
 }
 
-pub fn get_or_create_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<mlua::Table<'lua>> {
+fn get_or_create_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<mlua::Table<'lua>> {
 	let globals = lua.globals();
 	let package: Table = globals.get("package")?;
 	let loaded: Table = package.get("loaded")?;
@@ -143,10 +146,7 @@ pub fn get_or_create_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<
 	}
 }
 
-pub fn get_or_create_sub_module<'lua>(
-	lua: &'lua Lua,
-	name: &str,
-) -> anyhow::Result<mlua::Table<'lua>> {
+fn get_or_create_sub_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<mlua::Table<'lua>> {
 	let strata_mod = get_or_create_module(lua, "strata")?;
 	let sub = strata_mod.get(name)?;
 	match sub {
