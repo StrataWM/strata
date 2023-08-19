@@ -16,15 +16,16 @@ pub struct General {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct WindowDecorations {
-	pub borders: Borders,
+	pub border: Border,
 	pub window: Window,
 	pub blur: Blur,
-	pub shadows: Shadows,
+	pub shadow: Shadow,
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Borders {
+pub struct Border {
 	pub width: u32,
 	pub active: String,
 	pub inactive: String,
@@ -45,8 +46,8 @@ pub struct Blur {
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Shadows {
-	pub enabled: bool,
+pub struct Shadow {
+	pub enable: bool,
 	pub size: u32,
 	pub blur: u32,
 	pub color: String,
@@ -87,7 +88,7 @@ pub type Cmd = Vec<String>;
 pub struct Options {
 	pub autostart: Vec<Cmd>,
 	pub general: General,
-	pub window_decorations: WindowDecorations,
+	pub decorations: WindowDecorations,
 	pub tiling: Tiling,
 	pub animations: Animations,
 	pub rules: Vec<Rules>,
@@ -97,6 +98,6 @@ pub struct Options {
 #[derive(Debug, Default)]
 pub struct Config {
 	pub options: RwLock<Options>,
-	pub rules: RwLock<Vec<Rules>>,
-	pub bindings: RwLock<Vec<Keybinding>>,
+	// pub rules: RwLock<Vec<Rules>>,
+	// pub bindings: RwLock<Vec<Keybinding>>,
 }

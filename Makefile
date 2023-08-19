@@ -26,7 +26,6 @@ clean:
 	cargo clean
 
 install: $(APPNAME)
-	cargo build --release
 	install -Dm0755 "target/$(TARGET)/$(APPNAME)" "$(TARGET_BIN)"
 	mkdir -p "$(TARGET_LIB)"
 	cp -r "lua" "$(TARGET_LIB)"
