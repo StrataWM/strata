@@ -117,7 +117,10 @@ pub fn parse_config() -> Result<()> {
 	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
 	api_submod.set("get_config", lua.create_function(StrataApi::get_config)?)?;
 
-	lua.load(&format!("package.path = ';{}/?.lua' .. package.path", lib_path)).exec()?;
+	lua.load(&format!(
+		"package.path = '{lib_path}/strata/?.lua;{lib_path}/strata/init.lua;' .. package.path"
+	))
+	.exec()?;
 	lua.load(&config_str).exec()?;
 
 	Ok(())
