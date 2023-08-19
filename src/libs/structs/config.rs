@@ -73,7 +73,7 @@ pub struct Triggers {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Rules {
 	pub triggers: Triggers,
-	pub action: String,
+	pub action: String, // FIXME
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -91,8 +91,6 @@ pub struct Options {
 	pub decorations: WindowDecorations,
 	pub tiling: Tiling,
 	pub animations: Animations,
-	pub rules: Vec<Rules>,
-	pub bindings: Vec<Keybinding>,
 }
 
 #[derive(Debug, Default)]
