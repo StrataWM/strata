@@ -8,6 +8,7 @@ lazy_static! {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct General {
 	pub workspaces: u8,
 	pub gaps_in: i32,
@@ -25,6 +26,7 @@ pub struct WindowDecorations {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Border {
 	pub width: u32,
 	pub active: String,
@@ -33,11 +35,13 @@ pub struct Border {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Window {
 	pub opacity: f64,
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Blur {
 	pub enable: bool,
 	pub size: u32,
@@ -46,6 +50,7 @@ pub struct Blur {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Shadow {
 	pub enable: bool,
 	pub size: u32,
@@ -54,11 +59,13 @@ pub struct Shadow {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Tiling {
 	pub layout: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Animations {
 	pub enable: bool,
 }
@@ -85,6 +92,7 @@ pub struct Keybinding {
 pub type Cmd = Vec<String>;
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Options {
 	pub autostart: Vec<Cmd>,
 	pub general: General,
