@@ -8,8 +8,8 @@ use mlua::{
 	Value,
 };
 use std::{
-	env::var,
 	fs::read_to_string,
+	path::PathBuf,
 };
 
 struct StrataApi;
@@ -99,13 +99,9 @@ impl StrataApi {
 	}
 }
 
-pub fn parse_config() -> Result<()> {
+pub fn parse_config(config_path: PathBuf) -> Result<()> {
 	let lua = Lua::new();
 	let lib_path = "/usr/lib/stratawm/lua";
-	let config_path = format!(
-		"{home}/.config/strata/strata.lua",
-		home = var("HOME").expect("This should always be set!!!")
-	);
 	let config_str = read_to_string(config_path)?;
 
 	// Create a new module

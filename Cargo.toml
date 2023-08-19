@@ -50,6 +50,7 @@ mlua = { version = "0.9.0-rc.2", features = [
 ] }
 lazy_static = "1.4.0"
 parking_lot = "0.12.1"
+xdg = "2.5.2"
 
 [dependencies.smithay]
 default-features = false

@@ -22,7 +22,12 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	let _ = tokio::spawn(async { parse_config() }).await?;
+	let xdg_config_path =
+		xdg::BaseDirectories::with_prefix("strata")?.find_config_file("strata.lua");
+	if let Some(config_path) = xdg_config_path {
+		tokio::spawn(async { parse_config(config_path) }).await??;
+	}
+
 	let log_dir =
 		format!("{}/.strata/stratawm", var("HOME").expect("This variable should be set!!!"));
 	let file_appender = tracing_appender::rolling::never(

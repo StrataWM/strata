@@ -1755,6 +1755,7 @@ dependencies = [
  "tokio",
  "tracing-appender",
  "tracing-subscriber",
+ "xdg",
 ]
 
 [[package]]
@@ -2545,6 +2546,12 @@ checksum = "463705a63313cd4301184381c5e8042f0a7e9b4bb63653f216311d4ae74690b7"
 dependencies = [
  "nom",
 ]
+
+[[package]]
+name = "xdg"
+version = "2.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"
 
 [[package]]
 name = "xkbcommon"
