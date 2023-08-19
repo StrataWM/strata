@@ -101,7 +101,7 @@ impl StrataApi {
 
 pub fn parse_config() -> Result<()> {
 	let lua = Lua::new();
-	let lib_path = "/usr/lib/stratawm/lua"; // TODO: properly handle install location somehow
+	let lib_path = "/usr/lib/stratawm/lua";
 	let config_path = format!(
 		"{home}/.config/strata/strata.lua",
 		home = var("HOME").expect("This should always be set!!!")

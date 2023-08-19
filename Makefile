@@ -29,6 +29,7 @@ clean:
 	cargo clean
 
 install: $(BINARY)
+	cargo build --release
 	install -Dm0755 "target/$(TARGET)/$(BINARY)" "$(TARGET_BIN)"
 	mkdir -p "$(TARGET_LIB)"
 	cp -r "lua" "$(TARGET_LIB)"
