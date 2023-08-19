@@ -11,7 +11,7 @@ TARGET = release
 DEBUG ?= 0
 
 TARGET_BIN = $(DESTDIR)$(BINDIR)/$(BINARY)
-TARGET_LIB = $(DESTDIR)$(LIBDIR)/$(LUA_LIB)
+TARGET_LIB = $(DESTDIR)$(LIBDIR)
 
 .PHONY: all clean install uninstall
 
@@ -22,7 +22,7 @@ endif
 
 all: $(BINARY)
 
-$(BINARY): # Add dependencies here if needed
+$(BINARY):
 	cargo build $(ARGS)
 
 clean:
@@ -30,9 +30,11 @@ clean:
 
 install: $(BINARY)
 	install -Dm0755 "target/$(TARGET)/$(BINARY)" "$(TARGET_BIN)"
+	mkdir -p "$(TARGET_LIB)"
 	cp -r "lua" "$(TARGET_LIB)"
 
 uninstall:
 	rm -f "$(TARGET_BIN)"
+	rm -rf "$(TARGET_LIB)"
 
 .PHONY: all clean install uninstall
