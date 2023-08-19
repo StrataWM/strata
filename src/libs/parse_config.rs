@@ -8,10 +8,7 @@ use mlua::{
 	Table,
 	Value,
 };
-use std::{
-	fs::read_to_string,
-	path::PathBuf,
-};
+use std::path::PathBuf;
 
 struct StrataApi;
 
@@ -102,7 +99,7 @@ impl StrataApi {
 
 pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	let lua = Lua::new();
-	let api_submod = get_or_create_sub_module(&lua, "api").unwrap(); // TODO: remove unwrap
+	let api_submod = get_or_create_module(&lua, "strata.api").unwrap(); // TODO: remove unwrap
 
 	api_submod.set("spawn", lua.create_function(StrataApi::spawn)?)?;
 	api_submod.set("set_bindings", lua.create_function(StrataApi::set_bindings)?)?;
@@ -114,8 +111,16 @@ pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	let lib_path = lib_dir.to_string_lossy();
 
 	lua.load(chunk!(
-		package.path = $config_path .. "/?.lua;" .. package.path
-		package.path = $lib_path .. "/?.lua;" .. package.path
+		local paths = {
+			$config_path .. "?.lua",
+			$config_path .. "?/init.lua",
+			$lib_path .. "/strata/?.lua",
+			$lib_path .. "/?/init.lua",
+		}
+		for _, path in ipairs(paths) do
+			package.path = path .. ";" .. package.path
+		end
+
 		require("config")
 	))
 	.exec()?;
@@ -140,26 +145,6 @@ fn get_or_create_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<mlua
 			anyhow::bail!(
 				"cannot register module {name} as package.loaded.{name} is already set to a value \
 				 of type {type_name}",
-				type_name = wat.type_name()
-			)
-		}
-	}
-}
-
-fn get_or_create_sub_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<mlua::Table<'lua>> {
-	let strata_mod = get_or_create_module(lua, "strata")?;
-	let sub = strata_mod.get(name)?;
-	match sub {
-		Value::Nil => {
-			let sub = lua.create_table()?;
-			strata_mod.set(name, sub.clone())?;
-			Ok(sub)
-		}
-		Value::Table(sub) => Ok(sub),
-		wat => {
-			anyhow::bail!(
-				"cannot register module strata.{name} as it is already set to a value of type \
-				 {type_name}",
 				type_name = wat.type_name()
 			)
 		}
