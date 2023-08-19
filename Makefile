@@ -1,36 +1,33 @@
 PREFIX ?= /usr
 SYSCONFDIR ?= /etc
 BINDIR = $(PREFIX)/bin
-LIBDIR = $(PREFIX)/lib/stratawm
 SHAREDIR = $(PREFIX)/share
 
-BINARY = stratawm
+APPNAME = stratawm
 LUA_LIB = lua
 ID = com.strata.Compositor
 TARGET = release
 DEBUG ?= 0
 
-TARGET_BIN = $(DESTDIR)$(BINDIR)/$(BINARY)
-TARGET_LIB = $(DESTDIR)$(LIBDIR)
-
-.PHONY: all clean install uninstall
+TARGET_BIN = $(DESTDIR)$(BINDIR)/$(APPNAME)
+TARGET_LIB = $(DESTDIR)$(SHAREDIR)/$(APPNAME)/
 
 ifeq ($(DEBUG),0)
 	TARGET = release
 	ARGS += --release
 endif
 
-all: $(BINARY)
+all: $(APPNAME)
 
-$(BINARY):
+$(APPNAME):
 	cargo build $(ARGS)
 
 clean:
 	cargo clean
 
-install: $(BINARY)
+install: $(APPNAME)
 	cargo build --release
-	install -Dm0755 "target/$(TARGET)/$(BINARY)" "$(TARGET_BIN)"
+	install -Dm0755 "target/$(TARGET)/$(APPNAME)" "$(TARGET_BIN)"
 	mkdir -p "$(TARGET_LIB)"
 	cp -r "lua" "$(TARGET_LIB)"
 

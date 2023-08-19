@@ -1,5 +1,6 @@
 use crate::libs::structs::config::*;
 use mlua::{
+	chunk,
 	Function,
 	Lua,
 	LuaSerdeExt,
@@ -99,26 +100,25 @@ impl StrataApi {
 	}
 }
 
-pub fn parse_config(config_path: PathBuf) -> Result<()> {
+pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	let lua = Lua::new();
-	let lib_path = "/usr/lib/stratawm/lua";
-	let config_str = read_to_string(config_path)?;
-
-	// Create a new module
 	let api_submod = get_or_create_sub_module(&lua, "api").unwrap(); // TODO: remove unwrap
 
-	// Create "spawn api" for strata.api that can triggers Function as needed.
 	api_submod.set("spawn", lua.create_function(StrataApi::spawn)?)?;
 	api_submod.set("set_bindings", lua.create_function(StrataApi::set_bindings)?)?;
 	api_submod.set("set_rules", lua.create_function(StrataApi::set_rules)?)?;
 	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
 	api_submod.set("get_config", lua.create_function(StrataApi::get_config)?)?;
 
-	lua.load(&format!(
-		"package.path = '{lib_path}/strata/?.lua;{lib_path}/strata/init.lua;' .. package.path"
+	let config_path = config_dir.to_string_lossy();
+	let lib_path = lib_dir.to_string_lossy();
+
+	lua.load(chunk!(
+		package.path = $config_path .. "/?.lua;" .. package.path
+		package.path = $lib_path .. "/?.lua;" .. package.path
+		require("config")
 	))
 	.exec()?;
-	lua.load(&config_str).exec()?;
 
 	Ok(())
 }
