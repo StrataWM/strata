@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 authors = ["Anant Narayan <anantnrg@gmail.com>"]
 license = "GNU GPL v3"
-description = "A modular, dynamic and sleek Wayland compositor with batteries included."
+description = "A cutting-edge, robust and sleek Wayland compositor with batteries included."
 readme = "README.md"
 homepage = "https://github.com/stratawm/stratawm"
 repository = "https://github.com/stratawm/stratawm"
@@ -20,6 +20,12 @@ keywords = [
 ]
 categories = ["linux-utilities"]
 
+[profile.release]
+strip = true
+opt-level = 3
+lto = true
+codegen-units = 1
+
 [dependencies]
 tracing-subscriber = { features = ["env-filter"], version = "0.3.17" }
 bitflags = "2.2.1"
@@ -34,7 +40,14 @@ serde = { version = "1.0.183", features = ["derive"] }
 smithay-drm-extras = { git = "https://github.com/Smithay/smithay.git" }
 once_cell = "1.18.0"
 crossbeam-channel = "0.5.8"
-mlua = { version = "0.9.0-rc.2", features = ["luajit", "vendored", "serialize", "send", "macros", "parking_lot"] }
+mlua = { version = "0.9.0-rc.2", features = [
+    "luajit",
+    "vendored",
+    "serialize",
+    "send",
+    "macros",
+    "parking_lot",
+] }
 lazy_static = "1.4.0"
 parking_lot = "0.12.1"
 
