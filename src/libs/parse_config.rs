@@ -70,6 +70,7 @@ impl StrataApi {
 	}
 
 	pub fn set_config(lua: &Lua, configs: Table) -> Result<()> {
+		println!("Called!");
 		{
 			let mut options = CONFIG.options.write();
 

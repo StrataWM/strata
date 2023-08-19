@@ -1,31 +1,38 @@
-export prefix ?= /usr
-sysconfdir ?= /etc
-bindir = $(prefix)/bin
-libdir = $(prefix)/lib/stratawm
-sharedir = $(prefix)/share
+PREFIX ?= /usr
+SYSCONFDIR ?= /etc
+BINDIR = $(PREFIX)/bin
+LIBDIR = $(PREFIX)/lib/stratawm
+SHAREDIR = $(PREFIX)/share
 
 BINARY = stratawm
 LUA_LIB = lua
 ID = com.strata.Compositor
-TARGET = debug
+TARGET = release
 DEBUG ?= 0
 
-.PHONY = all clean install uninstall
+TARGET_BIN = $(DESTDIR)$(BINDIR)/$(BINARY)
+TARGET_LIB = $(DESTDIR)$(LIBDIR)/$(LUA_LIB)
+
+.PHONY: all clean install uninstall
 
 ifeq ($(DEBUG),0)
 	TARGET = release
 	ARGS += --release
 endif
 
-TARGET_BIN="$(DESTDIR)$(bindir)/$(BINARY)"
-TARGET_LIB="$(DESTDIR)$(libdir)/$(LUA_LIB)"
+all: $(BINARY)
+
+$(BINARY): # Add dependencies here if needed
+	cargo build $(ARGS)
 
 clean:
 	cargo clean
 
-install:
+install: $(BINARY)
 	install -Dm0755 "target/$(TARGET)/$(BINARY)" "$(TARGET_BIN)"
-	install -Dm0644 "$(LUA_LIB)" "$(TARGET_LIB)/$(LUA_LIB)"
+	cp -r "lua" "$(TARGET_LIB)"
 
 uninstall:
-	rm "$(TARGET_BIN)"
+	rm -f "$(TARGET_BIN)"
+
+.PHONY: all clean install uninstall
