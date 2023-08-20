@@ -3,7 +3,7 @@ SYSCONFDIR ?= /etc
 BINDIR = $(PREFIX)/bin
 SHAREDIR = $(PREFIX)/share
 
-APPNAME = stratawm
+APPNAME = strata
 LUA_LIB = lua
 ID = com.strata.Compositor
 TARGET = release

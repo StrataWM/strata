@@ -21,7 +21,7 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	let xdg = xdg::BaseDirectories::with_prefix("stratawm")?;
+	let xdg = xdg::BaseDirectories::with_prefix("strata")?;
 
 	let config_dir = xdg.find_config_file("");
 	let lib_dir = xdg.find_data_file("lua");
