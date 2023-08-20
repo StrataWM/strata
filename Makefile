@@ -25,8 +25,10 @@ $(APPNAME):
 clean:
 	cargo clean
 
-install: $(APPNAME)
+install: $(APPNAME) install_lib
 	install -Dm0755 "target/$(TARGET)/$(APPNAME)" "$(TARGET_BIN)"
+
+install_lib:
 	mkdir -p "$(TARGET_LIB)"
 	cp -r "lua" "$(TARGET_LIB)"
 
