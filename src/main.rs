@@ -21,11 +21,13 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	let xdg = xdg::BaseDirectories::with_prefix("stratawm")?;
+	let xdg = xdg::BaseDirectories::with_prefix("strata")?;
 
 	let config_dir = xdg.find_config_file("");
 	let lib_dir = xdg.find_data_file("lua");
 	let log_dir = xdg.get_state_home();
+
+	println!("{:?}", lib_dir);
 
 	if let (Some(config_path), Some(data_path)) = (config_dir, lib_dir) {
 		tokio::spawn(async { parse_config(config_path, data_path) }).await??;

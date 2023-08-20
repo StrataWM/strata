@@ -1,13 +1,13 @@
 [package]
-name = "stratawm"
+name = "strata"
 version = "0.0.1"
 edition = "2021"
 authors = ["Anant Narayan <anantnrg@gmail.com>"]
 license = "GNU GPL v3"
 description = "A cutting-edge, robust and sleek Wayland compositor with batteries included."
 readme = "README.md"
-homepage = "https://github.com/stratawm/stratawm"
-repository = "https://github.com/stratawm/stratawm"
+homepage = "https://github.com/stratawm/strata"
+repository = "https://github.com/stratawm/strata"
 keywords = [
     "smithay",
     "compositor",
