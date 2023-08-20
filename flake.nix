@@ -48,14 +48,12 @@
             pkg-config
             autoPatchelfHook
             cmake
+            wayland
           ];
 
           buildInputs = with pkgs; [
             fontconfig
             stdenv.cc.cc.lib
-          ];
-
-          runtimeDependencies = with pkgs; [
             expat
             libdrm
             libevdev
@@ -68,7 +66,10 @@
             mesa # For libgbm
             mtdev
             systemd # For libudev
-            wayland
+          ];
+
+          runtimeDependencies = with pkgs; [
+            rust
           ];
         };
 
