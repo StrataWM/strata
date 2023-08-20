@@ -6,9 +6,8 @@ local module = {
 	api = api, -- mlua module
 
 	-- Exposed mlua API functions
-	set_bindings = api.set_bindings,
-	set_rules = api.set_rules,
 	set_config = api.set_config,
+	get_config = api.get_config,
 }
 
 return module

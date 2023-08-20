@@ -14,7 +14,6 @@ pub use libs::{
 };
 use log::info;
 use std::{
-	env::var,
 	error::Error,
 	io::stdout,
 };
@@ -22,9 +21,16 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	let _ = tokio::spawn(async { parse_config() }).await?;
-	let log_dir =
-		format!("{}/.strata/stratawm", var("HOME").expect("This variable should be set!!!"));
+	let xdg = xdg::BaseDirectories::with_prefix("stratawm")?;
+
+	let config_dir = xdg.find_config_file("");
+	let lib_dir = xdg.find_data_file("lua");
+	let log_dir = xdg.get_state_home();
+
+	if let (Some(config_path), Some(data_path)) = (config_dir, lib_dir) {
+		tokio::spawn(async { parse_config(config_path, data_path) }).await??;
+	}
+
 	let file_appender = tracing_appender::rolling::never(
 		&log_dir,
 		format!("strata_{}.log", Local::now().format("%Y-%m-%d_%H:%M:%S")),

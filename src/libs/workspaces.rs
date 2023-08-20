@@ -103,7 +103,7 @@ impl Workspace {
 		let mut render_elements: Vec<C> = Vec::new();
 		for element in &self.windows {
 			let window = &element.borrow().window;
-			if CONFIG.options.read().window_decorations.borders.width > 0 {
+			if CONFIG.options.read().decorations.border.width > 0 {
 				render_elements.push(C::from(BorderShader::element(
 					renderer.glow_renderer_mut(),
 					window,

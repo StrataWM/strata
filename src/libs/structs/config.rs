@@ -8,6 +8,7 @@ lazy_static! {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct General {
 	pub workspaces: u8,
 	pub gaps_in: i32,
@@ -16,15 +17,17 @@ pub struct General {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct WindowDecorations {
-	pub borders: Borders,
+	pub border: Border,
 	pub window: Window,
 	pub blur: Blur,
-	pub shadows: Shadows,
+	pub shadow: Shadow,
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Borders {
+#[serde(default)]
+pub struct Border {
 	pub width: u32,
 	pub active: String,
 	pub inactive: String,
@@ -32,11 +35,13 @@ pub struct Borders {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Window {
 	pub opacity: f64,
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Blur {
 	pub enable: bool,
 	pub size: u32,
@@ -45,19 +50,22 @@ pub struct Blur {
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Shadows {
-	pub enabled: bool,
+#[serde(default)]
+pub struct Shadow {
+	pub enable: bool,
 	pub size: u32,
 	pub blur: u32,
 	pub color: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Tiling {
 	pub layout: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Animations {
 	pub enable: bool,
 }
@@ -72,7 +80,7 @@ pub struct Triggers {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Rules {
 	pub triggers: Triggers,
-	pub action: String,
+	pub action: String, // FIXME
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -84,19 +92,18 @@ pub struct Keybinding {
 pub type Cmd = Vec<String>;
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct Options {
 	pub autostart: Vec<Cmd>,
 	pub general: General,
-	pub window_decorations: WindowDecorations,
+	pub decorations: WindowDecorations,
 	pub tiling: Tiling,
 	pub animations: Animations,
-	pub rules: Vec<Rules>,
-	pub bindings: Vec<Keybinding>,
 }
 
 #[derive(Debug, Default)]
 pub struct Config {
 	pub options: RwLock<Options>,
-	pub rules: RwLock<Vec<Rules>>,
-	pub bindings: RwLock<Vec<Keybinding>>,
+	// pub rules: RwLock<Vec<Rules>>,
+	// pub bindings: RwLock<Vec<Keybinding>>,
 }
