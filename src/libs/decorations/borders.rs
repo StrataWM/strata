@@ -1,6 +1,6 @@
-use crate::libs::structs::{
-	config::CONFIG,
-	state::BorderShader,
+use crate::{
+	libs::structs::state::BorderShader,
+	CONFIG,
 };
 use smithay::{
 	backend::renderer::{

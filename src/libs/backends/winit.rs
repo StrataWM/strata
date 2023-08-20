@@ -1,15 +1,17 @@
-use crate::libs::{
-	decorations::CustomRenderElements,
-	structs::{
-		backends::WinitData,
-		config::CONFIG,
-		state::{
-			Backend,
-			BorderShader,
-			CalloopData,
-			StrataState,
+use crate::{
+	libs::{
+		decorations::CustomRenderElements,
+		structs::{
+			backends::WinitData,
+			state::{
+				Backend,
+				BorderShader,
+				CalloopData,
+				StrataState,
+			},
 		},
 	},
+	CONFIG,
 };
 use smithay::{
 	backend::{
