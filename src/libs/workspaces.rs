@@ -1,16 +1,18 @@
-use crate::libs::{
-	decorations::AsGlowRenderer,
-	structs::{
-		config::CONFIG,
-		state::BorderShader,
-		workspaces::{
-			Dwindle,
-			StrataWindow,
-			Workspace,
-			Workspaces,
+use crate::{
+	libs::{
+		decorations::AsGlowRenderer,
+		structs::{
+			state::BorderShader,
+			workspaces::{
+				Dwindle,
+				StrataWindow,
+				Workspace,
+				Workspaces,
+			},
 		},
+		tiling::refresh_geometry,
 	},
-	tiling::refresh_geometry,
+	CONFIG,
 };
 use smithay::{
 	backend::renderer::{

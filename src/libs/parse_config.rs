@@ -1,6 +1,10 @@
-use crate::libs::structs::config::*;
+use crate::{
+	CONFIG,
+	LUA,
+};
 use mlua::{
 	chunk,
+	FromLua,
 	Lua,
 	LuaSerdeExt,
 	Result,
@@ -12,16 +16,51 @@ use std::path::PathBuf;
 struct StrataApi;
 
 impl StrataApi {
-	pub fn spawn(_: &Lua, cmd: String) -> Result<()> {
-		println!("Spawning {}", cmd.to_string());
+	pub async fn spawn<'lua>(lua: &'lua Lua, cmd: Value<'lua>) -> Result<()> {
+		let cmd: Vec<String> = lua.from_value(cmd)?;
+
+		tokio::spawn(async move {
+			let mut child = tokio::process::Command::new(&cmd[0])
+				.args(&cmd[1..])
+				.spawn()
+				.expect("failed to execute child");
+
+			let ecode = child.wait().await.expect("failed to wait on child");
+			println!("child process exited with: {}", ecode);
+		})
+		.await
+		.map_err(|_| mlua::Error::RuntimeError("Failed to spawn process".to_owned()))?;
+
+		// TODO: add log
+
 		Ok(())
 	}
 
-	pub fn set_config(lua: &Lua, configs: Value) -> Result<()> {
+	pub fn set_config(lua: &Lua, config: Table) -> Result<()> {
 		println!("Called!");
 
-		let mut options = CONFIG.options.write();
-		*options = lua.from_value(configs)?;
+		{
+			let mut bindings = CONFIG.bindings.write();
+			let value: Value = config.get("bindings")?;
+			if !value.is_nil() {
+				*bindings = FromLua::from_lua(value, lua)?;
+			}
+		}
+		{
+			let mut rules = CONFIG.rules.write();
+			let value: Value = config.get("rules")?;
+			if !value.is_nil() {
+				*rules = FromLua::from_lua(value, lua)?;
+			}
+		}
+		{
+			let mut options = CONFIG.options.write();
+			options.autostart = lua.from_value(Value::Table(config.get("autostart")?))?;
+			options.general = lua.from_value(Value::Table(config.get("general")?))?;
+			options.decorations = lua.from_value(Value::Table(config.get("decorations")?))?;
+			options.tiling = lua.from_value(Value::Table(config.get("tiling")?))?;
+			options.animations = lua.from_value(Value::Table(config.get("animations")?))?;
+		}
 
 		Ok(())
 	}
@@ -32,10 +71,10 @@ impl StrataApi {
 }
 
 pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
-	let lua = Lua::new();
+	let lua = LUA.lock();
 	let api_submod = get_or_create_module(&lua, "strata.api").unwrap(); // TODO: remove unwrap
 
-	api_submod.set("spawn", lua.create_function(StrataApi::spawn)?)?;
+	api_submod.set("spawn", lua.create_async_function(StrataApi::spawn)?)?;
 	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
 	api_submod.set("get_config", lua.create_function(StrataApi::get_config)?)?;
 
@@ -61,11 +100,9 @@ pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 }
 
 fn get_or_create_module<'lua>(lua: &'lua Lua, name: &str) -> anyhow::Result<mlua::Table<'lua>> {
-	let globals = lua.globals();
-	let package: Table = globals.get("package")?;
-	let loaded: Table = package.get("loaded")?;
-
+	let loaded: Table = lua.globals().get::<_, Table>("package")?.get("loaded")?;
 	let module = loaded.get(name)?;
+
 	match module {
 		Value::Nil => {
 			let module = lua.create_table()?;

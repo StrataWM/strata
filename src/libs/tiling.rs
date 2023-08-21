@@ -3,14 +3,14 @@ use std::{
 	rc::Rc,
 };
 
-use crate::libs::structs::{
-	config::CONFIG,
-	workspaces::{
+use crate::{
+	libs::structs::workspaces::{
 		Dwindle,
 		HorizontalOrVertical,
 		StrataWindow,
 		Workspace,
 	},
+	CONFIG,
 };
 use smithay::{
 	desktop::layer_map_for_output,

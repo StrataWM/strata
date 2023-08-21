@@ -1,14 +1,16 @@
-use crate::libs::structs::{
-	config::CONFIG,
-	state::{
-		Backend,
-		CalloopData,
-		StrataState,
+use crate::{
+	libs::structs::{
+		state::{
+			Backend,
+			CalloopData,
+			StrataState,
+		},
+		workspaces::{
+			FocusTarget,
+			Workspaces,
+		},
 	},
-	workspaces::{
-		FocusTarget,
-		Workspaces,
-	},
+	CONFIG,
 };
 use smithay::{
 	desktop::{
