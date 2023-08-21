@@ -20,6 +20,8 @@
 
 - [x] ~~Add different layouts (BSP, i3, etc...)~~
 
+- [ ] Add wallpaper support
+
 - [ ] Implement window transparency
 
 - [ ] Add dual-kwase blur
