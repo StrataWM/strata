@@ -43,33 +43,30 @@
               ./resources
             ];
           };
+          cmakeFlags = [ "PREFIX=~/.local" ];
 
           nativeBuildInputs = with pkgs; [
             pkg-config
-            autoPatchelfHook
             cmake
-            wayland
+            autoPatchelfHook
           ];
 
           buildInputs = with pkgs; [
             fontconfig
             stdenv.cc.cc.lib
-            expat
+            wayland
             libdrm
-            libevdev
+            libGL
             libffi
-            libglvnd
             libinput
             libseat
             libwacom
             libxkbcommon
             mesa # For libgbm
-            mtdev
             systemd # For libudev
           ];
-
-          runtimeDependencies = with pkgs; [
-            rust
+           runtimeDependencies = with pkgs; [
+             libGL
           ];
         };
 
