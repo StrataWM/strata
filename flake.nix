@@ -84,6 +84,27 @@
         devShells.default = pkgs.mkShell {
           # Should there be packages here or use Nix purely for CI?
           LD_LIBRARY_PATH = lib.makeLibraryPath (__concatMap (d: d.runtimeDependencies) (__attrValues self'.checks));
+          # Basic Developing Components using `nix develop`
+          buildInputs = with pkgs; [
+          rust-bin.nightly.latest.default
+          rust-analyzer
+          rustfmt
+          pkg-config
+          cmake
+          autoPatchelfHook
+          fontconfig
+          stdenv.cc.cc.lib
+          wayland
+          libdrm
+          libGL
+          libffi
+          libinput
+          libseat
+          libwacom
+          libxkbcommon
+          mesa # For libgbm
+          systemd # For libudev
+          ];
         };
       };
     };
