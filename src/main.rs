@@ -32,7 +32,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let xdg = xdg::BaseDirectories::with_prefix("strata")?;
 
 	let config_dir = xdg.find_config_file("");
-	println!("{:?}", config_dir);
 	let lib_dir = xdg.find_data_file("lua");
 	let log_dir = xdg.get_state_home();
 

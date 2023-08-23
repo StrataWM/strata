@@ -57,7 +57,7 @@ xdg = "2.5.2"
 default-features = false
 git = "https://github.com/smithay/smithay"
 version = "0.3"
-rev = "c569c8732172137169e95e69bd620f81a8a32f2b"
+rev = "e241ccb"
 features = [
     "backend_winit",
     "wayland_frontend",
