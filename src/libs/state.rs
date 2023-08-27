@@ -81,7 +81,7 @@ impl<BackendData: Backend> StrataState<BackendData> {
 		display: &mut Display<StrataState<BackendData>>,
 		backend_data: BackendData,
 	) -> Self {
-		let options = CONFIG.options.read();
+		let options = &CONFIG.read().options;
 
 		let start_time = Instant::now();
 		let dh = display.handle();

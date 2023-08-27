@@ -6,18 +6,19 @@ use mlua::{
 	chunk,
 	FromLua,
 	Lua,
-	LuaSerdeExt,
 	Result,
 	Table,
 	Value,
 };
 use std::path::PathBuf;
 
+use super::from_lua::{self,};
+
 struct StrataApi;
 
 impl StrataApi {
 	pub async fn spawn<'lua>(lua: &'lua Lua, cmd: Value<'lua>) -> Result<()> {
-		let cmd: Vec<String> = lua.from_value(cmd)?;
+		let cmd: Vec<String> = FromLua::from_lua(cmd, lua)?;
 
 		tokio::spawn(async move {
 			let mut child = tokio::process::Command::new(&cmd[0])
@@ -36,36 +37,20 @@ impl StrataApi {
 		Ok(())
 	}
 
-	pub fn set_config(lua: &Lua, config: Table) -> Result<()> {
-		println!("Called!");
-
-		{
-			let mut bindings = CONFIG.bindings.write();
-			let value: Value = config.get("bindings")?;
-			if !value.is_nil() {
-				*bindings = FromLua::from_lua(value, lua)?;
-			}
-		}
-		{
-			let mut rules = CONFIG.rules.write();
-			let value: Value = config.get("rules")?;
-			if !value.is_nil() {
-				*rules = FromLua::from_lua(value, lua)?;
-			}
-		}
-		{
-			let mut options = CONFIG.options.write();
-			options.autostart = lua.from_value(Value::Table(config.get("autostart")?))?;
-			options.general = lua.from_value(Value::Table(config.get("general")?))?;
-			options.decorations = lua.from_value(Value::Table(config.get("decorations")?))?;
-			options.tiling = lua.from_value(Value::Table(config.get("tiling")?))?;
-			options.animations = lua.from_value(Value::Table(config.get("animations")?))?;
-		}
+	pub fn set_config(lua: &Lua, config: Value) -> Result<()> {
+		let config: from_lua::Config = FromLua::from_lua(config, lua)?;
+		CONFIG.write().set(config.into());
 
 		Ok(())
 	}
 
 	pub fn get_config(_lua: &Lua, _args: Value) -> Result<()> {
+		// TODO
+		unimplemented!()
+	}
+
+	pub fn update_config(_lua: &Lua, _args: Value) -> Result<()> {
+		// TODO
 		unimplemented!()
 	}
 }
@@ -77,6 +62,7 @@ pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	api_submod.set("spawn", lua.create_async_function(StrataApi::spawn)?)?;
 	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
 	api_submod.set("get_config", lua.create_function(StrataApi::get_config)?)?;
+	api_submod.set("update_config", lua.create_function(StrataApi::update_config)?)?;
 
 	let config_path = config_dir.to_string_lossy();
 	let lib_path = lib_dir.to_string_lossy();

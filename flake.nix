@@ -43,7 +43,7 @@
               ./resources
             ];
           };
-          cmakeFlags = [ "PREFIX=~/.local" ];
+          cmakeFlags = ["PREFIX=~/.local"];
 
           nativeBuildInputs = with pkgs; [
             pkg-config
@@ -65,8 +65,8 @@
             mesa # For libgbm
             systemd # For libudev
           ];
-           runtimeDependencies = with pkgs; [
-             libGL
+          runtimeDependencies = with pkgs; [
+            libGL
           ];
         };
 
@@ -86,24 +86,24 @@
           LD_LIBRARY_PATH = lib.makeLibraryPath (__concatMap (d: d.runtimeDependencies) (__attrValues self'.checks));
           # Basic Developing Components using `nix develop`
           buildInputs = with pkgs; [
-          rust-bin.nightly.latest.default
-          rust-analyzer
-          rustfmt
-          pkg-config
-          cmake
-          autoPatchelfHook
-          fontconfig
-          stdenv.cc.cc.lib
-          wayland
-          libdrm
-          libGL
-          libffi
-          libinput
-          libseat
-          libwacom
-          libxkbcommon
-          mesa # For libgbm
-          systemd # For libudev
+            rust-bin.nightly.latest.default
+            rust-analyzer
+            rustfmt
+            pkg-config
+            cmake
+            autoPatchelfHook
+            fontconfig
+            stdenv.cc.cc.lib
+            wayland
+            libdrm
+            libGL
+            libffi
+            libinput
+            libseat
+            libwacom
+            libxkbcommon
+            mesa # For libgbm
+            systemd # For libudev
           ];
         };
       };
