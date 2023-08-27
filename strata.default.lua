@@ -18,6 +18,7 @@ strata.set_config {
 	},
 	decorations = {
 		border = {
+			enable = true,
 			width = 2,
 			active = "#FFF",
 			inactive = "#131418",
@@ -57,6 +58,19 @@ strata.set_config {
 		{
 			keys = { "WIN", "SPACE" },
 			action = strata.actions.spawn("rofi --show drun"),
+		},
+		{
+			keys = { "WIN", "B" },
+			action = function() -- Toggle border
+				local border_enabled = strata.get_config().decorations.border.enable
+				strata.update_config {
+					decorations = {
+						border = {
+							enable = not border_enabled,
+						},
+					},
+				}
+			end,
 		},
 	},
 	rules = {

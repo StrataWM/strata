@@ -2,6 +2,7 @@ PREFIX ?= /usr
 SYSCONFDIR ?= /etc
 BINDIR = $(PREFIX)/bin
 SHAREDIR = $(PREFIX)/share
+XDG_CONFIG_HOME ?= $(HOME)/.config
 
 APPNAME = strata
 LUA_LIB = lua
@@ -31,6 +32,10 @@ install: $(APPNAME) install_lib
 install_lib:
 	mkdir -p "$(TARGET_LIB)"
 	cp -r "lua" "$(TARGET_LIB)"
+
+install_default_config:
+	mkdir -p "$(XDG_CONFIG_HOME)/$(APPNAME)"
+	cp "./strata.default.lua" "$(XDG_CONFIG_HOME)/$(APPNAME)"
 
 uninstall:
 	rm -f "$(TARGET_BIN)"
