@@ -35,7 +35,7 @@ install_lib:
 
 install_default_config:
 	mkdir -p "$(XDG_CONFIG_HOME)/$(APPNAME)"
-	cp -r "./strata.default.lua" "$(XDG_CONFIG_HOME)/$(APPNAME)"
+	cp "./strata.default.lua" "$(XDG_CONFIG_HOME)/$(APPNAME)"
 
 uninstall:
 	rm -f "$(TARGET_BIN)"
