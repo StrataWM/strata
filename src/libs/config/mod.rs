@@ -4,4 +4,3 @@ mod structs;
 
 pub use parse::parse_config;
 pub use structs::*;
-

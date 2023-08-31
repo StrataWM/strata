@@ -1,23 +1,25 @@
 use mlua::{
+	FromLua,
 	Function,
 	IntoLua,
 	RegistryKey,
 };
+use smart_default::SmartDefault;
+use strata_derive::Config;
+use strum::EnumString;
 
-#[derive(Debug, Default)]
+use super::from_lua;
+
+#[derive(Debug, Default, Config)]
 pub struct Config {
-	pub options: Options,
-	pub bindings: Vec<Keybinding>,
-	pub rules: Vec<Rule>,
-}
-
-#[derive(Debug, Default)]
-pub struct Options {
 	pub autostart: Vec<Cmd>,
 	pub general: General,
 	pub decorations: WindowDecorations,
 	pub tiling: Tiling,
 	pub animations: Animations,
+	pub bindings: Vec<Keybinding>,
+	#[config(from = from_lua::Rules)]
+	pub rules: Vec<Rule>,
 }
 
 #[derive(Debug)]
@@ -38,15 +40,18 @@ impl LuaFunction {
 
 pub type Cmd = Vec<String>;
 
-#[derive(Debug, Default)]
+#[derive(Debug, SmartDefault, Config)]
 pub struct General {
+	#[default(10)]
 	pub workspaces: u8,
+	#[default(5)]
 	pub gaps_in: i32,
+	#[default(10)]
 	pub gaps_out: i32,
 	pub kb_repeat: Vec<i32>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Config)]
 pub struct WindowDecorations {
 	pub border: Border,
 	pub window: Window,
@@ -54,72 +59,93 @@ pub struct WindowDecorations {
 	pub shadow: Shadow,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, SmartDefault, Config)]
 pub struct Border {
 	pub enable: bool,
+	#[default(2)]
 	pub width: u32,
+	#[default("#ffffff")]
 	pub active: String,
+	#[default("#888888")]
 	pub inactive: String,
+	#[default(5.0)]
 	pub radius: f64,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, SmartDefault, Config)]
 pub struct Window {
+	#[default(1.0)]
 	pub opacity: f64,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, SmartDefault, Config)]
 pub struct Blur {
 	pub enable: bool,
+	#[default(5)]
 	pub size: u32,
+	#[default(1)]
 	pub passes: u32,
+	#[default(true)]
 	pub optimize: bool,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, SmartDefault, Config)]
 pub struct Shadow {
 	pub enable: bool,
+	#[default(5)]
 	pub size: u32,
+	#[default(5)]
 	pub blur: u32,
+	#[default("#000000")]
 	pub color: String,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Config)]
 pub struct Tiling {
-	pub layout: String,
+	pub layout: Layout,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, EnumString, Config)]
+#[strum(serialize_all = "snake_case")]
+pub enum Layout {
+	#[default]
+	Dwindle,
+}
+
+#[derive(Debug, SmartDefault, Config)]
 pub struct Animations {
+	#[default(true)]
 	pub enable: bool,
 }
 
-#[derive(Debug, strata_derive::FromLua)]
+#[derive(Debug, Config)]
 pub struct Keybinding {
+	#[config(flat)]
 	pub keys: Vec<String>,
+	#[config(flat)]
 	pub action: LuaFunction,
 }
 
-#[derive(Debug, strata_derive::FromLua)]
+#[derive(Debug, Config)]
 pub struct Rule {
+	#[config(flat)]
 	pub triggers: Vec<Trigger>,
+	#[config(flat)]
 	pub action: LuaFunction,
 }
 
-#[derive(Debug, strata_derive::FromLua)]
+#[derive(Debug, Config)]
 pub struct Trigger {
+	#[config(flat)]
 	pub event: String,
+	#[config(flat)]
 	pub class_name: Option<String>,
+	#[config(flat)]
 	pub workspace: Option<i32>,
 }
 
 impl Config {
 	pub fn set(&mut self, config: Config) {
 		*self = config;
-	}
-
-	pub fn update(&mut self, config: Config) {
-		// TODO
-		unimplemented!()
 	}
 }
