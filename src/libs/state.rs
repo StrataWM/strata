@@ -12,6 +12,13 @@ use crate::{
 	CONFIG,
 };
 use smithay::{
+	backend::{
+		renderer::{
+			damage::OutputDamageTracker,
+			glow::GlowRenderer,
+		},
+		winit::WinitGraphicsBackend,
+	},
 	desktop::{
 		layer_map_for_output,
 		PopupManager,
@@ -78,6 +85,9 @@ impl StrataState {
 		mut loop_handle: LoopHandle<'static, CalloopData>,
 		loop_signal: LoopSignal,
 		display: &mut Display<StrataState>,
+		seat_name: String,
+		backend: WinitGraphicsBackend<GlowRenderer>,
+		damage_tracker: OutputDamageTracker,
 	) -> Self {
 		let config = &CONFIG.read();
 
@@ -91,7 +101,6 @@ impl StrataState {
 		let mut seat_state = SeatState::new();
 		let data_device_state = DataDeviceState::new::<Self>(&dh);
 		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
-		let seat_name = backend_data.seat_name();
 		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
 		let key_delay: i32 = config.general.kb_repeat[0];
@@ -110,7 +119,8 @@ impl StrataState {
 		Self {
 			loop_handle,
 			dh,
-			backend_data,
+			backend,
+			damage_tracker,
 			start_time,
 			seat_name,
 			socket_name,

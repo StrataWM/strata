@@ -1,6 +1,13 @@
 use crate::libs::structs::workspaces::Workspaces;
 use smithay::{
-	backend::renderer::gles::GlesPixelProgram,
+	backend::{
+		renderer::{
+			damage::OutputDamageTracker,
+			gles::GlesPixelProgram,
+			glow::GlowRenderer,
+		},
+		winit::WinitGraphicsBackend,
+	},
 	desktop::PopupManager,
 	input::{
 		Seat,
@@ -47,7 +54,8 @@ pub struct CalloopData {
 
 pub struct StrataState {
 	pub dh: DisplayHandle,
-	pub backend_data: BackendData,
+	pub backend: WinitGraphicsBackend<GlowRenderer>,
+	pub damage_tracker: OutputDamageTracker,
 	pub start_time: Instant,
 	pub loop_handle: LoopHandle<'static, CalloopData>,
 	pub loop_signal: LoopSignal,
