@@ -1,7 +1,6 @@
 use crate::{
 	libs::structs::{
 		state::{
-			Backend,
 			CalloopData,
 			StrataState,
 		},
@@ -74,12 +73,11 @@ use std::{
 	time::Instant,
 };
 
-impl<BackendData: Backend> StrataState<BackendData> {
+impl StrataState {
 	pub fn new(
-		mut loop_handle: LoopHandle<'static, CalloopData<BackendData>>,
+		mut loop_handle: LoopHandle<'static, CalloopData>,
 		loop_signal: LoopSignal,
-		display: &mut Display<StrataState<BackendData>>,
-		backend_data: BackendData,
+		display: &mut Display<StrataState>,
 	) -> Self {
 		let config = &CONFIG.read();
 
@@ -134,8 +132,8 @@ impl<BackendData: Backend> StrataState<BackendData> {
 	}
 
 	fn init_wayland_listener(
-		handle: &mut LoopHandle<'static, CalloopData<BackendData>>,
-		display: &mut Display<StrataState<BackendData>>,
+		handle: &mut LoopHandle<'static, CalloopData>,
+		display: &mut Display<StrataState>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();

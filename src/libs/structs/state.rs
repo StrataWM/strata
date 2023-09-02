@@ -40,20 +40,16 @@ use std::{
 	time::Instant,
 };
 
-pub struct CalloopData<BackendData: Backend + 'static> {
-	pub state: StrataState<BackendData>,
-	pub display: Display<StrataState<BackendData>>,
+pub struct CalloopData {
+	pub state: StrataState,
+	pub display: Display<StrataState>,
 }
 
-pub trait Backend {
-	fn seat_name(&self) -> String;
-}
-
-pub struct StrataState<BackendData: Backend + 'static> {
+pub struct StrataState {
 	pub dh: DisplayHandle,
 	pub backend_data: BackendData,
 	pub start_time: Instant,
-	pub loop_handle: LoopHandle<'static, CalloopData<BackendData>>,
+	pub loop_handle: LoopHandle<'static, CalloopData>,
 	pub loop_signal: LoopSignal,
 	pub compositor_state: CompositorState,
 	pub xdg_shell_state: XdgShellState,
@@ -62,7 +58,7 @@ pub struct StrataState<BackendData: Backend + 'static> {
 	pub output_manager_state: OutputManagerState,
 	pub data_device_state: DataDeviceState,
 	pub primary_selection_state: PrimarySelectionState,
-	pub seat_state: SeatState<StrataState<BackendData>>,
+	pub seat_state: SeatState<StrataState>,
 	pub layer_shell_state: WlrLayerShellState,
 	pub popup_manager: PopupManager,
 	pub seat: Seat<Self>,

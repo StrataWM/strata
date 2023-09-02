@@ -1,8 +1,5 @@
 use crate::libs::structs::{
-	state::{
-		Backend,
-		StrataState,
-	},
+	state::StrataState,
 	workspaces::FocusTarget,
 };
 use smithay::desktop::Window;
@@ -55,25 +52,15 @@ impl From<FocusTarget> for WlSurface {
 	}
 }
 
-impl<BackendData: Backend> PointerTarget<StrataState<BackendData>> for FocusTarget {
-	fn enter(
-		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
-		event: &MotionEvent,
-	) {
+impl PointerTarget<StrataState> for FocusTarget {
+	fn enter(&self, seat: &Seat<StrataState>, data: &mut StrataState, event: &MotionEvent) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::enter(w, seat, data, event),
 			FocusTarget::LayerSurface(l) => PointerTarget::enter(l, seat, data, event),
 			FocusTarget::Popup(p) => PointerTarget::enter(p.wl_surface(), seat, data, event),
 		}
 	}
-	fn motion(
-		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
-		event: &MotionEvent,
-	) {
+	fn motion(&self, seat: &Seat<StrataState>, data: &mut StrataState, event: &MotionEvent) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::motion(w, seat, data, event),
 			FocusTarget::LayerSurface(l) => PointerTarget::motion(l, seat, data, event),
@@ -82,8 +69,8 @@ impl<BackendData: Backend> PointerTarget<StrataState<BackendData>> for FocusTarg
 	}
 	fn relative_motion(
 		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
+		seat: &Seat<StrataState>,
+		data: &mut StrataState,
 		event: &RelativeMotionEvent,
 	) {
 		match self {
@@ -94,37 +81,21 @@ impl<BackendData: Backend> PointerTarget<StrataState<BackendData>> for FocusTarg
 			}
 		}
 	}
-	fn button(
-		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
-		event: &ButtonEvent,
-	) {
+	fn button(&self, seat: &Seat<StrataState>, data: &mut StrataState, event: &ButtonEvent) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::button(w, seat, data, event),
 			FocusTarget::LayerSurface(l) => PointerTarget::button(l, seat, data, event),
 			FocusTarget::Popup(p) => PointerTarget::button(p.wl_surface(), seat, data, event),
 		}
 	}
-	fn axis(
-		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
-		frame: AxisFrame,
-	) {
+	fn axis(&self, seat: &Seat<StrataState>, data: &mut StrataState, frame: AxisFrame) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::axis(w, seat, data, frame),
 			FocusTarget::LayerSurface(l) => PointerTarget::axis(l, seat, data, frame),
 			FocusTarget::Popup(p) => PointerTarget::axis(p.wl_surface(), seat, data, frame),
 		}
 	}
-	fn leave(
-		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
-		serial: Serial,
-		time: u32,
-	) {
+	fn leave(&self, seat: &Seat<StrataState>, data: &mut StrataState, serial: Serial, time: u32) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::leave(w, seat, data, serial, time),
 			FocusTarget::LayerSurface(l) => PointerTarget::leave(l, seat, data, serial, time),
@@ -133,11 +104,11 @@ impl<BackendData: Backend> PointerTarget<StrataState<BackendData>> for FocusTarg
 	}
 }
 
-impl<BackendData: Backend> KeyboardTarget<StrataState<BackendData>> for FocusTarget {
+impl KeyboardTarget<StrataState> for FocusTarget {
 	fn enter(
 		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
+		seat: &Seat<StrataState>,
+		data: &mut StrataState,
 		keys: Vec<KeysymHandle<'_>>,
 		serial: Serial,
 	) {
@@ -149,12 +120,7 @@ impl<BackendData: Backend> KeyboardTarget<StrataState<BackendData>> for FocusTar
 			}
 		}
 	}
-	fn leave(
-		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
-		serial: Serial,
-	) {
+	fn leave(&self, seat: &Seat<StrataState>, data: &mut StrataState, serial: Serial) {
 		match self {
 			FocusTarget::Window(w) => KeyboardTarget::leave(w, seat, data, serial),
 			FocusTarget::LayerSurface(l) => KeyboardTarget::leave(l, seat, data, serial),
@@ -163,8 +129,8 @@ impl<BackendData: Backend> KeyboardTarget<StrataState<BackendData>> for FocusTar
 	}
 	fn key(
 		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
+		seat: &Seat<StrataState>,
+		data: &mut StrataState,
 		key: KeysymHandle<'_>,
 		state: KeyState,
 		serial: Serial,
@@ -182,8 +148,8 @@ impl<BackendData: Backend> KeyboardTarget<StrataState<BackendData>> for FocusTar
 	}
 	fn modifiers(
 		&self,
-		seat: &Seat<StrataState<BackendData>>,
-		data: &mut StrataState<BackendData>,
+		seat: &Seat<StrataState>,
+		data: &mut StrataState,
 		modifiers: ModifiersState,
 		serial: Serial,
 	) {
