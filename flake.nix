@@ -42,6 +42,9 @@
               ./Cargo.lock
               ./resources
             ];
+            exclude = [
+              ./lua
+            ];
           };
           cmakeFlags = ["PREFIX=~/.local"];
 
