@@ -11,8 +11,7 @@ use mlua::{
 	Value,
 };
 use std::path::PathBuf;
-
-use super::from_lua::{self,};
+use strata_core::UpdateFromLua;
 
 struct StrataApi;
 
@@ -38,8 +37,7 @@ impl StrataApi {
 	}
 
 	pub fn set_config(lua: &Lua, config: Value) -> Result<()> {
-		let config: from_lua::Config = FromLua::from_lua(config, lua)?;
-		CONFIG.write().set(config.into());
+		CONFIG.write().set(FromLua::from_lua(config, lua)?);
 
 		Ok(())
 	}
@@ -49,9 +47,8 @@ impl StrataApi {
 		unimplemented!()
 	}
 
-	pub fn update_config(_lua: &Lua, _args: Value) -> Result<()> {
-		// TODO
-		unimplemented!()
+	pub fn update_config(lua: &Lua, args: Value) -> Result<()> {
+		CONFIG.write().update_from_lua(args, lua)
 	}
 }
 

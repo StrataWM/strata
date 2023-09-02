@@ -51,6 +51,9 @@ lazy_static = "1.4.0"
 parking_lot = "0.12.1"
 xdg = "2.5.2"
 strata-derive = { path = "strata-derive" }
+strata-core = { path = "strata-core" }
+smart-default = "0.7.1"
+strum = { version = "0.25.0", features = ["derive"] }
 
 [dependencies.smithay]
 default-features = false

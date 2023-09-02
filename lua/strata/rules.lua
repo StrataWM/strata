@@ -37,7 +37,7 @@ end
 function module.bind_to_workspace(inputs)
 	return map_rules(inputs, function(input)
 		return {
-			triggers = { event = "win_open_pre", class_name = input[2] },
+			triggers = { { event = "win_open_pre", class_name = input[2] } },
 			action = function(window) window:move_to_workspace(input[1]) end,
 		}
 	end)
@@ -49,7 +49,7 @@ end
 function module.set_floating(inputs)
 	return map_rules(inputs, function(input)
 		return {
-			triggers = { event = "win_open_pre", class_name = input[1] },
+			triggers = { { event = "win_open_pre", class_name = input[1] } },
 			action = function(window) window:set_floating() end,
 		}
 	end)
