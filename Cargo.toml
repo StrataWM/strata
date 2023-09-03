@@ -45,7 +45,7 @@ mlua = { version = "0.9.0", features = [
     "send",
     "macros",
     "parking_lot",
-	"async",
+    "async",
 ] }
 lazy_static = "1.4.0"
 parking_lot = "0.12.1"
@@ -57,9 +57,9 @@ strum = { version = "0.25.0", features = ["derive"] }
 
 [dependencies.smithay]
 default-features = false
-git = "https://github.com/smithay/smithay"
+git = "https://github.com/stratawm/smithay"
 version = "0.3"
-rev = "e241ccb"
+rev = "5f1674c"
 features = [
     "backend_winit",
     "wayland_frontend",
