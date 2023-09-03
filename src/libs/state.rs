@@ -1,7 +1,6 @@
 use crate::{
 	libs::structs::{
 		state::{
-			Backend,
 			CalloopData,
 			StrataState,
 		},
@@ -13,6 +12,13 @@ use crate::{
 	CONFIG,
 };
 use smithay::{
+	backend::{
+		renderer::{
+			damage::OutputDamageTracker,
+			glow::GlowRenderer,
+		},
+		winit::WinitGraphicsBackend,
+	},
 	desktop::{
 		layer_map_for_output,
 		PopupManager,
@@ -74,12 +80,14 @@ use std::{
 	time::Instant,
 };
 
-impl<BackendData: Backend> StrataState<BackendData> {
+impl StrataState {
 	pub fn new(
-		mut loop_handle: LoopHandle<'static, CalloopData<BackendData>>,
+		mut loop_handle: LoopHandle<'static, CalloopData>,
 		loop_signal: LoopSignal,
-		display: &mut Display<StrataState<BackendData>>,
-		backend_data: BackendData,
+		display: &mut Display<StrataState>,
+		seat_name: String,
+		backend: WinitGraphicsBackend<GlowRenderer>,
+		damage_tracker: OutputDamageTracker,
 	) -> Self {
 		let config = &CONFIG.read();
 
@@ -93,7 +101,6 @@ impl<BackendData: Backend> StrataState<BackendData> {
 		let mut seat_state = SeatState::new();
 		let data_device_state = DataDeviceState::new::<Self>(&dh);
 		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
-		let seat_name = backend_data.seat_name();
 		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
 		let key_delay: i32 = config.general.kb_repeat[0];
@@ -112,7 +119,8 @@ impl<BackendData: Backend> StrataState<BackendData> {
 		Self {
 			loop_handle,
 			dh,
-			backend_data,
+			backend,
+			damage_tracker,
 			start_time,
 			seat_name,
 			socket_name,
@@ -134,8 +142,8 @@ impl<BackendData: Backend> StrataState<BackendData> {
 	}
 
 	fn init_wayland_listener(
-		handle: &mut LoopHandle<'static, CalloopData<BackendData>>,
-		display: &mut Display<StrataState<BackendData>>,
+		handle: &mut LoopHandle<'static, CalloopData>,
+		display: &mut Display<StrataState>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();

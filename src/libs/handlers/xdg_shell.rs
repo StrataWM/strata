@@ -1,8 +1,5 @@
 use crate::libs::structs::{
-	state::{
-		Backend,
-		StrataState,
-	},
+	state::StrataState,
 	workspaces::{
 		StrataWindow,
 		Workspaces,
@@ -53,7 +50,7 @@ use std::{
 	sync::Mutex,
 };
 
-impl<BackendData: Backend> XdgShellHandler for StrataState<BackendData> {
+impl XdgShellHandler for StrataState {
 	fn xdg_shell_state(&mut self) -> &mut XdgShellState {
 		&mut self.xdg_shell_state
 	}
@@ -83,7 +80,7 @@ impl<BackendData: Backend> XdgShellHandler for StrataState<BackendData> {
 	fn grab(&mut self, _surface: PopupSurface, _seat: WlSeat, _serial: Serial) {}
 }
 
-delegate_xdg_shell!(@<BackendData: Backend + 'static> StrataState<BackendData>);
+delegate_xdg_shell!(StrataState);
 
 pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager: &PopupManager) {
 	if let Some(window) = workspaces.all_windows().find(|w| w.toplevel().wl_surface() == surface) {
@@ -147,7 +144,7 @@ pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager
 	};
 }
 
-impl<BackendData: Backend> XdgDecorationHandler for StrataState<BackendData> {
+impl XdgDecorationHandler for StrataState {
 	fn new_decoration(&mut self, toplevel: ToplevelSurface) {
 		toplevel.with_pending_state(|state| {
 			state.decoration_mode = Some(Mode::ServerSide);
@@ -164,4 +161,4 @@ impl<BackendData: Backend> XdgDecorationHandler for StrataState<BackendData> {
 
 	fn unset_mode(&mut self, _toplevel: ToplevelSurface) {}
 }
-delegate_xdg_decoration!(@<BackendData: Backend + 'static> StrataState<BackendData>);
+delegate_xdg_decoration!(StrataState);

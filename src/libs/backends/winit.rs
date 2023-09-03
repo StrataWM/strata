@@ -1,14 +1,10 @@
 use crate::{
 	libs::{
 		decorations::CustomRenderElements,
-		structs::{
-			backends::WinitData,
-			state::{
-				Backend,
-				BorderShader,
-				CalloopData,
-				StrataState,
-			},
+		structs::state::{
+			BorderShader,
+			CalloopData,
+			StrataState,
 		},
 	},
 	CONFIG,
@@ -60,15 +56,9 @@ use std::{
 	time::Duration,
 };
 
-impl Backend for WinitData {
-	fn seat_name(&self) -> String {
-		"winit".to_string()
-	}
-}
-
 pub fn init_winit() {
-	let mut event_loop: EventLoop<CalloopData<WinitData>> = EventLoop::try_new().unwrap();
-	let mut display: Display<StrataState<WinitData>> = Display::new().unwrap();
+	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new().unwrap();
+	let mut display: Display<StrataState> = Display::new().unwrap();
 	let (backend, mut winit) = winit::init().unwrap();
 	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
 	let output = Output::new(
@@ -80,17 +70,22 @@ pub fn init_winit() {
 			model: "Winit".into(),
 		},
 	);
-	let _global = output.create_global::<StrataState<WinitData>>(&display.handle());
+	let _global = output.create_global::<StrataState>(&display.handle());
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
-	let winitdata = WinitData { backend, damage_tracker: damage_tracked_renderer };
-	let state =
-		StrataState::new(event_loop.handle(), event_loop.get_signal(), &mut display, winitdata);
+	let state = StrataState::new(
+		event_loop.handle(),
+		event_loop.get_signal(),
+		&mut display,
+		"winit".to_string(),
+		backend,
+		damage_tracked_renderer,
+	);
 
 	let mut data = CalloopData { display, state };
 	let state = &mut data.state;
-	BorderShader::init(state.backend_data.backend.renderer());
+	BorderShader::init(state.backend.renderer());
 	for workspace in state.workspaces.iter() {
 		workspace.add_output(output.clone());
 	}
@@ -117,7 +112,7 @@ pub fn init_winit() {
 
 pub fn winit_dispatch(
 	winit: &mut WinitEventLoop,
-	data: &mut CalloopData<WinitData>,
+	data: &mut CalloopData,
 	output: &Output,
 	full_redraw: &mut u8,
 ) {
@@ -134,8 +129,6 @@ pub fn winit_dispatch(
 		}
 	});
 
-	let winitdata = &mut state.backend_data;
-
 	if let Err(WinitError::WindowClosed) = res {
 		state.loop_signal.stop();
 	} else {
@@ -144,10 +137,10 @@ pub fn winit_dispatch(
 
 	*full_redraw = full_redraw.saturating_sub(1);
 
-	let size = winitdata.backend.window_size().physical_size;
+	let size = state.backend.window_size().physical_size;
 	let damage = Rectangle::from_loc_and_size((0, 0), size);
 
-	winitdata.backend.bind().unwrap();
+	state.backend.bind().unwrap();
 
 	let mut renderelements: Vec<CustomRenderElements<_>> = vec![];
 	let workspace = state.workspaces.current_mut();
@@ -165,7 +158,7 @@ pub fn winit_dispatch(
 			.flat_map(|(loc, surface)| {
 				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
 					surface,
-					winitdata.backend.renderer(),
+					state.backend.renderer(),
 					loc.to_physical_precise_round(1),
 					Scale::from(1.0),
 					1.0,
@@ -173,7 +166,7 @@ pub fn winit_dispatch(
 			}),
 	);
 
-	renderelements.extend(workspace.render_elements(winitdata.backend.renderer()));
+	renderelements.extend(workspace.render_elements(state.backend.renderer()));
 
 	renderelements.extend(
 		lower
@@ -182,7 +175,7 @@ pub fn winit_dispatch(
 			.flat_map(|(loc, surface)| {
 				AsRenderElements::<GlowRenderer>::render_elements::<CustomRenderElements<_>>(
 					surface,
-					winitdata.backend.renderer(),
+					state.backend.renderer(),
 					loc.to_physical_precise_round(1),
 					Scale::from(1.0),
 					1.0,
@@ -190,12 +183,12 @@ pub fn winit_dispatch(
 			}),
 	);
 
-	winitdata
+	state
 		.damage_tracker
-		.render_output(winitdata.backend.renderer(), 0, &renderelements, [0.1, 0.1, 0.1, 1.0])
+		.render_output(state.backend.renderer(), 0, &renderelements, [0.1, 0.1, 0.1, 1.0])
 		.unwrap();
 
-	winitdata.backend.submit(Some(&[damage])).unwrap();
+	state.backend.submit(Some(&[damage])).unwrap();
 
 	workspace.windows().for_each(|window| {
 		window.send_frame(output, state.start_time.elapsed(), Some(Duration::ZERO), |_, _| {
@@ -206,5 +199,5 @@ pub fn winit_dispatch(
 	workspace.windows().for_each(|e| e.refresh());
 	display.flush_clients().unwrap();
 	state.popup_manager.cleanup();
-	BorderShader::cleanup(winitdata.backend.renderer());
+	BorderShader::cleanup(state.backend.renderer());
 }
