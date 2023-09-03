@@ -1665,7 +1665,7 @@ dependencies = [
 [[package]]
 name = "smithay"
 version = "0.3.0"
-source = "git+https://github.com/smithay/smithay?rev=e241ccb#e241ccbbc4dfc6ce38e33856d9d159e436db3b5e"
+source = "git+https://github.com/stratawm/smithay?rev=e241ccb#e241ccbbc4dfc6ce38e33856d9d159e436db3b5e"
 dependencies = [
  "appendlist",
  "ash",
