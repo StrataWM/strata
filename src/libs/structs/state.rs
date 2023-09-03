@@ -1,4 +1,5 @@
 use crate::libs::structs::workspaces::Workspaces;
+use once_cell::sync::OnceCell;
 use smithay::{
 	backend::{
 		renderer::{
@@ -44,6 +45,7 @@ use smithay::{
 };
 use std::{
 	ffi::OsString,
+	ops::Deref,
 	time::Instant,
 };
 
@@ -74,6 +76,42 @@ pub struct StrataState {
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub pointer_location: Point<f64, Logical>,
+}
+
+pub struct GlobalState {
+	inner: OnceCell<StrataState>,
+}
+
+impl GlobalState {
+	pub fn set(
+		&self,
+		loop_handle: LoopHandle<'static, CalloopData>,
+		loop_signal: LoopSignal,
+		display: &mut Display<StrataState>,
+		seat_name: String,
+		backend: WinitGraphicsBackend<GlowRenderer>,
+		damage_tracker: OutputDamageTracker,
+	) -> Result<(), StrataState> {
+		self.inner.set(StrataState::new(
+			loop_handle,
+			loop_signal,
+			display,
+			seat_name,
+			backend,
+			damage_tracker,
+		))
+	}
+	pub fn get(&self) -> &StrataState {
+		self.inner.get().expect("State not initialized")
+	}
+}
+
+impl Deref for GlobalState {
+	type Target = StrataState;
+
+	fn deref(&self) -> &Self::Target {
+		&self.get()
+	}
 }
 
 pub struct BorderShader {
