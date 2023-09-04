@@ -1,5 +1,6 @@
 use crate::{
 	libs::{
+		config::parse_config,
 		decorations::CustomRenderElements,
 		structs::state::{
 			BorderShader,
@@ -52,11 +53,16 @@ use smithay::{
 	wayland::shell::wlr_layer::Layer,
 };
 use std::{
+	error::Error,
 	process::Command,
 	time::Duration,
 };
 
-pub fn init_winit() {
+pub async fn init_winit() -> Result<(), Box<dyn Error>> {
+	let xdg = xdg::BaseDirectories::with_prefix("strata")?;
+	let config_dir = xdg.find_config_file("");
+	let lib_dir = xdg.find_data_file("lua");
+
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new().unwrap();
 	let mut display: Display<StrataState> = Display::new().unwrap();
 	let (backend, mut winit) = winit::init().unwrap();
@@ -102,12 +108,18 @@ pub fn init_winit() {
 		})
 		.unwrap();
 
+	if let (Some(config_path), Some(data_path)) = (config_dir, lib_dir) {
+		tokio::spawn(async { parse_config(config_path, data_path) }).await?;
+	}
+
 	// Autostart applications
 	for cmd in &CONFIG.read().autostart {
 		Command::new("/bin/sh").arg("-c").args(cmd).spawn().ok();
 	}
 
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
+
+	Ok(())
 }
 
 pub fn winit_dispatch(

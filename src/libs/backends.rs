@@ -5,7 +5,7 @@ use std::error::Error;
 pub async fn init_with_backend(backend_name: String) -> Result<(), Box<dyn Error>> {
 	match backend_name.as_str() {
 		"winit" => {
-			winit::init_winit();
+			winit::init_winit().await?;
 			Ok(())
 		}
 		"udev" => {
