@@ -1,4 +1,8 @@
 mod libs;
+use crate::libs::config::{
+	parse_config,
+	Config,
+};
 use chrono::Local;
 use clap::Parser;
 use lazy_static::lazy_static;
@@ -22,11 +26,6 @@ use std::{
 	io::stdout,
 };
 use tracing_subscriber::fmt::writer::MakeWriterExt;
-
-use crate::libs::config::{
-	parse_config,
-	Config,
-};
 
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
@@ -60,8 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	}
 
 	let args = Args::parse();
-
-	init_with_backend(&args.backend);
+	tokio::spawn(async move { init_with_backend(args.backend) }).await?.await?;
 
 	info!("Initializing Strata WM");
 	info!("Parsing config...");
