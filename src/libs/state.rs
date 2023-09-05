@@ -201,39 +201,6 @@ impl StrataState {
 		};
 		under
 	}
-
-	pub fn close_window(&mut self) {
-		if let Some(d) = self.workspaces.current().window_under(self.pointer_location) {
-			d.0.toplevel().send_close()
-		}
-	}
-
-	pub fn switch_to_workspace(&mut self, id: u8) {
-		self.workspaces.activate(id);
-		self.set_input_focus_auto();
-	}
-
-	pub fn move_window_to_workspace(&mut self, id: u8) {
-		let window =
-			self.workspaces.current().window_under(self.pointer_location).map(|d| d.0.clone());
-
-		if let Some(window) = window {
-			self.workspaces.move_window_to_workspace(&window, id);
-		}
-	}
-
-	pub fn follow_window_move(&mut self, id: u8) {
-		self.move_window_to_workspace(id);
-		self.switch_to_workspace(id);
-	}
-
-	pub fn quit(&mut self) {
-		self.loop_signal.stop();
-	}
-
-	pub fn spawn(&mut self, command: &str) {
-		Command::new("/bin/sh").arg("-c").arg(command).spawn().expect("Failed to spawn command");
-	}
 }
 
 #[derive(Default)]

@@ -55,6 +55,10 @@ use smithay::{
 use std::{
 	error::Error,
 	process::Command,
+	sync::{
+		Arc,
+		Mutex,
+	},
 	time::Duration,
 };
 
@@ -108,6 +112,9 @@ pub async fn init_winit() -> Result<(), Box<dyn Error>> {
 		})
 		.unwrap();
 
+	let state_arc: Arc<Mutex<&mut StrataState>> = Arc::new(Mutex::new(state));
+
+	// Parse config.
 	if let (Some(config_path), Some(data_path)) = (config_dir, lib_dir) {
 		tokio::spawn(async { parse_config(config_path, data_path) }).await?.await?;
 	}
