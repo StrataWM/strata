@@ -26,7 +26,7 @@ $(APPNAME):
 clean:
 	cargo clean
 
-install: $(APPNAME) install_lib
+install: $(APPNAME) install_lib install_default_config
 	install -Dm0755 "target/$(TARGET)/$(APPNAME)" "$(TARGET_BIN)"
 
 install_lib:
