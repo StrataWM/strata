@@ -52,7 +52,7 @@ impl StrataApi {
 	}
 }
 
-pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
+pub async fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	let lua = LUA.lock();
 	let api_submod = get_or_create_module(&lua, "strata.api").unwrap(); // TODO: remove unwrap
 
