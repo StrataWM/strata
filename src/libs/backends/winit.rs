@@ -109,7 +109,7 @@ pub async fn init_winit() -> Result<(), Box<dyn Error>> {
 		.unwrap();
 
 	if let (Some(config_path), Some(data_path)) = (config_dir, lib_dir) {
-		parse_config(config_path, data_path).await?;
+		tokio::spawn(async { parse_config(config_path, data_path) }).await?.await?;
 	}
 
 	// Autostart applications
