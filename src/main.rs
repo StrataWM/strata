@@ -1,8 +1,5 @@
 mod libs;
-use crate::libs::config::{
-	parse_config,
-	Config,
-};
+use crate::libs::config::Config;
 use chrono::Local;
 use clap::Parser;
 use lazy_static::lazy_static;
@@ -52,7 +49,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	}
 
 	let args = Args::parse();
-	tokio::spawn(async move { init_with_backend(args.backend) }).await?.await?;
+	init_with_backend(args.backend).await?;
 
 	info!("Initializing Strata WM");
 	info!("Parsing config...");
