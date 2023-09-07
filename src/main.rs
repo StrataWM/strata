@@ -1,17 +1,17 @@
 mod libs;
+
+use crate::libs::{
+	backends::init_with_backend,
+	config::{
+		parse_config,
+		Config,
+	},
+	structs::args::Args,
+};
+
 use chrono::Local;
 use clap::Parser;
 use lazy_static::lazy_static;
-pub use libs::{
-	backends::init_with_backend,
-	structs::{
-		args::Args,
-		state::{
-			CalloopData,
-			StrataState,
-		},
-	},
-};
 use log::info;
 use parking_lot::{
 	ReentrantMutex,
@@ -22,11 +22,6 @@ use std::{
 	io::stdout,
 };
 use tracing_subscriber::fmt::writer::MakeWriterExt;
-
-use crate::libs::config::{
-	parse_config,
-	Config,
-};
 
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
