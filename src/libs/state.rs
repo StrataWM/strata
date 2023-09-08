@@ -203,8 +203,8 @@ impl StrataState {
 	}
 
 	pub fn close_window(&mut self) {
-		if let Some(d) = self.workspaces.current().window_under(self.pointer_location) {
-			d.0.toplevel().send_close()
+		if let Some((window, _)) = self.workspaces.current().window_under(self.pointer_location) {
+			window.toplevel().send_close()
 		}
 	}
 
