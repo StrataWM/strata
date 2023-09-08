@@ -48,13 +48,13 @@ use std::{
 
 impl StrataWindow {
 	fn bbox(&self) -> Rectangle<i32, Logical> {
-		let mut bbox = self.window.bbox();
-		bbox.loc += self.rec.loc - self.window.geometry().loc;
+		let mut bbox = self.smithay_window.bbox();
+		bbox.loc += self.rec.loc - self.smithay_window.geometry().loc;
 		bbox
 	}
 
 	fn render_location(&self) -> Point<i32, Logical> {
-		self.rec.loc - self.window.geometry().loc
+		self.rec.loc - self.smithay_window.geometry().loc
 	}
 }
 impl Workspace {
@@ -63,7 +63,7 @@ impl Workspace {
 	}
 
 	pub fn windows(&self) -> impl Iterator<Item = Ref<'_, Window>> {
-		self.windows.iter().map(|w| Ref::map(w.borrow(), |hw| &hw.window))
+		self.windows.iter().map(|w| Ref::map(w.borrow(), |hw| &hw.smithay_window))
 	}
 
 	pub fn strata_windows(&self) -> impl Iterator<Item = Ref<'_, StrataWindow>> {
@@ -71,7 +71,7 @@ impl Workspace {
 	}
 
 	pub fn add_window(&mut self, window: Rc<RefCell<StrataWindow>>) {
-		self.windows.retain(|w| w.borrow().window != window.borrow().window);
+		self.windows.retain(|w| w.borrow().smithay_window != window.borrow().smithay_window);
 		self.windows.push(window.clone());
 		self.layout_tree.insert(window, self.layout_tree.next_split(), 0.5);
 		refresh_geometry(self);
@@ -80,7 +80,7 @@ impl Workspace {
 	pub fn remove_window(&mut self, window: &Window) -> Option<Rc<RefCell<StrataWindow>>> {
 		let mut removed = None;
 		self.windows.retain(|w| {
-			if &w.borrow().window == window {
+			if &w.borrow().smithay_window == window {
 				removed = Some(w.clone());
 				false
 			} else {
@@ -104,7 +104,7 @@ impl Workspace {
 	{
 		let mut render_elements: Vec<C> = Vec::new();
 		for element in &self.windows {
-			let window = &element.borrow().window;
+			let window = &element.borrow().smithay_window;
 			if CONFIG.read().decorations.border.width > 0 {
 				render_elements.push(C::from(BorderShader::element(
 					renderer.glow_renderer_mut(),
@@ -160,8 +160,8 @@ impl Workspace {
 		self.windows.iter().filter(|e| e.borrow().bbox().to_f64().contains(point)).find_map(|e| {
 			// we need to offset the point to the location where the surface is actually drawn
 			let render_location = e.borrow().render_location();
-			if e.borrow().window.is_in_input_region(&(point - render_location.to_f64())) {
-				Some((Ref::map(e.borrow(), |hw| &hw.window), render_location))
+			if e.borrow().smithay_window.is_in_input_region(&(point - render_location.to_f64())) {
+				Some((Ref::map(e.borrow(), |hw| &hw.smithay_window), render_location))
 			} else {
 				None
 			}
@@ -169,7 +169,7 @@ impl Workspace {
 	}
 
 	pub fn contains_window(&self, window: &Window) -> bool {
-		self.windows.iter().any(|w| &w.borrow().window == window)
+		self.windows.iter().any(|w| &w.borrow().smithay_window == window)
 	}
 }
 

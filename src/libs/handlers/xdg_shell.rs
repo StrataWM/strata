@@ -58,7 +58,7 @@ impl XdgShellHandler for StrataState {
 	fn new_toplevel(&mut self, surface: ToplevelSurface) {
 		let window = Window::new(surface);
 		self.workspaces.current_mut().add_window(Rc::new(RefCell::new(StrataWindow {
-			window: window.clone(),
+			smithay_window: window.clone(),
 			rec: window.geometry(),
 		})));
 	}

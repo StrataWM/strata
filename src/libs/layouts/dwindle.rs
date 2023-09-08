@@ -43,19 +43,19 @@ impl Dwindle {
 		match self {
 			Dwindle::Empty => {}
 			Dwindle::Window(w) => {
-				if w.borrow().window == *window {
+				if w.borrow().smithay_window == *window {
 					*self = Dwindle::Empty;
 				}
 			}
 			Dwindle::Split { left, right, split: _, ratio: _ } => {
 				if let Dwindle::Window(w) = left.as_ref() {
-					if w.borrow().window == *window {
+					if w.borrow().smithay_window == *window {
 						*self = *right.clone();
 						return;
 					}
 				}
 				if let Dwindle::Window(w) = right.as_ref() {
-					if w.borrow().window == *window {
+					if w.borrow().smithay_window == *window {
 						*self = *left.clone();
 						return;
 					}

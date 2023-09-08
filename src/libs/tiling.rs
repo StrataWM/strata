@@ -63,7 +63,7 @@ pub fn refresh_geometry(workspace: &mut Workspace) {
 		}
 	}
 	for strata_window in workspace.strata_windows() {
-		let xdg_toplevel = strata_window.window.toplevel();
+		let xdg_toplevel = strata_window.smithay_window.toplevel();
 		xdg_toplevel.with_pending_state(|state| {
 			state.size = Some(strata_window.rec.size);
 		});
