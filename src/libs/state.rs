@@ -103,9 +103,9 @@ impl StrataState {
 		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
 		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
-		let key_delay: i32 = config.general.kb_repeat[0];
-		let key_repeat: i32 = config.general.kb_repeat[1];
 		if !config.general.kb_repeat.is_empty() {
+			let key_delay: i32 = config.general.kb_repeat[0];
+			let key_repeat: i32 = config.general.kb_repeat[1];
 			seat.add_keyboard(XkbConfig::default(), key_delay, key_repeat)
 				.expect("Couldn't parse XKB config");
 		} else {
@@ -203,8 +203,8 @@ impl StrataState {
 	}
 
 	pub fn close_window(&mut self) {
-		if let Some(d) = self.workspaces.current().window_under(self.pointer_location) {
-			d.0.toplevel().send_close()
+		if let Some((window, _)) = self.workspaces.current().window_under(self.pointer_location) {
+			window.toplevel().send_close()
 		}
 	}
 

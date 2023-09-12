@@ -564,17 +564,6 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
 name = "errno"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f639046355ee4f37944e44f60642c6f3a7efa3cf6b78c78a0d989a8ce6c396a1"
-dependencies = [
- "errno-dragonfly",
- "libc",
- "winapi",
-]
-
-[[package]]
-name = "errno"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b30f669a7961ef1631673d2766cc92f52d64f7ef354d4fe0ddfd30ed52f0f4f"
@@ -916,13 +905,13 @@ dependencies = [
 
 [[package]]
 name = "libseat"
-version = "0.1.7"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "845e5c255462c9bc7c71c17b996766b76e3c66f2ddd5846bfbc83f18382aa648"
+checksum = "54a0adf8d8607a73a5b74cbe4132f57cb349e4bf860103cd089461bbcbc9907e"
 dependencies = [
- "errno 0.2.8",
+ "errno",
  "libseat-sys",
- "slog",
+ "log",
 ]
 
 [[package]]
@@ -1553,7 +1542,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9bfe0f2582b4931a45d1fa608f8a8722e8b3c7ac54dd6d5f3b3212791fedef49"
 dependencies = [
  "bitflags 2.4.0",
- "errno 0.3.2",
+ "errno",
  "libc",
  "linux-raw-sys",
  "windows-sys 0.48.0",
@@ -1631,12 +1620,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "slog"
-version = "2.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8347046d4ebd943127157b94d63abb990fcf729dc4e9978927fdf4ac3c998d06"
-
-[[package]]
 name = "slotmap"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1665,7 +1648,7 @@ dependencies = [
 [[package]]
 name = "smithay"
 version = "0.3.0"
-source = "git+https://github.com/stratawm/smithay?rev=5f1674c#5f1674cc825881f88d9ad6d684cc4f58e344be40"
+source = "git+https://github.com/stratawm/smithay?rev=1a61e1c#1a61e1c13a8d6996e28741a5ecdb09af4981c17d"
 dependencies = [
  "appendlist",
  "ash",

@@ -102,6 +102,70 @@ impl PointerTarget<StrataState> for FocusTarget {
 			FocusTarget::Popup(p) => PointerTarget::leave(p.wl_surface(), seat, data, serial, time),
 		}
 	}
+	fn gesture_swipe_update(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GestureSwipeUpdateEvent,
+	) {
+		todo!()
+	}
+	fn gesture_swipe_end(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GestureSwipeEndEvent,
+	) {
+		todo!()
+	}
+	fn gesture_swipe_begin(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GestureSwipeBeginEvent,
+	) {
+		todo!()
+	}
+	fn gesture_pinch_update(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GesturePinchUpdateEvent,
+	) {
+		todo!()
+	}
+	fn gesture_pinch_end(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GesturePinchEndEvent,
+	) {
+		todo!()
+	}
+	fn gesture_pinch_begin(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GesturePinchBeginEvent,
+	) {
+		todo!()
+	}
+	fn gesture_hold_begin(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GestureHoldBeginEvent,
+	) {
+		todo!()
+	}
+	fn gesture_hold_end(
+		&self,
+		_: &smithay::input::Seat<StrataState>,
+		_: &mut StrataState,
+		_: &smithay::input::pointer::GestureHoldEndEvent,
+	) {
+		todo!()
+	}
 }
 
 impl KeyboardTarget<StrataState> for FocusTarget {
