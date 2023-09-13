@@ -2,7 +2,7 @@ use crate::{
 	libs::{
 		decorations::AsGlowRenderer,
 		structs::{
-			state::BorderShader,
+			decorations::BorderShader,
 			workspaces::{
 				Dwindle,
 				StrataWindow,

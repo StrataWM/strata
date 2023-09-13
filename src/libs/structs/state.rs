@@ -3,7 +3,6 @@ use smithay::{
 	backend::{
 		renderer::{
 			damage::OutputDamageTracker,
-			gles::GlesPixelProgram,
 			glow::GlowRenderer,
 		},
 		winit::WinitGraphicsBackend,
@@ -74,9 +73,4 @@ pub struct StrataState {
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub pointer_location: Point<f64, Logical>,
-}
-
-pub struct BorderShader {
-	pub rounded: GlesPixelProgram,
-	pub default: GlesPixelProgram,
 }
