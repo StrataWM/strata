@@ -27,6 +27,7 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
 	static ref CONFIG: RwLock<Config> = RwLock::new(Config::default());
+	static ref STATE: ReentrantMutex<GlobalState> = ReentrantMutex::new(GlobalState::default());
 }
 
 #[tokio::main]
