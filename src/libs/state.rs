@@ -55,9 +55,9 @@ use smithay::{
 			CompositorClientState,
 			CompositorState,
 		},
-		data_device::DataDeviceState,
+		selection::data_device::DataDeviceState,
 		output::OutputManagerState,
-		primary_selection::PrimarySelectionState,
+		selection::primary_selection::PrimarySelectionState,
 		shell::{
 			wlr_layer::{
 				Layer,
