@@ -42,17 +42,19 @@ use smithay::{
 			CompositorHandler,
 			CompositorState,
 		},
-		data_device::{
-			set_data_device_focus,
-			ClientDndGrabHandler,
-			DataDeviceHandler,
-			ServerDndGrabHandler,
-		},
-		primary_selection::{
-			set_primary_focus,
-			PrimarySelectionHandler,
-		},
 		seat::WaylandFocus,
+		selection::{
+			data_device::{
+				set_data_device_focus,
+				ClientDndGrabHandler,
+				DataDeviceHandler,
+				ServerDndGrabHandler,
+			},
+			primary_selection::{
+				set_primary_focus,
+				PrimarySelectionHandler,
+			},
+		},
 		shell::wlr_layer::{
 			Layer,
 			LayerSurface as WlrLayerSurface,
