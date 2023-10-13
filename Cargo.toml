@@ -59,7 +59,7 @@ strum = { version = "0.25.0", features = ["derive"] }
 default-features = false
 git = "https://github.com/stratawm/smithay"
 version = "0.3"
-rev = "509030a"
+rev = "64113eab89342534a8a5e766971dcf0c2ce59271"
 features = [
     "backend_winit",
     "wayland_frontend",
