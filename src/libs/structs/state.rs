@@ -28,9 +28,11 @@ use smithay::{
 	},
 	wayland::{
 		compositor::CompositorState,
-		data_device::DataDeviceState,
 		output::OutputManagerState,
-		primary_selection::PrimarySelectionState,
+		selection::{
+			data_device::DataDeviceState,
+			primary_selection::PrimarySelectionState,
+		},
 		shell::{
 			wlr_layer::WlrLayerShellState,
 			xdg::{
