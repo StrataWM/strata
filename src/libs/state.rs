@@ -31,9 +31,8 @@ use smithay::{
 	reexports::{
 		calloop::{
 			generic::Generic,
+			EventLoop,
 			Interest,
-			LoopHandle,
-			LoopSignal,
 			Mode,
 			PostAction,
 		},
@@ -55,9 +54,11 @@ use smithay::{
 			CompositorClientState,
 			CompositorState,
 		},
-		selection::data_device::DataDeviceState,
 		output::OutputManagerState,
-		selection::primary_selection::PrimarySelectionState,
+		selection::{
+			data_device::DataDeviceState,
+			primary_selection::PrimarySelectionState,
+		},
 		shell::{
 			wlr_layer::{
 				Layer,
@@ -74,7 +75,6 @@ use smithay::{
 };
 use std::{
 	ffi::OsString,
-	os::unix::io::AsRawFd,
 	process::Command,
 	sync::Arc,
 	time::Instant,
@@ -82,8 +82,7 @@ use std::{
 
 impl StrataState {
 	pub fn new(
-		mut loop_handle: LoopHandle<'static, CalloopData>,
-		loop_signal: LoopSignal,
+		event_loop: &mut EventLoop<CalloopData>,
 		display: &mut Display<StrataState>,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
@@ -114,10 +113,10 @@ impl StrataState {
 		let config_workspace: u8 = config.general.workspaces.clone();
 		let workspaces = Workspaces::new(config_workspace);
 		seat.add_pointer();
-		let socket_name = Self::init_wayland_listener(&mut loop_handle, display);
+		let socket_name = Self::init_wayland_listener(display, event_loop);
+		let loop_signal = event_loop.get_signal();
 
 		Self {
-			loop_handle,
 			dh,
 			backend,
 			damage_tracker,
@@ -142,13 +141,14 @@ impl StrataState {
 	}
 
 	fn init_wayland_listener(
-		handle: &mut LoopHandle<'static, CalloopData>,
 		display: &mut Display<StrataState>,
+		event_loop: &mut EventLoop<CalloopData>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
-
-		handle
+		let handle = event_loop.handle();
+		event_loop
+			.handle()
 			.insert_source(listening_socket, move |client_stream, _, state| {
 				state
 					.display
@@ -160,9 +160,12 @@ impl StrataState {
 
 		handle
 			.insert_source(
-				Generic::new(display.backend().poll_fd(), Interest::READ, Mode::Level),
-				|_, _, state| {
-					state.display.dispatch_clients(&mut state.state).unwrap();
+				Generic::new(display, Interest::READ, Mode::Level),
+				|_, display, state| {
+					// Safety: we don't drop the display
+					unsafe {
+						display.get_mut().dispatch_clients(&mut state.state).unwrap();
+					}
 					Ok(PostAction::Continue)
 				},
 			)

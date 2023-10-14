@@ -58,7 +58,6 @@ pub struct StrataState {
 	pub backend: WinitGraphicsBackend<GlowRenderer>,
 	pub damage_tracker: OutputDamageTracker,
 	pub start_time: Instant,
-	pub loop_handle: LoopHandle<'static, CalloopData>,
 	pub loop_signal: LoopSignal,
 	pub compositor_state: CompositorState,
 	pub xdg_shell_state: XdgShellState,

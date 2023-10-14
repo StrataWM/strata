@@ -77,8 +77,7 @@ pub fn init_winit() {
 	output.set_preferred(mode);
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
 	let state = StrataState::new(
-		event_loop.handle(),
-		event_loop.get_signal(),
+		&mut event_loop,
 		&mut display,
 		"winit".to_string(),
 		backend,
