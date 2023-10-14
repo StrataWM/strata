@@ -146,13 +146,14 @@ impl StrataState {
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
+
 		let handle = event_loop.handle();
+
 		event_loop
 			.handle()
 			.insert_source(listening_socket, move |client_stream, _, state| {
 				state
-					.display
-					.handle()
+					.display_handle
 					.insert_client(client_stream, Arc::new(ClientState::default()))
 					.unwrap();
 			})

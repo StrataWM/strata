@@ -14,13 +14,10 @@ use smithay::{
 	},
 	reexports::{
 		calloop::{
-			LoopHandle,
+			EventLoop,
 			LoopSignal,
 		},
-		wayland_server::{
-			Display,
-			DisplayHandle,
-		},
+		wayland_server::DisplayHandle,
 	},
 	utils::{
 		Logical,
@@ -50,7 +47,7 @@ use std::{
 
 pub struct CalloopData {
 	pub state: StrataState,
-	pub display: Display<StrataState>,
+	pub display_handle: DisplayHandle,
 }
 
 pub struct StrataState {
