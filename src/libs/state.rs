@@ -160,7 +160,7 @@ impl StrataState {
 
 		handle
 			.insert_source(
-				Generic::new(display.backend().poll_fd().as_raw_fd(), Interest::READ, Mode::Level),
+				Generic::new(display.backend().poll_fd(), Interest::READ, Mode::Level),
 				|_, _, state| {
 					state.display.dispatch_clients(&mut state.state).unwrap();
 					Ok(PostAction::Continue)
