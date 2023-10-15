@@ -8,7 +8,10 @@ use crate::libs::{
 	},
 	structs::{
 		args::Args,
-		CommsChannel,
+		comms::{
+			CommsChannel,
+			ConfigCommands,
+		},
 	},
 };
 use chrono::Local;
@@ -33,7 +36,7 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
 	static ref CONFIG: RwLock<Config> = RwLock::new(Config::default());
-	static ref CHANNEL: Arc<Mutex<CommsChannel<String>>> = {
+	static ref CHANNEL: Arc<Mutex<CommsChannel<ConfigCommands>>> = {
 		let (sender, receiver) = unbounded();
 		Arc::new(Mutex::new(CommsChannel { sender, receiver }))
 	};
@@ -67,9 +70,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let args = Args::parse();
 
 	let channel = CHANNEL.lock().unwrap();
-	channel.sender.send("hello".to_string());
-	println!("{:?}", channel.receiver.recv());
-
+	channel.sender.send(ConfigCommands::CloseWindow);
+	match channel.receiver.recv().unwrap() {
+		ConfigCommands::CloseWindow => {
+			println!("close")
+		}
+		ConfigCommands::Spawn(cmd) => {
+			println!("{}", cmd)
+		}
+		ConfigCommands::SwitchWS(id) => {
+			println!("Switching to workspace {}", id)
+		}
+	}
 	init_with_backend(&args.backend);
 
 	info!("Initializing Strata WM");
