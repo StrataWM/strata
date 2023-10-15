@@ -9,6 +9,7 @@ use crate::libs::{
 	structs::args::Args,
 };
 
+use crate::libs::structs::comms_channel;
 use chrono::Local;
 use clap::Parser;
 use lazy_static::lazy_static;
@@ -20,18 +21,25 @@ use parking_lot::{
 use std::{
 	error::Error,
 	io::stdout,
+	sync::{
+		Arc,
+		Mutex,
+	},
 };
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
 	static ref CONFIG: RwLock<Config> = RwLock::new(Config::default());
+	static ref CHANNEL: Arc<Mutex<comms_channel>> = {
+		let (sender, receiver) = crossbeam_channel::unbounded();
+		Arc::new(Mutex::new(comms_channel { sender, receiver }))
+	};
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
 	let xdg = xdg::BaseDirectories::with_prefix("strata")?;
-
 	let config_dir = xdg.find_config_file("");
 	let lib_dir = xdg.find_data_file("lua");
 	let log_dir = xdg.get_state_home();
@@ -55,6 +63,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	}
 
 	let args = Args::parse();
+
+	let channel = CHANNEL.lock().unwrap();
+	channel.sender.send("hello");
+	println!("{:?}", channel.receiver.recv());
 
 	init_with_backend(&args.backend);
 
