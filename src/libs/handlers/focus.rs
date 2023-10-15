@@ -166,6 +166,10 @@ impl PointerTarget<StrataState> for FocusTarget {
 	) {
 		todo!()
 	}
+
+	fn frame(&self, seat: &Seat<StrataState>, data: &mut StrataState) {
+		todo!()
+	}
 }
 
 impl KeyboardTarget<StrataState> for FocusTarget {

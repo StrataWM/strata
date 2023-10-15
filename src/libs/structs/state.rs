@@ -14,13 +14,10 @@ use smithay::{
 	},
 	reexports::{
 		calloop::{
-			LoopHandle,
+			EventLoop,
 			LoopSignal,
 		},
-		wayland_server::{
-			Display,
-			DisplayHandle,
-		},
+		wayland_server::DisplayHandle,
 	},
 	utils::{
 		Logical,
@@ -28,9 +25,11 @@ use smithay::{
 	},
 	wayland::{
 		compositor::CompositorState,
-		data_device::DataDeviceState,
 		output::OutputManagerState,
-		primary_selection::PrimarySelectionState,
+		selection::{
+			data_device::DataDeviceState,
+			primary_selection::PrimarySelectionState,
+		},
 		shell::{
 			wlr_layer::WlrLayerShellState,
 			xdg::{
@@ -48,7 +47,7 @@ use std::{
 
 pub struct CalloopData {
 	pub state: StrataState,
-	pub display: Display<StrataState>,
+	pub display_handle: DisplayHandle,
 }
 
 pub struct StrataState {
@@ -56,7 +55,6 @@ pub struct StrataState {
 	pub backend: WinitGraphicsBackend<GlowRenderer>,
 	pub damage_tracker: OutputDamageTracker,
 	pub start_time: Instant,
-	pub loop_handle: LoopHandle<'static, CalloopData>,
 	pub loop_signal: LoopSignal,
 	pub compositor_state: CompositorState,
 	pub xdg_shell_state: XdgShellState,

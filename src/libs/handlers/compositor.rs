@@ -42,17 +42,20 @@ use smithay::{
 			CompositorHandler,
 			CompositorState,
 		},
-		data_device::{
-			set_data_device_focus,
-			ClientDndGrabHandler,
-			DataDeviceHandler,
-			ServerDndGrabHandler,
-		},
-		primary_selection::{
-			set_primary_focus,
-			PrimarySelectionHandler,
-		},
 		seat::WaylandFocus,
+		selection::{
+			data_device::{
+				set_data_device_focus,
+				ClientDndGrabHandler,
+				DataDeviceHandler,
+				ServerDndGrabHandler,
+			},
+			primary_selection::{
+				set_primary_focus,
+				PrimarySelectionHandler,
+			},
+			SelectionHandler,
+		},
 		shell::wlr_layer::{
 			Layer,
 			LayerSurface as WlrLayerSurface,
@@ -159,9 +162,12 @@ impl SeatHandler for StrataState {
 
 delegate_seat!(StrataState);
 
-impl DataDeviceHandler for StrataState {
+impl SelectionHandler for StrataState {
 	type SelectionUserData = ();
-	fn data_device_state(&self) -> &smithay::wayland::data_device::DataDeviceState {
+}
+
+impl DataDeviceHandler for StrataState {
+	fn data_device_state(&self) -> &smithay::wayland::selection::data_device::DataDeviceState {
 		&self.data_device_state
 	}
 }
@@ -172,10 +178,9 @@ impl ServerDndGrabHandler for StrataState {}
 delegate_data_device!(StrataState);
 
 impl PrimarySelectionHandler for StrataState {
-	type SelectionUserData = ();
 	fn primary_selection_state(
 		&self,
-	) -> &smithay::wayland::primary_selection::PrimarySelectionState {
+	) -> &smithay::wayland::selection::primary_selection::PrimarySelectionState {
 		&self.primary_selection_state
 	}
 }

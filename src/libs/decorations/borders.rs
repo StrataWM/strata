@@ -122,6 +122,7 @@ impl BorderShader {
 						),
 						Uniform::new("gradientDirection", gradient_direction),
 					],
+					smithay::backend::renderer::element::Kind::Unspecified,
 				)
 			} else {
 				PixelShaderElement::new(
@@ -139,6 +140,7 @@ impl BorderShader {
 						Uniform::new("halfThickness", thickness * 0.5),
 						Uniform::new("gradientDirection", gradient_direction),
 					],
+					smithay::backend::renderer::element::Kind::Unspecified,
 				)
 			};
 			elements.insert(window.clone(), elem.clone());

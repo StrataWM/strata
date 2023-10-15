@@ -128,7 +128,7 @@ pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager
 	};
 
 	if let Some(popup) = popup_manager.find_popup(surface) {
-		let PopupKind::Xdg(ref popup) = popup;
+		let PopupKind::Xdg(ref popup) = popup else { todo!() };
 		let initial_configure_sent = with_states(surface, |states| {
 			states
 				.data_map

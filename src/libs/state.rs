@@ -31,9 +31,8 @@ use smithay::{
 	reexports::{
 		calloop::{
 			generic::Generic,
+			EventLoop,
 			Interest,
-			LoopHandle,
-			LoopSignal,
 			Mode,
 			PostAction,
 		},
@@ -55,9 +54,11 @@ use smithay::{
 			CompositorClientState,
 			CompositorState,
 		},
-		data_device::DataDeviceState,
 		output::OutputManagerState,
-		primary_selection::PrimarySelectionState,
+		selection::{
+			data_device::DataDeviceState,
+			primary_selection::PrimarySelectionState,
+		},
 		shell::{
 			wlr_layer::{
 				Layer,
@@ -74,7 +75,6 @@ use smithay::{
 };
 use std::{
 	ffi::OsString,
-	os::unix::io::AsRawFd,
 	process::Command,
 	sync::Arc,
 	time::Instant,
@@ -82,9 +82,8 @@ use std::{
 
 impl StrataState {
 	pub fn new(
-		mut loop_handle: LoopHandle<'static, CalloopData>,
-		loop_signal: LoopSignal,
-		display: &mut Display<StrataState>,
+		event_loop: &mut EventLoop<CalloopData>,
+		display: Display<StrataState>,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
 		damage_tracker: OutputDamageTracker,
@@ -114,10 +113,10 @@ impl StrataState {
 		let config_workspace: u8 = config.general.workspaces.clone();
 		let workspaces = Workspaces::new(config_workspace);
 		seat.add_pointer();
-		let socket_name = Self::init_wayland_listener(&mut loop_handle, display);
+		let socket_name = Self::init_wayland_listener(display, event_loop);
+		let loop_signal = event_loop.get_signal();
 
 		Self {
-			loop_handle,
 			dh,
 			backend,
 			damage_tracker,
@@ -142,31 +141,40 @@ impl StrataState {
 	}
 
 	fn init_wayland_listener(
-		handle: &mut LoopHandle<'static, CalloopData>,
-		display: &mut Display<StrataState>,
+		display: Display<StrataState>,
+		event_loop: &mut EventLoop<CalloopData>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
 
-		handle
-			.insert_source(listening_socket, move |client_stream, _, state| {
-				state
-					.display
-					.handle()
-					.insert_client(client_stream, Arc::new(ClientState::default()))
-					.unwrap();
-			})
-			.expect("Failed to init the wayland event source.");
+        let handle = event_loop.handle();
 
-		handle
-			.insert_source(
-				Generic::new(display.backend().poll_fd().as_raw_fd(), Interest::READ, Mode::Level),
-				|_, _, state| {
-					state.display.dispatch_clients(&mut state.state).unwrap();
-					Ok(PostAction::Continue)
-				},
-			)
-			.unwrap();
+        event_loop
+            .handle()
+            .insert_source(listening_socket, move |client_stream, _, state| {
+                // Inside the callback, you should insert the client into the display.
+                //
+                // You may also associate some data with the client when inserting the client.
+                state
+                    .display_handle
+                    .insert_client(client_stream, Arc::new(ClientState::default()))
+                    .unwrap();
+            })
+            .expect("Failed to init the wayland event source.");
+
+        // You also need to add the display itself to the event loop, so that client events will be processed by wayland-server.
+        handle
+            .insert_source(
+                Generic::new(display, Interest::READ, Mode::Level),
+                |_, display, state| {
+                    // Safety: we don't drop the display
+                    unsafe {
+                        display.get_mut().dispatch_clients(&mut state.state).unwrap();
+                    }
+                    Ok(PostAction::Continue)
+                },
+            )
+            .unwrap();
 
 		socket_name
 	}

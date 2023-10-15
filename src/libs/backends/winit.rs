@@ -61,6 +61,7 @@ use std::{
 pub fn init_winit() {
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new().unwrap();
 	let mut display: Display<StrataState> = Display::new().unwrap();
+	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
 	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
 	let output = Output::new(
@@ -72,20 +73,18 @@ pub fn init_winit() {
 			model: "Winit".into(),
 		},
 	);
-	let _global = output.create_global::<StrataState>(&display.handle());
+	let _global = output.create_global::<StrataState>(&display_handle);
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
 	let state = StrataState::new(
-		event_loop.handle(),
-		event_loop.get_signal(),
-		&mut display,
+		&mut event_loop,
+		display,
 		"winit".to_string(),
 		backend,
 		damage_tracked_renderer,
 	);
-
-	let mut data = CalloopData { display, state };
+	let mut data = CalloopData { display_handle, state };
 	let state = &mut data.state;
 	BorderShader::init(state.backend.renderer());
 	for workspace in state.workspaces.iter() {
@@ -118,7 +117,7 @@ pub fn winit_dispatch(
 	output: &Output,
 	full_redraw: &mut u8,
 ) {
-	let display = &mut data.display;
+	let display = &mut data.display_handle;
 	let state = &mut data.state;
 
 	let res = winit.dispatch_new_events(|event| {
