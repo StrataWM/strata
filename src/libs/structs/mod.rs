@@ -3,7 +3,7 @@ pub mod decorations;
 pub mod state;
 pub mod workspaces;
 
-pub struct comms_channel {
-	pub sender: crossbeam_channel::Sender<_>,
-	pub receiver: crossbeam_channel::Receiver<_>,
+pub struct CommsChannel<T> {
+	pub sender: crossbeam_channel::Sender<T>,
+	pub receiver: crossbeam_channel::Receiver<T>,
 }

@@ -6,12 +6,14 @@ use crate::libs::{
 		parse_config,
 		Config,
 	},
-	structs::args::Args,
+	structs::{
+		args::Args,
+		CommsChannel,
+	},
 };
-
-use crate::libs::structs::comms_channel;
 use chrono::Local;
 use clap::Parser;
+use crossbeam_channel::unbounded;
 use lazy_static::lazy_static;
 use log::info;
 use parking_lot::{
@@ -31,9 +33,9 @@ use tracing_subscriber::fmt::writer::MakeWriterExt;
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
 	static ref CONFIG: RwLock<Config> = RwLock::new(Config::default());
-	static ref CHANNEL: Arc<Mutex<comms_channel>> = {
-		let (sender, receiver) = crossbeam_channel::unbounded();
-		Arc::new(Mutex::new(comms_channel { sender, receiver }))
+	static ref CHANNEL: Arc<Mutex<CommsChannel<String>>> = {
+		let (sender, receiver) = unbounded();
+		Arc::new(Mutex::new(CommsChannel { sender, receiver }))
 	};
 }
 
@@ -65,7 +67,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let args = Args::parse();
 
 	let channel = CHANNEL.lock().unwrap();
-	channel.sender.send("hello");
+	channel.sender.send("hello".to_string());
 	println!("{:?}", channel.receiver.recv());
 
 	init_with_backend(&args.backend);
