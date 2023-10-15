@@ -83,7 +83,7 @@ use std::{
 impl StrataState {
 	pub fn new(
 		event_loop: &mut EventLoop<CalloopData>,
-		display: &mut Display<StrataState>,
+		display: Display<StrataState>,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
 		damage_tracker: OutputDamageTracker,
@@ -141,36 +141,40 @@ impl StrataState {
 	}
 
 	fn init_wayland_listener(
-		display: &mut Display<StrataState>,
+		display: Display<StrataState>,
 		event_loop: &mut EventLoop<CalloopData>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
 
-		let handle = event_loop.handle();
+        let handle = event_loop.handle();
 
-		event_loop
-			.handle()
-			.insert_source(listening_socket, move |client_stream, _, state| {
-				state
-					.display_handle
-					.insert_client(client_stream, Arc::new(ClientState::default()))
-					.unwrap();
-			})
-			.expect("Failed to init the wayland event source.");
+        event_loop
+            .handle()
+            .insert_source(listening_socket, move |client_stream, _, state| {
+                // Inside the callback, you should insert the client into the display.
+                //
+                // You may also associate some data with the client when inserting the client.
+                state
+                    .display_handle
+                    .insert_client(client_stream, Arc::new(ClientState::default()))
+                    .unwrap();
+            })
+            .expect("Failed to init the wayland event source.");
 
-		handle
-			.insert_source(
-				Generic::new(display, Interest::READ, Mode::Level),
-				|_, display, state| {
-					// Safety: we don't drop the display
-					unsafe {
-						display.get_mut().dispatch_clients(&mut state.state).unwrap();
-					}
-					Ok(PostAction::Continue)
-				},
-			)
-			.unwrap();
+        // You also need to add the display itself to the event loop, so that client events will be processed by wayland-server.
+        handle
+            .insert_source(
+                Generic::new(display, Interest::READ, Mode::Level),
+                |_, display, state| {
+                    // Safety: we don't drop the display
+                    unsafe {
+                        display.get_mut().dispatch_clients(&mut state.state).unwrap();
+                    }
+                    Ok(PostAction::Continue)
+                },
+            )
+            .unwrap();
 
 		socket_name
 	}

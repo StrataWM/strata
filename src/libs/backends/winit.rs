@@ -58,7 +58,7 @@ use std::{
 	time::Duration,
 };
 
-pub fn init_winit(event_loop: &mut EventLoop<CalloopData>, data: &mut CalloopData) {
+pub fn init_winit() {
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new().unwrap();
 	let mut display: Display<StrataState> = Display::new().unwrap();
 	let display_handle = display.handle();
@@ -79,7 +79,7 @@ pub fn init_winit(event_loop: &mut EventLoop<CalloopData>, data: &mut CalloopDat
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
 	let state = StrataState::new(
 		&mut event_loop,
-		&mut display,
+		display,
 		"winit".to_string(),
 		backend,
 		damage_tracked_renderer,
@@ -107,6 +107,8 @@ pub fn init_winit(event_loop: &mut EventLoop<CalloopData>, data: &mut CalloopDat
 	for cmd in &CONFIG.read().autostart {
 		Command::new("/bin/sh").arg("-c").args(cmd).spawn().ok();
 	}
+
+	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
 
 pub fn winit_dispatch(
