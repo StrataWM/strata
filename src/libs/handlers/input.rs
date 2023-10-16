@@ -49,7 +49,7 @@ impl StrataState {
 					time,
 					|_, modifiers, handle| {
 						if event.state() == KeyState::Pressed {
-							println!("{:?}", handle.raw_syms());
+							println!("{:?}", handle.raw_code());
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward
