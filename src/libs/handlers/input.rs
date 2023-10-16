@@ -1,4 +1,5 @@
 use crate::libs::structs::{
+	comms::ConfigCommands,
 	state::StrataState,
 	workspaces::FocusTarget,
 };
@@ -11,6 +12,7 @@ use smithay::{
 		Event,
 		InputBackend,
 		InputEvent,
+		KeyState,
 		KeyboardKeyEvent,
 		PointerAxisEvent,
 		PointerButtonEvent,
@@ -39,14 +41,22 @@ impl StrataState {
 				let serial = SERIAL_COUNTER.next_serial();
 				let time = Event::time_msec(&event);
 
-				self.seat.get_keyboard().unwrap().input::<(), _>(
+				if let Some(action) = self.seat.get_keyboard().unwrap().input(
 					self,
 					event.key_code(),
 					event.state(),
 					serial,
 					time,
-					|_, _, _| FilterResult::Forward,
-				);
+					|_, modifiers, handle| {
+						if event.state() == KeyState::Pressed {
+							println!("{:?}", handle.raw_syms());
+							return FilterResult::Intercept(ConfigCommands::CloseWindow);
+						}
+						FilterResult::Forward
+					},
+				) {
+					self.handle_action(action);
+				}
 			}
 			InputEvent::PointerMotion { event } => {
 				let serial = SERIAL_COUNTER.next_serial();
@@ -157,6 +167,20 @@ impl StrataState {
 		let clamped_x = pos_x.max(0.0).min(max_x as f64);
 		let clamped_y = pos_y.max(0.0).min(max_y as f64);
 		(clamped_x, clamped_y).into()
+	}
+
+	pub fn handle_action(&mut self, action: ConfigCommands) {
+		match action {
+			ConfigCommands::CloseWindow => {
+				println!("close")
+			}
+			ConfigCommands::Spawn(cmd) => {
+				println!("{}", cmd)
+			}
+			ConfigCommands::SwitchWS(id) => {
+				println!("Switching to workspace {}", id)
+			}
+		}
 	}
 
 	pub fn set_input_focus(&mut self, target: FocusTarget) {
