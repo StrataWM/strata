@@ -55,6 +55,7 @@ impl StrataState {
 							let keysym =
 								xkb::keysym_to_utf32(handle.raw_syms().first().cloned().unwrap());
 							println!("{:?}", handle.raw_syms());
+							println!("{:?}", crate::CONFIG.read().bindings);
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward

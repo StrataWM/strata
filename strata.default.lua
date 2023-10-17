@@ -48,15 +48,15 @@ strata.set_config {
 	},
 	bindings = {
 		{
-			keys = { "CTRL", "SHIFT", "Q" },
+			keys = { "Control_L", "Shift_L", "q" },
 			action = close_all_windows,
 		},
 		{
-			keys = { "WIN", "RETURN" },
+			keys = { "Super_L", "Return" },
 			action = strata.actions.spawn("kitty --title Terminal"),
 		},
 		{
-			keys = { "WIN", "SPACE" },
+			keys = { "Super_L", "space" },
 			action = strata.actions.spawn("rofi --show drun"),
 		},
 		{
