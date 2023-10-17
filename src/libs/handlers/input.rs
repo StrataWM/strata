@@ -51,11 +51,8 @@ impl StrataState {
 					serial,
 					time,
 					|_, modifiers, handle| {
-						let keysym = xkb::keysym_from_name(
-							format!("{:?}", handle.raw_syms()).as_str(),
-							xkb::KEYSYM_NO_FLAGS,
-						);
 						if event.state() == KeyState::Pressed {
+							let keysym = xkb::keysym_to_utf32(handle.raw_syms().first().cloned().unwrap());
 							println!("{:?}", keysym);
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
