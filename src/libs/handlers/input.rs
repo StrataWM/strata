@@ -19,7 +19,10 @@ use smithay::{
 		PointerMotionEvent,
 	},
 	input::{
-		keyboard::FilterResult,
+		keyboard::{
+			xkb,
+			FilterResult,
+		},
 		pointer::{
 			AxisFrame,
 			ButtonEvent,
@@ -48,8 +51,12 @@ impl StrataState {
 					serial,
 					time,
 					|_, modifiers, handle| {
+						let keysym = xkb::keysym_from_name(
+							format!("{:?}", handle.raw_syms()).as_str(),
+							xkb::KEYSYM_NO_FLAGS,
+						);
 						if event.state() == KeyState::Pressed {
-							println!("{:?}", handle.raw_code());
+							println!("{:?}", keysym);
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward
@@ -167,6 +174,12 @@ impl StrataState {
 		let clamped_x = pos_x.max(0.0).min(max_x as f64);
 		let clamped_y = pos_y.max(0.0).min(max_y as f64);
 		(clamped_x, clamped_y).into()
+	}
+
+	pub fn initialize_xkb() -> Result<xkb::Context, Box<dyn std::error::Error>> {
+		let context = xkb::Context::new(xkb::ContextFlags::MAX);
+
+		Ok(context)
 	}
 
 	pub fn handle_action(&mut self, action: ConfigCommands) {
