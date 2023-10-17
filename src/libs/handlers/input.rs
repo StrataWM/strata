@@ -1,7 +1,10 @@
-use crate::libs::structs::{
-	comms::ConfigCommands,
-	state::StrataState,
-	workspaces::FocusTarget,
+use crate::{
+	libs::structs::{
+		comms::ConfigCommands,
+		state::StrataState,
+		workspaces::FocusTarget,
+	},
+	CONFIG,
 };
 use smithay::{
 	backend::input::{
@@ -52,10 +55,13 @@ impl StrataState {
 					time,
 					|_, modifiers, handle| {
 						if event.state() == KeyState::Pressed {
-							let keysym =
-								xkb::keysym_to_utf32(handle.raw_syms().first().cloned().unwrap());
 							println!("{:?}", handle.raw_syms());
-							println!("{:?}", crate::CONFIG.read().bindings);
+
+							for binding in &CONFIG.read().bindings {
+								for key in &mut binding.keys {
+									key.insert_str(0, "XK_")
+								}
+							}
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward
