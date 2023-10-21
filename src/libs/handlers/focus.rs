@@ -167,7 +167,7 @@ impl PointerTarget<StrataState> for FocusTarget {
 		todo!()
 	}
 
-	fn frame(&self, seat: &Seat<StrataState>, data: &mut StrataState) {
+	fn frame(&self, _seat: &Seat<StrataState>, _data: &mut StrataState) {
 		todo!()
 	}
 }

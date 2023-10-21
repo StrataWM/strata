@@ -58,8 +58,10 @@ impl StrataState {
 					time,
 					|_, modifiers, handle| {
 						if event.state() == KeyState::Pressed {
-							println!("{:?}", handle.raw_syms());
-
+							for binding in &CONFIG.read().bindings {
+								println!("{:?}", binding);
+							}
+							println!("{:?}", &CONFIG.read());
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward
