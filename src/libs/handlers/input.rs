@@ -58,17 +58,8 @@ impl StrataState {
 					time,
 					|_, modifiers, handle| {
 						if event.state() == KeyState::Pressed {
-							let mut modified_syms = vec![];
 							println!("{:?}", handle.raw_syms());
 
-							for binding in &CONFIG.read().bindings {
-								let modified_keys: Vec<String> =
-									binding.keys.iter().map(|key| format!("XK_{}", key)).collect();
-
-								let modified_binding =
-									Keybinding { keys: modified_keys, action: binding.action };
-								modified_syms.push(modified_binding)
-							}
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward
