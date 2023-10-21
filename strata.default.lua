@@ -48,15 +48,15 @@ strata.set_config {
 	},
 	bindings = {
 		{
-			keys = { "XK_Super_L", "XK_Return" },
+			keys = { "KEY__Super_L", "KEY__Return" },
 			action = strata.actions.spawn("kitty --title Terminal"),
 		},
 		{
-			keys = { "XK_Super_L", "XK_space" },
+			keys = { "KEY__Super_L", "KEY__space" },
 			action = strata.actions.spawn("rofi --show drun"),
 		},
 		{
-			keys = { "XK_Super_L", "XK_b" },
+			keys = { "KEY__Super_L", "KEY__b" },
 			action = function() -- Toggle border
 				local border_enabled = strata.get_config().decorations.border.enable
 				strata.update_config {
