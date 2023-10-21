@@ -57,11 +57,14 @@ impl StrataState {
 					serial,
 					time,
 					|_, modifiers, handle| {
+						let mut keys = vec![];
 						if event.state() == KeyState::Pressed {
+							keys.push(handle.raw_syms());
+						}
+						if event.state() == KeyState::Released {
 							for binding in &CONFIG.read().bindings {
 								println!("{:?}", binding);
 							}
-							println!("{:?}", &CONFIG.read());
 							return FilterResult::Intercept(ConfigCommands::CloseWindow);
 						}
 						FilterResult::Forward
