@@ -55,56 +55,57 @@ impl StrataState {
 				let serial = SERIAL_COUNTER.next_serial();
 				let time = Event::time_msec(&event);
 
-				if let Some(action) =
-					self.seat.get_keyboard().unwrap().input(
-						self,
-						event.key_code(),
-						event.state(),
-						serial,
-						time,
-						|_, mods, handle| {
-							for binding in &CONFIG.read().bindings {
-								let mut keysym: Keysym =
-									xkb::utf32_to_keysym(xkb::keysyms::KEY_NoSymbol);
-								let mut modifier_state = ModifiersState::default();
+				if let Some(action) = self.seat.get_keyboard().unwrap().input(
+					self,
+					event.key_code(),
+					event.state(),
+					serial,
+					time,
+					|_, mods, handle| {
+						for binding in &CONFIG.read().bindings {
+							let mut keysym: Keysym =
+								xkb::utf32_to_keysym(xkb::keysyms::KEY_NoSymbol);
+							let mut modifier_state = ModifiersState::default();
 
-								for key in &binding.keys {
-									match key.as_str() {
-										"Super_L" => modifier_state.logo = true,
-										"Super_R" => modifier_state.logo = true,
-										"Shift_L" => modifier_state.shift = true,
-										"Shift_R" => modifier_state.shift = true,
-										"Alt_L" => modifier_state.alt = true,
-										"Alt_R" => modifier_state.alt = true,
-										"Ctrl_L" => modifier_state.ctrl = true,
-										"Ctrl_R" => modifier_state.ctrl = true,
-										"CapsLck" => modifier_state.caps_lock = true,
-										"Caps" => modifier_state.caps_lock = true,
-										&_ => {
-											let sym = xkb::keysym_from_name(
-												key.as_str(),
-												xkb::KEYSYM_NO_FLAGS,
-											);
-											keysym = sym;
-										}
+							for key in &binding.keys {
+								match key.as_str() {
+									"Super_L" => modifier_state.logo = true,
+									"Super_R" => modifier_state.logo = true,
+									"Shift_L" => modifier_state.shift = true,
+									"Shift_R" => modifier_state.shift = true,
+									"Alt_L" => modifier_state.alt = true,
+									"Alt_R" => modifier_state.alt = true,
+									"Ctrl_L" => modifier_state.ctrl = true,
+									"Ctrl_R" => modifier_state.ctrl = true,
+									"CapsLck" => modifier_state.caps_lock = true,
+									"Caps" => modifier_state.caps_lock = true,
+									&_ => {
+										let sym = xkb::keysym_from_name(
+											key.as_str(),
+											xkb::KEYSYM_NO_FLAGS,
+										);
+										keysym = sym;
 									}
 								}
-								if event.state() == KeyState::Pressed
-									&& modifier_state.alt == mods.alt && modifier_state.ctrl
-									== mods.ctrl && modifier_state.shift == mods.shift
-									&& modifier_state.logo == mods.logo && modifier_state.caps_lock
-									== mods.caps_lock 
-								{
-									println!(
-										"mod in config: {:?} \n mod from press: {:?}",
-										modifier_state, mods
-									);
-									return FilterResult::Intercept(ConfigCommands::CloseWindow);
-								}
 							}
-							FilterResult::Forward
-						},
-					) {
+							if event.state() == KeyState::Released
+								&& modifier_state.alt == mods.alt
+								&& modifier_state.ctrl == mods.ctrl
+								&& modifier_state.shift == mods.shift
+								&& modifier_state.logo == mods.logo
+								&& modifier_state.caps_lock == mods.caps_lock
+							{
+								println!(
+									"keysym: {:?}, sym: {:?}",
+									keysym,
+									handle.modified_syms().contains(&keysym)
+								);
+								return FilterResult::Intercept(ConfigCommands::CloseWindow);
+							}
+						}
+						FilterResult::Forward
+					},
+				) {
 					self.handle_action(action);
 				}
 			}
