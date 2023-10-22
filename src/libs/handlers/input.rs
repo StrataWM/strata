@@ -63,7 +63,8 @@ impl StrataState {
 					time,
 					|_, mods, handle| {
 						for binding in &CONFIG.read().bindings {
-							let mut keysym: Keysym = Keysym:;
+							let mut keysym: Keysym =
+								xkb::utf32_to_keysym(xkb::keysyms::KEY_NoSymbol);
 							let mut modifier_state = ModifiersState::default();
 
 							for key in &binding.keys {
@@ -87,13 +88,11 @@ impl StrataState {
 									}
 								}
 							}
-							println!("{:?}", keysym);
-							println!("{:?}", modifier_state);
-							println!("{:?}", handle.raw_syms());
-							println!("{:?}", mods);
-							if event.state() == KeyState::Pressed
-								&& mods == &modifier_state && handle.raw_syms().contains(&keysym)
-							{
+							if event.state() == KeyState::Pressed {
+								println!(
+									"mod in config: {:?} \n mod from press: {:?}",
+									modifier_state, mods
+								);
 								return FilterResult::Intercept(ConfigCommands::CloseWindow);
 							}
 						}
