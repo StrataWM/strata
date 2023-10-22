@@ -31,6 +31,8 @@ use smithay::{
 		keyboard::{
 			xkb,
 			FilterResult,
+			Keysym,
+			ModifiersState,
 		},
 		pointer::{
 			AxisFrame,
@@ -59,15 +61,39 @@ impl StrataState {
 					event.state(),
 					serial,
 					time,
-					|_, _, handle| {
+					|_, mods, handle| {
 						for binding in &CONFIG.read().bindings {
-							let mut keysyms = vec![];
-							for key in &binding.keys {
-								let sym = xkb::keysym_from_name(key.as_str(), xkb::KEYSYM_NO_FLAGS);
-								keysyms.push(sym);
-							}
-							if event.state() == KeyState::Pressed {
+							let mut keysym: Keysym = Keysym:;
+							let mut modifier_state = ModifiersState::default();
 
+							for key in &binding.keys {
+								match key.as_str() {
+									"Super_L" => modifier_state.logo = true,
+									"Super_R" => modifier_state.logo = true,
+									"Shift_L" => modifier_state.shift = true,
+									"Shift_R" => modifier_state.shift = true,
+									"Alt_L" => modifier_state.alt = true,
+									"Alt_R" => modifier_state.alt = true,
+									"Ctrl_L" => modifier_state.ctrl = true,
+									"Ctrl_R" => modifier_state.ctrl = true,
+									"CapsLck" => modifier_state.caps_lock = true,
+									"Caps" => modifier_state.caps_lock = true,
+									&_ => {
+										let sym = xkb::keysym_from_name(
+											key.as_str(),
+											xkb::KEYSYM_NO_FLAGS,
+										);
+										keysym = sym;
+									}
+								}
+							}
+							println!("{:?}", keysym);
+							println!("{:?}", modifier_state);
+							println!("{:?}", handle.raw_syms());
+							println!("{:?}", mods);
+							if event.state() == KeyState::Pressed
+								&& mods == &modifier_state && handle.raw_syms().contains(&keysym)
+							{
 								return FilterResult::Intercept(ConfigCommands::CloseWindow);
 							}
 						}
