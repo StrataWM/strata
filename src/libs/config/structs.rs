@@ -1,7 +1,6 @@
 use mlua::{
 	FromLua,
 	Function,
-	IntoLua,
 	RegistryKey,
 };
 use smart_default::SmartDefault;

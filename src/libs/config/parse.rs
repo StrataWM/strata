@@ -1,4 +1,6 @@
 use crate::{
+	libs::structs::comms::ConfigCommands,
+	CHANNEL,
 	CONFIG,
 	LUA,
 };
@@ -19,19 +21,10 @@ impl StrataApi {
 	pub async fn spawn<'lua>(lua: &'lua Lua, cmd: Value<'lua>) -> Result<()> {
 		let cmd: Vec<String> = FromLua::from_lua(cmd, lua)?;
 
-		tokio::spawn(async move {
-			let mut child = tokio::process::Command::new(&cmd[0])
-				.args(&cmd[1..])
-				.spawn()
-				.expect("failed to execute child");
-
-			let ecode = child.wait().await.expect("failed to wait on child");
-			println!("child process exited with: {}", ecode);
-		})
-		.await
-		.map_err(|_| mlua::Error::RuntimeError("Failed to spawn process".to_owned()))?;
-
 		// TODO: add log
+
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::Spawn(cmd.join(" "))).unwrap();
 
 		Ok(())
 	}

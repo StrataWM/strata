@@ -72,19 +72,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	let args = Args::parse();
 
-	// let channel = CHANNEL.lock().unwrap();
-	// channel.sender.send(ConfigCommands::CloseWindow);
-	// match channel.receiver.recv().unwrap() {
-	// 	ConfigCommands::CloseWindow => {
-	// 		println!("close")
-	// 	}
-	// 	ConfigCommands::Spawn(cmd) => {
-	// 		println!("{}", cmd)
-	// 	}
-	// 	ConfigCommands::SwitchWS(id) => {
-	// 		println!("Switching to workspace {}", id)
-	// 	}
-	// }
 	init_with_backend(&args.backend);
 
 	info!("Initializing Strata WM");

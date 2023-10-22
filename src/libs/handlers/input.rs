@@ -1,15 +1,10 @@
 use crate::{
-	libs::{
-		config::{
-			Config,
-			Keybinding,
-		},
-		structs::{
-			comms::ConfigCommands,
-			state::StrataState,
-			workspaces::FocusTarget,
-		},
+	libs::structs::{
+		comms::ConfigCommands,
+		state::StrataState,
+		workspaces::FocusTarget,
 	},
+	CHANNEL,
 	CONFIG,
 	LUA,
 };
@@ -97,7 +92,8 @@ impl StrataState {
 									== mods.caps_lock && handle.raw_syms().contains(&keysym)
 								{
 									let _ = binding.action.call(&LUA.lock());
-									return FilterResult::Intercept(ConfigCommands::CloseWindow);
+									let action = CHANNEL.lock().unwrap().receiver.recv().unwrap();
+									return FilterResult::Intercept(action);
 								}
 							}
 							FilterResult::Forward
