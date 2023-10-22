@@ -6,5 +6,8 @@ pub struct CommsChannel<T> {
 pub enum ConfigCommands {
 	Spawn(String),
 	CloseWindow,
-	SwitchWS(i32),
+	SwitchWS(u8),
+	MoveWindow(u8),
+	MoveWindowAndFollow(u8),
+	Quit,
 }

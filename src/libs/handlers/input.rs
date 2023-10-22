@@ -213,23 +213,14 @@ impl StrataState {
 		(clamped_x, clamped_y).into()
 	}
 
-	pub fn initialize_xkb() -> Result<xkb::Context, Box<dyn std::error::Error>> {
-		let context = xkb::Context::new(xkb::ContextFlags::MAX);
-
-		Ok(context)
-	}
-
 	pub fn handle_action(&mut self, action: ConfigCommands) {
 		match action {
-			ConfigCommands::CloseWindow => {
-				println!("close")
-			}
-			ConfigCommands::Spawn(cmd) => {
-				println!("{}", cmd)
-			}
-			ConfigCommands::SwitchWS(id) => {
-				println!("Switching to workspace {}", id)
-			}
+			ConfigCommands::CloseWindow => self.close_window(),
+			ConfigCommands::Spawn(cmd) => self.spawn(&cmd.as_str()),
+			ConfigCommands::SwitchWS(id) => self.switch_to_workspace(id),
+			ConfigCommands::MoveWindow(id) => self.move_window_to_workspace(id),
+			ConfigCommands::MoveWindowAndFollow(id) => self.follow_window_move(id),
+			ConfigCommands::Quit => self.quit(),
 		}
 	}
 
