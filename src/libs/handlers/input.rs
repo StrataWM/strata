@@ -11,6 +11,7 @@ use crate::{
 		},
 	},
 	CONFIG,
+	LUA,
 };
 use smithay::{
 	backend::input::{
@@ -95,6 +96,7 @@ impl StrataState {
 									&& modifier_state.logo == mods.logo && modifier_state.caps_lock
 									== mods.caps_lock && handle.raw_syms().contains(&keysym)
 								{
+									let _ = binding.action.call(&LUA.lock());
 									return FilterResult::Intercept(ConfigCommands::CloseWindow);
 								}
 							}
