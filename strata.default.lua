@@ -56,6 +56,14 @@ strata.set_config {
 			action = strata.actions.spawn("rofi --show drun"),
 		},
 		{
+			keys = { "Ctrl_L", "q" },
+			action = strata.actions.close_window(),
+		},
+		{
+			keys = { "Ctrl_L", "m" },
+			action = strata.actions.quit(),
+		},
+		{
 			keys = { "Super_L", "b" },
 			action = function() -- Toggle border
 				local border_enabled = strata.get_config().decorations.border.enable
