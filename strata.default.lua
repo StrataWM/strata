@@ -57,11 +57,11 @@ strata.set_config {
 		},
 		{
 			keys = { "Alt_L", "q" },
-			action = strata.actions.close_window(),
+			action = strata.actions.close_window,
 		},
 		{
 			keys = { "Alt_L", "m" },
-			action = strata.actions.quit(),
+			action = strata.actions.quit,
 		},
 		{
 			keys = { "Super_L", "b" },

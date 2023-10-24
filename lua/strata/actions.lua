@@ -16,4 +16,9 @@ function module.spawn(cmd)
 	return function() api.spawn(cmd) end
 end
 
+---@return function
+function module.close_window()
+	return function() api.close_window() end
+end
+
 return module
