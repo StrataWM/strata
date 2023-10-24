@@ -1,4 +1,6 @@
 use crate::{
+	libs::structs::comms::ConfigCommands,
+	CHANNEL,
 	CONFIG,
 	LUA,
 };
@@ -19,19 +21,57 @@ impl StrataApi {
 	pub async fn spawn<'lua>(lua: &'lua Lua, cmd: Value<'lua>) -> Result<()> {
 		let cmd: Vec<String> = FromLua::from_lua(cmd, lua)?;
 
-		tokio::spawn(async move {
-			let mut child = tokio::process::Command::new(&cmd[0])
-				.args(&cmd[1..])
-				.spawn()
-				.expect("failed to execute child");
+		// TODO: add log
 
-			let ecode = child.wait().await.expect("failed to wait on child");
-			println!("child process exited with: {}", ecode);
-		})
-		.await
-		.map_err(|_| mlua::Error::RuntimeError("Failed to spawn process".to_owned()))?;
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::Spawn(cmd.join(" "))).unwrap();
+
+		Ok(())
+	}
+
+	pub fn switch_to_ws<'lua>(lua: &'lua Lua, id: Value<'lua>) -> Result<()> {
+		let id: u8 = FromLua::from_lua(id, lua)?;
 
 		// TODO: add log
+
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::SwitchWS(id)).unwrap();
+
+		Ok(())
+	}
+
+	pub fn move_window<'lua>(lua: &'lua Lua, id: Value<'lua>) -> Result<()> {
+		let id: u8 = FromLua::from_lua(id, lua)?;
+
+		// TODO: add log
+
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::MoveWindow(id)).unwrap();
+
+		Ok(())
+	}
+
+	pub fn move_window_and_follow<'lua>(lua: &'lua Lua, id: Value<'lua>) -> Result<()> {
+		let id: u8 = FromLua::from_lua(id, lua)?;
+
+		// TODO: add log
+
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::MoveWindowAndFollow(id)).unwrap();
+
+		Ok(())
+	}
+
+	pub fn close_window<'lua>(_lua: &'lua Lua, _: Value<'lua>) -> Result<()> {
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::CloseWindow).unwrap();
+
+		Ok(())
+	}
+
+	pub fn quit<'lua>(_lua: &'lua Lua, _: Value<'lua>) -> Result<()> {
+		let channel = CHANNEL.lock().unwrap();
+		channel.sender.send(ConfigCommands::Quit).unwrap();
 
 		Ok(())
 	}
@@ -56,6 +96,12 @@ pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	let lua = LUA.lock();
 	let api_submod = get_or_create_module(&lua, "strata.api").unwrap(); // TODO: remove unwrap
 
+	api_submod.set("close_window", lua.create_function(StrataApi::close_window)?)?;
+	api_submod.set("switch_to_ws", lua.create_function(StrataApi::switch_to_ws)?)?;
+	api_submod.set("move_window", lua.create_function(StrataApi::move_window)?)?;
+	api_submod
+		.set("move_window_and_follow", lua.create_function(StrataApi::move_window_and_follow)?)?;
+	api_submod.set("quit", lua.create_function(StrataApi::quit)?)?;
 	api_submod.set("spawn", lua.create_async_function(StrataApi::spawn)?)?;
 	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
 	api_submod.set("get_config", lua.create_function(StrataApi::get_config)?)?;

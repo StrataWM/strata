@@ -168,7 +168,11 @@ impl PointerTarget<StrataState> for FocusTarget {
 	}
 
 	fn frame(&self, seat: &Seat<StrataState>, data: &mut StrataState) {
-		todo!()
+		match self {
+			FocusTarget::Window(w) => PointerTarget::frame(w, seat, data),
+			FocusTarget::LayerSurface(l) => PointerTarget::frame(l, seat, data),
+			FocusTarget::Popup(p) => PointerTarget::frame(p.wl_surface(), seat, data),
+		}
 	}
 }
 

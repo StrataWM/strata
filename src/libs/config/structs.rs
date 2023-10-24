@@ -1,7 +1,6 @@
 use mlua::{
 	FromLua,
 	Function,
-	IntoLua,
 	RegistryKey,
 };
 use smart_default::SmartDefault;
@@ -28,12 +27,8 @@ pub struct LuaFunction {
 }
 
 impl LuaFunction {
-	pub fn call<'lua, T: IntoLua<'lua>>(
-		&'lua self,
-		lua: &'lua mlua::Lua,
-		args: T,
-	) -> anyhow::Result<()> {
-		lua.registry_value::<Function>(&self.key)?.call(args)?;
+	pub fn call<'lua>(&'lua self, lua: &'lua mlua::Lua) -> anyhow::Result<()> {
+		lua.registry_value::<Function>(&self.key)?.call(0)?;
 		Ok(())
 	}
 }

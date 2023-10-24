@@ -13,10 +13,7 @@ use smithay::{
 		SeatState,
 	},
 	reexports::{
-		calloop::{
-			EventLoop,
-			LoopSignal,
-		},
+		calloop::LoopSignal,
 		wayland_server::DisplayHandle,
 	},
 	utils::{

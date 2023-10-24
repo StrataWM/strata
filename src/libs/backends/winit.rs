@@ -60,7 +60,7 @@ use std::{
 
 pub fn init_winit() {
 	let mut event_loop: EventLoop<CalloopData> = EventLoop::try_new().unwrap();
-	let mut display: Display<StrataState> = Display::new().unwrap();
+	let display: Display<StrataState> = Display::new().unwrap();
 	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
 	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };

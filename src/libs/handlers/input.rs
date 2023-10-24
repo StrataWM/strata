@@ -1,6 +1,12 @@
-use crate::libs::structs::{
-	state::StrataState,
-	workspaces::FocusTarget,
+use crate::{
+	libs::structs::{
+		comms::ConfigCommands,
+		state::StrataState,
+		workspaces::FocusTarget,
+	},
+	CHANNEL,
+	CONFIG,
+	LUA,
 };
 use smithay::{
 	backend::input::{
@@ -11,13 +17,19 @@ use smithay::{
 		Event,
 		InputBackend,
 		InputEvent,
+		KeyState,
 		KeyboardKeyEvent,
 		PointerAxisEvent,
 		PointerButtonEvent,
 		PointerMotionEvent,
 	},
 	input::{
-		keyboard::FilterResult,
+		keyboard::{
+			xkb,
+			FilterResult,
+			Keysym,
+			ModifiersState,
+		},
 		pointer::{
 			AxisFrame,
 			ButtonEvent,
@@ -39,14 +51,56 @@ impl StrataState {
 				let serial = SERIAL_COUNTER.next_serial();
 				let time = Event::time_msec(&event);
 
-				self.seat.get_keyboard().unwrap().input::<(), _>(
-					self,
-					event.key_code(),
-					event.state(),
-					serial,
-					time,
-					|_, _, _| FilterResult::Forward,
-				);
+				if let Some(action) =
+					self.seat.get_keyboard().unwrap().input(
+						self,
+						event.key_code(),
+						event.state(),
+						serial,
+						time,
+						|_, mods, handle| {
+							for binding in &CONFIG.read().bindings {
+								let mut keysym: Keysym =
+									xkb::utf32_to_keysym(xkb::keysyms::KEY_NoSymbol);
+								let mut modifier_state = ModifiersState::default();
+
+								for key in &binding.keys {
+									match key.as_str() {
+										"Super_L" => modifier_state.logo = true,
+										"Super_R" => modifier_state.logo = true,
+										"Shift_L" => modifier_state.shift = true,
+										"Shift_R" => modifier_state.shift = true,
+										"Alt_L" => modifier_state.alt = true,
+										"Alt_R" => modifier_state.alt = true,
+										"Ctrl_L" => modifier_state.ctrl = true,
+										"Ctrl_R" => modifier_state.ctrl = true,
+										"CapsLck" => modifier_state.caps_lock = true,
+										"Caps" => modifier_state.caps_lock = true,
+										&_ => {
+											let sym = xkb::keysym_from_name(
+												key.as_str(),
+												xkb::KEYSYM_NO_FLAGS,
+											);
+											keysym = sym;
+										}
+									}
+								}
+								if event.state() == KeyState::Released
+									&& modifier_state.alt == mods.alt && modifier_state.ctrl
+									== mods.ctrl && modifier_state.shift == mods.shift
+									&& modifier_state.logo == mods.logo && modifier_state.caps_lock
+									== mods.caps_lock && handle.raw_syms().contains(&keysym)
+								{
+									let _ = binding.action.call(&LUA.lock());
+									let action = CHANNEL.lock().unwrap().receiver.recv().unwrap();
+									return FilterResult::Intercept(action);
+								}
+							}
+							FilterResult::Forward
+						},
+					) {
+					self.handle_action(action);
+				}
 			}
 			InputEvent::PointerMotion { event } => {
 				let serial = SERIAL_COUNTER.next_serial();
@@ -157,6 +211,17 @@ impl StrataState {
 		let clamped_x = pos_x.max(0.0).min(max_x as f64);
 		let clamped_y = pos_y.max(0.0).min(max_y as f64);
 		(clamped_x, clamped_y).into()
+	}
+
+	pub fn handle_action(&mut self, action: ConfigCommands) {
+		match action {
+			ConfigCommands::CloseWindow => self.close_window(),
+			ConfigCommands::Spawn(cmd) => self.spawn(&cmd.as_str()),
+			ConfigCommands::SwitchWS(id) => self.switch_to_workspace(id),
+			ConfigCommands::MoveWindow(id) => self.move_window_to_workspace(id),
+			ConfigCommands::MoveWindowAndFollow(id) => self.follow_window_move(id),
+			ConfigCommands::Quit => self.quit(),
+		}
 	}
 
 	pub fn set_input_focus(&mut self, target: FocusTarget) {
