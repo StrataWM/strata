@@ -16,6 +16,27 @@ function module.spawn(cmd)
 	return function() api.spawn(cmd) end
 end
 
+--- Switches to a workspace
+---@param id number
+---@return function
+function module.switch_to_ws(id)
+	return function() api.switch_to_ws(id) end
+end
+
+--- Moves a window to a different workspace
+---@param id number
+---@return function
+function module.move_to_ws(id)
+	return function() api.move_to_ws(id) end
+end
+
+--- Moves a window to a different workspace and switches to the same one
+---@param id number
+---@return function
+function module.move_and_switch_to_ws(id)
+	return function() api.move_and_swtich_to_ws(id) end
+end
+
 --- Closes the currently active window
 ---@return function
 function module.close_window()
