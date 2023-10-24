@@ -21,4 +21,9 @@ function module.close_window()
 	return function() api.close_window() end
 end
 
+---@return function
+function module.quit()
+	return function() api.quit() end
+end
+
 return module
