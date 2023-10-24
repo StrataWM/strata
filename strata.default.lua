@@ -6,7 +6,7 @@ local function close_all_windows()
 	end
 end
 
-strata.set_config {
+config = {
 	autostart = {
 		{ "kitty --title Terminal" },
 	},
@@ -64,10 +64,6 @@ strata.set_config {
 			action = strata.actions.quit,
 		},
 		{
-			keys = { "Alt_L", "1" },
-			action = strata.actions.switch_to_ws(1),
-		},
-		{
 			keys = { "Super_L", "b" },
 			action = function() -- Toggle border
 				local border_enabled = strata.get_config().decorations.border.enable
@@ -104,3 +100,12 @@ strata.set_config {
 		},
 	},
 }
+
+for i = 1, 10 do
+	table.insert(config.bindings, {
+		keys = { "Alt_L", tostring(i) },
+		action = strata.actions.switch_to_ws(i)
+	})
+end
+
+strata.set_config(config)
