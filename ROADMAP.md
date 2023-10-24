@@ -20,7 +20,17 @@
 
 - [x] ~~Add different layouts (BSP, i3, etc...)~~
 
+- [x] ~~Implement Lua config~~
+
+- [x] ~~Add keybindings~~
+
+- [ ] Add support for launching from TTY (`udev-tty`)
+
 - [ ] Add wallpaper support
+
+- [ ] Add window rules
+
+- [ ] Add floating windows
 
 - [ ] Implement window transparency
 
