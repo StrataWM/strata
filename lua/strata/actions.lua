@@ -16,11 +16,13 @@ function module.spawn(cmd)
 	return function() api.spawn(cmd) end
 end
 
+--- Closes the currently active window
 ---@return function
 function module.close_window()
 	return function() api.close_window() end
 end
 
+--- Quits the compositor (safely)
 ---@return function
 function module.quit()
 	return function() api.quit() end
