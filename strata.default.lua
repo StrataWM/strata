@@ -56,11 +56,11 @@ strata.set_config {
 			action = strata.actions.spawn("rofi --show drun"),
 		},
 		{
-			keys = { "Ctrl_L", "q" },
+			keys = { "Alt_L", "q" },
 			action = strata.actions.close_window(),
 		},
 		{
-			keys = { "Ctrl_L", "m" },
+			keys = { "Alt_L", "m" },
 			action = strata.actions.quit(),
 		},
 		{
