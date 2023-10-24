@@ -26,14 +26,14 @@ end
 --- Moves a window to a different workspace
 ---@param id number
 ---@return function
-function module.move_to_ws(id)
+function module.move_window(id)
 	return function() api.move_to_ws(id) end
 end
 
 --- Moves a window to a different workspace and switches to the same one
 ---@param id number
 ---@return function
-function module.move_and_switch_to_ws(id)
+function module.move_window_and_follow(id)
 	return function() api.move_and_swtich_to_ws(id) end
 end
 
