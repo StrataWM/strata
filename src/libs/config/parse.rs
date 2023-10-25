@@ -95,16 +95,12 @@ impl StrataApi {
 pub fn parse_config(config_dir: PathBuf, lib_dir: PathBuf) -> Result<()> {
 	let lua = LUA.lock();
 	let api_submod = get_or_create_module(&lua, "strata.api").unwrap(); // TODO: remove unwrap
-	let win_submod = get_or_create_module(&lua, "strata.window").unwrap(); // TODO: remove unwrap
-	let ws_submod = get_or_create_module(&lua, "strata.workspace").unwrap(); // TODO: remove unwrap
 
-	win_submod.set("close", lua.create_function(StrataApi::close_window)?)?;
-	win_submod.set("move", lua.create_function(StrataApi::move_window)?)?;
-	win_submod
+	api_submod.set("close_window", lua.create_function(StrataApi::close_window)?)?;
+	api_submod.set("switch_to_ws", lua.create_function(StrataApi::switch_to_ws)?)?;
+	api_submod.set("move_window", lua.create_function(StrataApi::move_window)?)?;
+	api_submod
 		.set("move_window_and_follow", lua.create_function(StrataApi::move_window_and_follow)?)?;
-
-	ws_submod.set("switch", lua.create_function(StrataApi::switch_to_ws)?)?;
-
 	api_submod.set("quit", lua.create_function(StrataApi::quit)?)?;
 	api_submod.set("spawn", lua.create_async_function(StrataApi::spawn)?)?;
 	api_submod.set("set_config", lua.create_function(StrataApi::set_config)?)?;
