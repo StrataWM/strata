@@ -1,4 +1,7 @@
-use crate::CONFIG;
+use crate::{
+	decorations::BorderShader,
+	CONFIG,
+};
 use smithay::{
 	backend::renderer::{
 		element::Element,
@@ -30,11 +33,6 @@ const ROUNDED_BORDER_FRAG: &str = include_str!("shaders/rounded_corners.frag");
 const BORDER_FRAG: &str = include_str!("shaders/borders.frag");
 
 struct BorderShaderElements(RefCell<HashMap<Window, PixelShaderElement>>);
-
-pub struct BorderShader {
-	pub rounded: GlesPixelProgram,
-	pub default: GlesPixelProgram,
-}
 
 impl BorderShader {
 	pub fn init(renderer: &mut GlowRenderer) {

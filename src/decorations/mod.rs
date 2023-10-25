@@ -1,3 +1,5 @@
+mod borders;
+
 use smithay::{
 	backend::renderer::{
 		element::{
@@ -7,7 +9,10 @@ use smithay::{
 			Id,
 			RenderElement,
 		},
-		gles::element::PixelShaderElement,
+		gles::{
+			element::PixelShaderElement,
+			GlesPixelProgram,
+		},
 		glow::GlowRenderer,
 		multigpu::{
 			gbm::GbmGlesBackend,
@@ -27,6 +32,11 @@ use smithay::{
 		Scale,
 	},
 };
+
+pub struct BorderShader {
+	pub rounded: GlesPixelProgram,
+	pub default: GlesPixelProgram,
+}
 
 pub type GlMultiRenderer<'a, 'b> =
 	MultiRenderer<'a, 'a, 'b, GbmGlesBackend<GlowRenderer>, GbmGlesBackend<GlowRenderer>>;
