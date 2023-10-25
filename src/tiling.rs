@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-	libs::structs::workspaces::{
+	workspaces::{
 		Dwindle,
 		HorizontalOrVertical,
 		StrataWindow,

@@ -27,7 +27,6 @@ use smithay::{
 		Scale,
 	},
 };
-pub mod borders;
 
 pub type GlMultiRenderer<'a, 'b> =
 	MultiRenderer<'a, 'a, 'b, GbmGlesBackend<GlowRenderer>, GbmGlesBackend<GlowRenderer>>;

@@ -1,17 +1,9 @@
 use crate::{
-	libs::{
-		decorations::AsGlowRenderer,
-		structs::{
-			decorations::BorderShader,
-			workspaces::{
-				Dwindle,
-				StrataWindow,
-				Workspace,
-				Workspaces,
-			},
-		},
-		tiling::refresh_geometry,
+	decorations::{
+		AsGlowRenderer,
+		BorderShader,
 	},
+	tiling::refresh_geometry,
 	CONFIG,
 };
 use smithay::{
@@ -27,6 +19,8 @@ use smithay::{
 	},
 	desktop::{
 		space::SpaceElement,
+		LayerSurface,
+		PopupKind,
 		Window,
 	},
 	output::Output,
@@ -45,6 +39,42 @@ use std::{
 	},
 	rc::Rc,
 };
+
+pub struct StrataWindow {
+	pub smithay_window: Window,
+	pub rec: Rectangle<i32, Logical>,
+}
+
+pub struct Workspace {
+	pub windows: Vec<Rc<RefCell<StrataWindow>>>,
+	pub outputs: Vec<Output>,
+	pub layout_tree: Dwindle,
+}
+
+pub struct Workspaces {
+	pub workspaces: Vec<Workspace>,
+	pub current: u8,
+}
+
+#[derive(Clone)]
+pub enum Dwindle {
+	Empty,
+	Window(Rc<RefCell<StrataWindow>>),
+	Split { split: HorizontalOrVertical, ratio: f32, left: Box<Dwindle>, right: Box<Dwindle> },
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum HorizontalOrVertical {
+	Horizontal,
+	Vertical,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FocusTarget {
+	Window(Window),
+	LayerSurface(LayerSurface),
+	Popup(PopupKind),
+}
 
 impl StrataWindow {
 	fn bbox(&self) -> Rectangle<i32, Logical> {

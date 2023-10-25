@@ -1,13 +1,7 @@
 use crate::{
-	libs::structs::{
-		state::{
-			CalloopData,
-			StrataState,
-		},
-		workspaces::{
-			FocusTarget,
-			Workspaces,
-		},
+	workspaces::{
+		FocusTarget,
+		Workspaces,
 	},
 	CONFIG,
 };
@@ -26,6 +20,7 @@ use smithay::{
 	},
 	input::{
 		keyboard::XkbConfig,
+		Seat,
 		SeatState,
 	},
 	reexports::{
@@ -33,6 +28,7 @@ use smithay::{
 			generic::Generic,
 			EventLoop,
 			Interest,
+			LoopSignal,
 			Mode,
 			PostAction,
 		},
@@ -43,6 +39,7 @@ use smithay::{
 				DisconnectReason,
 			},
 			Display,
+			DisplayHandle,
 		},
 	},
 	utils::{
@@ -79,6 +76,34 @@ use std::{
 	sync::Arc,
 	time::Instant,
 };
+
+pub struct CalloopData {
+	pub state: StrataState,
+	pub display_handle: DisplayHandle,
+}
+
+pub struct StrataState {
+	pub dh: DisplayHandle,
+	pub backend: WinitGraphicsBackend<GlowRenderer>,
+	pub damage_tracker: OutputDamageTracker,
+	pub start_time: Instant,
+	pub loop_signal: LoopSignal,
+	pub compositor_state: CompositorState,
+	pub xdg_shell_state: XdgShellState,
+	pub xdg_decoration_state: XdgDecorationState,
+	pub shm_state: ShmState,
+	pub output_manager_state: OutputManagerState,
+	pub data_device_state: DataDeviceState,
+	pub primary_selection_state: PrimarySelectionState,
+	pub seat_state: SeatState<StrataState>,
+	pub layer_shell_state: WlrLayerShellState,
+	pub popup_manager: PopupManager,
+	pub seat: Seat<Self>,
+	pub seat_name: String,
+	pub socket_name: OsString,
+	pub workspaces: Workspaces,
+	pub pointer_location: Point<f64, Logical>,
+}
 
 impl StrataState {
 	pub fn new(
@@ -238,6 +263,20 @@ impl StrataState {
 	pub fn spawn(&mut self, command: &str) {
 		Command::new("/bin/sh").arg("-c").arg(command).spawn().expect("Failed to spawn command");
 	}
+}
+
+pub struct CommsChannel<T> {
+	pub sender: crossbeam_channel::Sender<T>,
+	pub receiver: crossbeam_channel::Receiver<T>,
+}
+
+pub enum ConfigCommands {
+	Spawn(String),
+	CloseWindow,
+	SwitchWS(u8),
+	MoveWindow(u8),
+	MoveWindowAndFollow(u8),
+	Quit,
 }
 
 #[derive(Default)]

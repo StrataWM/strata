@@ -1,11 +1,11 @@
-use crate::libs::{
+use crate::{
 	handlers::xdg_shell::handle_commit,
-	state::ClientState,
-	structs::{
-		state::StrataState,
-		workspaces::FocusTarget,
+	state::{
+		ClientState,
+		StrataState,
 	},
 	tiling::refresh_geometry,
+	workspaces::FocusTarget,
 };
 use smithay::{
 	backend::renderer::utils::on_commit_buffer_handler,

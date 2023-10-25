@@ -1,5 +1,5 @@
 use crate::{
-	libs::structs::comms::ConfigCommands,
+	state::ConfigCommands,
 	CHANNEL,
 	CONFIG,
 	LUA,
