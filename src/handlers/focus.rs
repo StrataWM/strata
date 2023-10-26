@@ -1,4 +1,4 @@
-use crate::libs::structs::{
+use crate::{
 	state::StrataState,
 	workspaces::FocusTarget,
 };

@@ -2,6 +2,8 @@ local api = require("strata.api")
 
 local module = {
 	actions = require("actions"),
+	window = require("window"),
+	workspace = require("workspace"),
 	rules = require("rules"),
 	api = api, -- mlua module
 

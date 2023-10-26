@@ -1,5 +1,5 @@
 use crate::{
-	libs::structs::decorations::BorderShader,
+	decorations::BorderShader,
 	CONFIG,
 };
 use smithay::{

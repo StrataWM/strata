@@ -1,13 +1,11 @@
 use crate::{
-	libs::{
-		decorations::CustomRenderElements,
-		structs::{
-			decorations::BorderShader,
-			state::{
-				CalloopData,
-				StrataState,
-			},
-		},
+	decorations::{
+		BorderShader,
+		CustomRenderElements,
+	},
+	state::{
+		CalloopData,
+		StrataState,
 	},
 	CONFIG,
 };

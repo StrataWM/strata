@@ -1,17 +1,21 @@
-mod libs;
+pub mod backends;
+pub mod config;
+pub mod decorations;
+pub mod handlers;
+pub mod layouts;
+pub mod state;
+pub mod tiling;
+pub mod workspaces;
 
-use crate::libs::{
+use crate::{
 	backends::init_with_backend,
 	config::{
 		parse_config,
 		Config,
 	},
-	structs::{
-		args::Args,
-		comms::{
-			CommsChannel,
-			ConfigCommands,
-		},
+	state::{
+		CommsChannel,
+		ConfigCommands,
 	},
 };
 use chrono::Local;
@@ -33,6 +37,13 @@ use std::{
 };
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+pub struct Args {
+	#[arg(short, long)]
+	pub backend: String,
+}
+
 lazy_static! {
 	static ref LUA: ReentrantMutex<mlua::Lua> = ReentrantMutex::new(mlua::Lua::new());
 	static ref CONFIG: RwLock<Config> = RwLock::new(Config::default());
@@ -52,10 +63,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	if let (Some(config_path), Some(data_path)) = (config_dir, lib_dir) {
 		tokio::spawn(async { parse_config(config_path, data_path) }).await??;
 	}
-	// let lua = LUA.lock();
-	// for binding in &CONFIG.read().bindings {
-	// 	binding.action.call(&lua, "");
-	// }
+
 	let file_appender = tracing_appender::rolling::never(
 		&log_dir,
 		format!("strata_{}.log", Local::now().format("%Y-%m-%d_%H:%M:%S")),

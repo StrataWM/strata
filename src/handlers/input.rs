@@ -1,9 +1,9 @@
 use crate::{
-	libs::structs::{
-		comms::ConfigCommands,
-		state::StrataState,
-		workspaces::FocusTarget,
+	state::{
+		ConfigCommands,
+		StrataState,
 	},
+	workspaces::FocusTarget,
 	CHANNEL,
 	CONFIG,
 	LUA,

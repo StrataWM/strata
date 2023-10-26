@@ -57,7 +57,7 @@ config = {
 		},
 		{
 			keys = { "Alt_L", "q" },
-			action = strata.actions.close_window,
+			action = strata.window.close,
 		},
 		{
 			keys = { "Alt_L", "m" },
@@ -104,7 +104,14 @@ config = {
 for i = 1, 10 do
 	table.insert(config.bindings, {
 		keys = { "Alt_L", tostring(i) },
-		action = strata.actions.switch_to_ws(i)
+		action = strata.workspace.switch(i)
+	})
+end
+
+for i = 1, 10 do
+	table.insert(config.bindings, {
+		keys = { "Alt_L", "Shift_L", tostring(i) },
+		action = strata.window.move(i, { follow = true })
 	})
 end
 
