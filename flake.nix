@@ -38,6 +38,8 @@
             root = ./.;
             include = [
               ./src
+              ./strata-core
+              ./strata-derive
               ./Cargo.toml
               ./Cargo.lock
               ./resources
