@@ -360,17 +360,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
-name = "colored"
-version = "2.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2674ec482fbc38012cf31e6c42ba0177b431a0cb6f15fe40efa5aab1bda516f6"
-dependencies = [
- "is-terminal",
- "lazy_static",
- "windows-sys 0.48.0",
-]
-
-[[package]]
 name = "concurrent-queue"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,38 +462,15 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drm"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edf9159ef4bcecd0c5e4cbeb573b8d0037493403d542780dba5d840bbf9df56f"
-dependencies = [
- "bitflags 1.3.2",
- "bytemuck",
- "drm-ffi 0.5.0",
- "drm-fourcc",
- "nix 0.26.2",
-]
-
-[[package]]
-name = "drm"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fb1b703ffbc7ebd216eba7900008049a56ace55580ecb2ee7fa801e8d8be87"
 dependencies = [
  "bitflags 2.4.0",
  "bytemuck",
- "drm-ffi 0.6.0",
+ "drm-ffi",
  "drm-fourcc",
  "nix 0.27.1",
-]
-
-[[package]]
-name = "drm-ffi"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1352481b7b90e27a8a1bf8ef6b33cf18b98dba7c410e75c24bb3eef2f0d8d525"
-dependencies = [
- "drm-sys 0.4.0",
- "nix 0.26.2",
 ]
 
 [[package]]
@@ -513,7 +479,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba7d1c19c4b6270e89d59fb27dc6d02a317c658a8a54e54781e1db9b5947595d"
 dependencies = [
- "drm-sys 0.5.0",
+ "drm-sys",
  "nix 0.27.1",
 ]
 
@@ -525,24 +491,9 @@ checksum = "0aafbcdb8afc29c1a7ee5fbe53b5d62f4565b35a042a662ca9fecd0b54dae6f4"
 
 [[package]]
 name = "drm-sys"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1369f1679d6b706d234c4c1e0613c415c2c74b598a09ad28080ba2474b72e42d"
-dependencies = [
- "libc",
-]
-
-[[package]]
-name = "drm-sys"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a4f1c0468062a56cd5705f1e3b5409eb286d5596a2028ec8e947595d7e715ae"
-
-[[package]]
-name = "edid-rs"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ab5fa33485cd85ac354df485819a63360fefa312fe04cffe65e6f175be1522c"
 
 [[package]]
 name = "either"
@@ -639,7 +590,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c97c1672f2d951da311cd20b148794c4157a8879c7650e65f76c7826e2b1c1"
 dependencies = [
  "bitflags 1.3.2",
- "drm 0.10.0",
+ "drm",
  "drm-fourcc",
  "gbm-sys",
  "libc",
@@ -807,17 +758,6 @@ name = "io-lifetimes"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bffb4def18c48926ccac55c1223e02865ce1a821751a95920448662696e7472c"
-
-[[package]]
-name = "is-terminal"
-version = "0.4.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb0889898416213fab133e1d33a0e5858a48177452750691bde3666d0fdbaf8b"
-dependencies = [
- "hermit-abi",
- "rustix",
- "windows-sys 0.48.0",
-]
 
 [[package]]
 name = "itertools"
@@ -1685,8 +1625,8 @@ dependencies = [
  "cgmath",
  "cursor-icon",
  "downcast-rs",
- "drm 0.10.0",
- "drm-ffi 0.6.0",
+ "drm",
+ "drm-ffi",
  "drm-fourcc",
  "encoding_rs",
  "gbm",
@@ -1742,15 +1682,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "smithay-drm-extras"
-version = "0.1.0"
-source = "git+https://github.com/Smithay/smithay.git#e241ccbbc4dfc6ce38e33856d9d159e436db3b5e"
-dependencies = [
- "drm 0.9.0",
- "edid-rs",
-]
-
-[[package]]
 name = "socket2"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1774,7 +1705,6 @@ dependencies = [
  "bitflags 2.4.0",
  "chrono",
  "clap",
- "colored",
  "crossbeam-channel",
  "lazy_static",
  "log",
@@ -1783,7 +1713,6 @@ dependencies = [
  "parking_lot",
  "smart-default",
  "smithay",
- "smithay-drm-extras",
  "strata-core",
  "strata-derive",
  "strum",
