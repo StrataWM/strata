@@ -10,7 +10,6 @@ use crate::{
 		StrataWindow,
 		Workspace,
 	},
-	CONFIG,
 };
 use smithay::{
 	desktop::layer_map_for_output,
@@ -25,8 +24,7 @@ use smithay::{
 
 pub fn refresh_geometry(workspace: &mut Workspace) {
 	let gaps = {
-		let config = &CONFIG.read();
-		(config.general.gaps_out, config.general.gaps_in)
+		(3, 3)
 	};
 	let output = layer_map_for_output(workspace.outputs().next().unwrap()).non_exclusive_zone();
 	let output_full = workspace.outputs().next().unwrap().current_mode().unwrap().size;

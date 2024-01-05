@@ -1,9 +1,14 @@
-use crate::{
-	workspaces::{
-		FocusTarget,
-		Workspaces,
-	},
-	CONFIG,
+use crate::workspaces::{
+	FocusTarget,
+	Workspaces,
+};
+use gc_arena::{
+	lock::RefLock,
+	Rootable,
+};
+use piccolo::{
+	Lua,
+	StashedUserData,
 };
 use smithay::{
 	backend::{
@@ -44,7 +49,9 @@ use smithay::{
 	},
 	utils::{
 		Logical,
+		Physical,
 		Point,
+		Size,
 	},
 	wayland::{
 		compositor::{
@@ -71,18 +78,47 @@ use smithay::{
 	},
 };
 use std::{
+	cell::RefCell,
 	ffi::OsString,
 	process::Command,
 	sync::Arc,
 	time::Instant,
 };
 
-pub struct CalloopData {
-	pub state: StrataState,
+pub struct StrataRT {
+	pub lua: Lua,
+	pub state: StashedUserData,
+}
+
+impl StrataRT {
+	pub fn with_state<F>(&mut self, mut cb: F) -> anyhow::Result<()>
+	where
+		F: FnMut(piccolo::Context, &RefCell<StrataComp>),
+	{
+		self.lua.try_enter(|ctx| {
+			let state = ctx
+				.fetch(&self.state)
+				.downcast_write::<Rootable![RefLock<StrataComp>]>(&ctx)
+				.unwrap()
+				.unlock();
+
+			cb(ctx, state);
+
+			Ok(())
+		})?;
+
+		Ok(())
+	}
+}
+
+pub struct StrataData {
+	pub rt: StrataRT,
 	pub display_handle: DisplayHandle,
 }
 
-pub struct StrataState {
+#[derive(gc_arena::Collect)]
+#[collect(require_static)]
+pub struct StrataComp {
 	pub dh: DisplayHandle,
 	pub backend: WinitGraphicsBackend<GlowRenderer>,
 	pub damage_tracker: OutputDamageTracker,
@@ -95,26 +131,24 @@ pub struct StrataState {
 	pub output_manager_state: OutputManagerState,
 	pub data_device_state: DataDeviceState,
 	pub primary_selection_state: PrimarySelectionState,
-	pub seat_state: SeatState<StrataState>,
+	pub seat_state: SeatState<StrataComp>,
 	pub layer_shell_state: WlrLayerShellState,
 	pub popup_manager: PopupManager,
-	pub seat: Seat<Self>,
+	pub seat: Seat<StrataComp>,
 	pub seat_name: String,
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub pointer_location: Point<f64, Logical>,
 }
 
-impl StrataState {
+impl StrataComp {
 	pub fn new(
-		event_loop: &mut EventLoop<CalloopData>,
-		display: Display<StrataState>,
+		event_loop: &mut EventLoop<StrataData>,
+		display: Display<StrataComp>,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
 		damage_tracker: OutputDamageTracker,
 	) -> Self {
-		let config = &CONFIG.read();
-
 		let start_time = Instant::now();
 		let dh = display.handle();
 		let compositor_state = CompositorState::new::<Self>(&dh);
@@ -127,21 +161,15 @@ impl StrataState {
 		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
 		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
-		if !config.general.kb_repeat.is_empty() {
-			let key_delay: i32 = config.general.kb_repeat[0];
-			let key_repeat: i32 = config.general.kb_repeat[1];
-			seat.add_keyboard(XkbConfig::default(), key_delay, key_repeat)
-				.expect("Couldn't parse XKB config");
-		} else {
-			seat.add_keyboard(XkbConfig::default(), 500, 250).expect("Couldn't parse XKB config");
-		}
-		let config_workspace: u8 = config.general.workspaces.clone();
+
+		seat.add_keyboard(XkbConfig::default(), 500, 250).expect("Couldn't parse XKB config");
+		let config_workspace: u8 = 5;
 		let workspaces = Workspaces::new(config_workspace);
 		seat.add_pointer();
 		let socket_name = Self::init_wayland_listener(display, event_loop);
 		let loop_signal = event_loop.get_signal();
 
-		Self {
+		StrataComp {
 			dh,
 			backend,
 			damage_tracker,
@@ -166,36 +194,38 @@ impl StrataState {
 	}
 
 	fn init_wayland_listener(
-		display: Display<StrataState>,
-		event_loop: &mut EventLoop<CalloopData>,
+		display: Display<StrataComp>,
+		event_loop: &mut EventLoop<StrataData>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
 
-		let handle = event_loop.handle();
+		let evlh = event_loop.handle();
 
-		event_loop
-			.handle()
-			.insert_source(listening_socket, move |client_stream, _, state| {
-				// You may also associate some data with the client when inserting the client.
-				state
-					.display_handle
-					.insert_client(client_stream, Arc::new(ClientState::default()))
+		evlh.insert_source(listening_socket, move |client_stream, _, state| {
+			// You may also associate some data with the client when inserting the client.
+			state
+				.display_handle
+				.insert_client(client_stream, Arc::new(ClientState::default()))
+				.unwrap();
+		})
+		.expect("Failed to init the wayland event source.");
+
+		evlh.insert_source(
+			Generic::new(display, Interest::READ, Mode::Level),
+			|_, display, data| {
+				data.rt
+					.with_state(|_, state| {
+						unsafe {
+							display.get_mut().dispatch_clients(&mut state.borrow_mut()).unwrap();
+						}
+					})
 					.unwrap();
-			})
-			.expect("Failed to init the wayland event source.");
 
-		handle
-			.insert_source(
-				Generic::new(display, Interest::READ, Mode::Level),
-				|_, display, state| {
-					unsafe {
-						display.get_mut().dispatch_clients(&mut state.state).unwrap();
-					}
-					Ok(PostAction::Continue)
-				},
-			)
-			.unwrap();
+				Ok(PostAction::Continue)
+			},
+		)
+		.unwrap();
 
 		socket_name
 	}
