@@ -9,6 +9,7 @@ use gc_arena::{
 use piccolo::{
 	Lua,
 	StashedUserData,
+	UserData,
 };
 use smithay::{
 	backend::{
@@ -91,6 +92,19 @@ pub struct StrataRT {
 }
 
 impl StrataRT {
+	pub fn new(state: StrataComp) -> Self {
+		let mut lua = Lua::core();
+
+		let state = lua
+			.try_enter(|ctx| {
+				let ud = UserData::new::<Rootable![RefLock<StrataComp>]>(&ctx, RefLock::new(state));
+				ctx.globals().set(ctx, "strata", ud)?;
+				Ok(ctx.stash(ud))
+			})
+			.unwrap();
+
+		Self { lua, state }
+	}
 	pub fn with_state<F>(&mut self, mut cb: F) -> anyhow::Result<()>
 	where
 		F: FnMut(piccolo::Context, &RefCell<StrataComp>),

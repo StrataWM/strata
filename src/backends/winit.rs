@@ -84,12 +84,11 @@ use smithay::{
 use std::{
 	cell::RefCell,
 	process::Command,
-	time::Duration,
+	time::{Duration, Instant},
 };
 
 pub fn init_winit() {
 	let mut event_loop: EventLoop<StrataData> = EventLoop::try_new().unwrap();
-	let mut lua = Lua::core();
 	let display: Display<StrataComp> = Display::new().unwrap();
 	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
@@ -135,14 +134,7 @@ pub fn init_winit() {
 	// 	Command::new("/bin/sh").arg("-c").args(cmd).spawn().ok();
 	// }
 
-	let state = lua
-		.try_enter(|ctx| {
-			let ud = UserData::new::<Rootable![RefLock<StrataComp>]>(&ctx, RefLock::new(state));
-			ctx.globals().set(ctx, "strata", ud)?;
-			Ok(ctx.stash(ud))
-		})
-		.unwrap();
-	let rt = StrataRT { lua, state };
+	let rt = StrataRT::new(state);
 	let mut data = StrataData { rt, display_handle };
 
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
@@ -269,7 +261,7 @@ pub fn process_input_event<I: InputBackend>(state: &RefCell<StrataComp>, event: 
 					FilterResult::Intercept(())
 				},
 			) {
-				println!("do stuff");
+				// println!("do stuff");
 			}
 		}
 		InputEvent::PointerMotion { event } => {
