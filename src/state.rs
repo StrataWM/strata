@@ -7,12 +7,34 @@ use gc_arena::{
 	Rootable,
 };
 use piccolo::{
+	meta_ops,
+	Callback,
+	CallbackReturn,
+	Closure,
+	Context,
+	Executor,
 	Lua,
+	MetaMethod,
 	StashedUserData,
+	Table,
 	UserData,
+	Value,
 };
 use smithay::{
 	backend::{
+		input::{
+			AbsolutePositionEvent,
+			Axis,
+			AxisSource,
+			Event,
+			InputBackend,
+			InputEvent,
+			KeyState,
+			KeyboardKeyEvent,
+			PointerAxisEvent,
+			PointerButtonEvent,
+			PointerMotionEvent,
+		},
 		renderer::{
 			damage::OutputDamageTracker,
 			glow::GlowRenderer,
@@ -25,7 +47,17 @@ use smithay::{
 		Window,
 	},
 	input::{
-		keyboard::XkbConfig,
+		keyboard::{
+			xkb,
+			FilterResult,
+			XkbConfig,
+		},
+		pointer::{
+			AxisFrame,
+			ButtonEvent,
+			MotionEvent,
+			RelativeMotionEvent,
+		},
 		Seat,
 		SeatState,
 	},
@@ -53,6 +85,7 @@ use smithay::{
 		Physical,
 		Point,
 		Size,
+		SERIAL_COUNTER,
 	},
 	wayland::{
 		compositor::{
@@ -82,52 +115,241 @@ use std::{
 	cell::RefCell,
 	ffi::OsString,
 	process::Command,
+	rc::Rc,
 	sync::Arc,
 	time::Instant,
 };
 
-pub struct StrataRT {
+pub struct StrataState {
 	pub lua: Lua,
-	pub state: StashedUserData,
+	pub comp: Rc<RefCell<StrataComp>>,
+	pub display_handle: DisplayHandle,
 }
 
-impl StrataRT {
-	pub fn new(state: StrataComp) -> Self {
-		let mut lua = Lua::core();
-
-		let state = lua
-			.try_enter(|ctx| {
-				let ud = UserData::new::<Rootable![RefLock<StrataComp>]>(&ctx, RefLock::new(state));
-				ctx.globals().set(ctx, "strata", ud)?;
-				Ok(ctx.stash(ud))
-			})
-			.unwrap();
-
-		Self { lua, state }
+impl StrataState {
+	pub fn process_input_event<I: InputBackend>(
+		&mut self,
+		event: InputEvent<I>,
+	) -> anyhow::Result<()> {
+		match &event {
+			InputEvent::Keyboard { event, .. } => self.keyboard::<I>(event),
+			InputEvent::PointerMotion { event, .. } => self.pointer_motion::<I>(event),
+			InputEvent::PointerMotionAbsolute { event, .. } => {
+				self.pointer_motion_absolute::<I>(event)
+			}
+			InputEvent::PointerButton { event, .. } => self.pointer_button::<I>(event),
+			InputEvent::PointerAxis { event, .. } => self.pointer_axis::<I>(event),
+			_ => Ok(()),
+		}
 	}
-	pub fn with_state<F>(&mut self, mut cb: F) -> anyhow::Result<()>
-	where
-		F: FnMut(piccolo::Context, &RefCell<StrataComp>),
-	{
-		self.lua.try_enter(|ctx| {
-			let state = ctx
-				.fetch(&self.state)
-				.downcast_write::<Rootable![RefLock<StrataComp>]>(&ctx)
-				.unwrap()
-				.unlock();
 
-			cb(ctx, state);
+	pub fn keyboard<I: InputBackend>(&mut self, event: &I::KeyboardKeyEvent) -> anyhow::Result<()> {
+		let serial = SERIAL_COUNTER.next_serial();
+		let time = Event::time_msec(event);
 
-			Ok(())
-		})?;
+		let keyboard = self.comp.borrow_mut().seat.get_keyboard().unwrap();
+		let ex = keyboard.input(
+			&mut self.comp.borrow_mut(),
+			event.key_code(),
+			event.state(),
+			serial,
+			time,
+			|_, mods, handle| {
+				// for binding in &CONFIG.read().bindings {
+				// 	let mut keysym: Keysym =
+				// 		xkb::utf32_to_keysym(xkb::keysyms::KEY_NoSymbol);
+				// 	let mut modifier_state = ModifiersState::default();
+				//
+				// 	for key in &binding.keys {
+				// 		match key.as_str() {
+				// 			"Super_L" => modifier_state.logo = true,
+				// 			"Super_R" => modifier_state.logo = true,
+				// 			"Shift_L" => modifier_state.shift = true,
+				// 			"Shift_R" => modifier_state.shift = true,
+				// 			"Alt_L" => modifier_state.alt = true,
+				// 			"Alt_R" => modifier_state.alt = true,
+				// 			"Ctrl_L" => modifier_state.ctrl = true,
+				// 			"Ctrl_R" => modifier_state.ctrl = true,
+				// 			"CapsLck" => modifier_state.caps_lock = true,
+				// 			"Caps" => modifier_state.caps_lock = true,
+				// 			&_ => {
+				// 				let sym = xkb::keysym_from_name(
+				// 					key.as_str(),
+				// 					xkb::KEYSYM_NO_FLAGS,
+				// 				);
+				// 				keysym = sym;
+				// 			}
+				// 		}
+				// 	}
+				// 	if event.state() == KeyState::Released
+				// 		&& modifier_state.alt == mods.alt && modifier_state.ctrl
+				// 		== mods.ctrl && modifier_state.shift == mods.shift
+				// 		&& modifier_state.logo == mods.logo && modifier_state.caps_lock
+				// 		== mods.caps_lock && handle.raw_syms().contains(&keysym)
+				// 	{
+				// 	}
+				// }
+
+				if event.state() == KeyState::Released {
+					let raw_syms = handle.raw_syms();
+
+					if raw_syms.contains(&xkb::keysyms::KEY_Escape.into()) {
+						let ex = self
+							.lua
+							.try_enter(|ctx| {
+								let func = Closure::load(
+									ctx,
+									None,
+									r#"
+									strata:quit()
+									"#
+									.as_bytes(),
+								)
+								.unwrap();
+
+								Ok(ctx.stash(Executor::start(ctx, func.into(), ())))
+							})
+							.unwrap();
+
+						return FilterResult::Intercept(ex);
+					}
+				}
+
+				FilterResult::Forward
+			},
+		);
+
+		if let Some(ex) = ex {
+			self.lua.execute::<()>(&ex)?;
+		}
 
 		Ok(())
 	}
-}
 
-pub struct StrataData {
-	pub rt: StrataRT,
-	pub display_handle: DisplayHandle,
+	pub fn pointer_motion<I: InputBackend>(
+		&mut self,
+		event: &I::PointerMotionEvent,
+	) -> anyhow::Result<()> {
+		let serial = SERIAL_COUNTER.next_serial();
+		let delta = (event.delta_x(), event.delta_y()).into();
+		self.comp.borrow_mut().pointer_location += delta;
+		self.comp.borrow_mut().pointer_location =
+			self.comp.borrow().clamp_coords(self.comp.borrow().pointer_location);
+
+		let under = self.comp.borrow().surface_under();
+
+		self.comp.borrow_mut().set_input_focus_auto();
+
+		let ptr = self.comp.borrow().seat.get_pointer();
+
+		if let Some(ptr) = ptr {
+			// let pointer_location = s.pointer_location;
+			ptr.motion(
+				&mut self.comp.borrow_mut(),
+				under.clone(),
+				&MotionEvent {
+					location: self.comp.borrow().pointer_location,
+					serial,
+					time: event.time_msec(),
+				},
+			);
+
+			ptr.relative_motion(
+				&mut self.comp.borrow_mut(),
+				under,
+				&RelativeMotionEvent {
+					delta,
+					delta_unaccel: event.delta_unaccel(),
+					utime: event.time(),
+				},
+			)
+		}
+
+		Ok(())
+	}
+
+	pub fn pointer_motion_absolute<I: InputBackend>(
+		&mut self,
+		event: &I::PointerMotionAbsoluteEvent,
+	) -> anyhow::Result<()> {
+		let serial = SERIAL_COUNTER.next_serial();
+
+		let output = self.comp.borrow().workspaces.current().outputs().next().unwrap().clone();
+		let output_geo = self.comp.borrow().workspaces.current().output_geometry(&output).unwrap();
+		let pos = event.position_transformed(output_geo.size) + output_geo.loc.to_f64();
+		let pointer = self.comp.borrow().seat.get_pointer().unwrap();
+
+		let pointer_location = self.comp.borrow_mut().clamp_coords(pos);
+		self.comp.borrow_mut().pointer_location = pointer_location;
+
+		self.comp.borrow_mut().set_input_focus_auto();
+		let under = self.comp.borrow().surface_under();
+		pointer.motion(
+			&mut self.comp.borrow_mut(),
+			under,
+			&MotionEvent { location: pos, serial, time: event.time_msec() },
+		);
+
+		Ok(())
+	}
+
+	pub fn pointer_button<I: InputBackend>(
+		&mut self,
+		event: &I::PointerButtonEvent,
+	) -> anyhow::Result<()> {
+		let pointer = self.comp.borrow().seat.get_pointer().unwrap();
+		let serial = SERIAL_COUNTER.next_serial();
+		let button = event.button_code();
+		let button_state = event.state();
+		self.comp.borrow_mut().set_input_focus_auto();
+		pointer.button(
+			&mut self.comp.borrow_mut(),
+			&ButtonEvent { button, state: button_state, serial, time: event.time_msec() },
+		);
+
+		Ok(())
+	}
+
+	pub fn pointer_axis<I: InputBackend>(
+		&mut self,
+		event: &I::PointerAxisEvent,
+	) -> anyhow::Result<()> {
+		let horizontal_amount = event
+			.amount(Axis::Horizontal)
+			.unwrap_or_else(|| event.amount_discrete(Axis::Horizontal).unwrap_or(0.0) * 3.0);
+		let vertical_amount = event
+			.amount(Axis::Vertical)
+			.unwrap_or_else(|| event.amount_discrete(Axis::Vertical).unwrap_or(0.0) * 3.0);
+		let horizontal_amount_discrete = event.amount_discrete(Axis::Horizontal);
+		let vertical_amount_discrete = event.amount_discrete(Axis::Vertical);
+
+		{
+			let mut frame = AxisFrame::new(event.time_msec()).source(event.source());
+			if horizontal_amount != 0.0 {
+				frame = frame.value(Axis::Horizontal, horizontal_amount);
+				if let Some(discrete) = horizontal_amount_discrete {
+					frame = frame.discrete(Axis::Horizontal, discrete as i32);
+				}
+			} else if event.source() == AxisSource::Finger {
+				frame = frame.stop(Axis::Horizontal);
+			}
+			if vertical_amount != 0.0 {
+				frame = frame.value(Axis::Vertical, vertical_amount);
+				if let Some(discrete) = vertical_amount_discrete {
+					frame = frame.discrete(Axis::Vertical, discrete as i32);
+				}
+			} else if event.source() == AxisSource::Finger {
+				frame = frame.stop(Axis::Vertical);
+			}
+			let ptr = self.comp.borrow().seat.get_pointer();
+
+			if let Some(ptr) = ptr {
+				ptr.axis(&mut self.comp.borrow_mut(), frame);
+			}
+		}
+
+		Ok(())
+	}
 }
 
 #[derive(gc_arena::Collect)]
@@ -157,7 +379,7 @@ pub struct StrataComp {
 
 impl StrataComp {
 	pub fn new(
-		event_loop: &mut EventLoop<StrataData>,
+		event_loop: &mut EventLoop<StrataState>,
 		display: Display<StrataComp>,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
@@ -207,9 +429,73 @@ impl StrataComp {
 		}
 	}
 
+	pub fn ud_from_rc_refcell<'gc>(
+		ctx: Context<'gc>,
+		state: Rc<RefCell<StrataComp>>,
+	) -> anyhow::Result<UserData<'gc>> {
+		let ud = UserData::new_static(&ctx, state);
+		ud.set_metatable(&ctx, Some(StrataComp::metatable(ctx)?));
+		Ok(ud)
+	}
+
+	pub fn metatable<'gc>(ctx: Context<'gc>) -> anyhow::Result<Table<'gc>> {
+		let m = Table::new(&ctx);
+
+		m.set(
+			ctx,
+			MetaMethod::Index,
+			Callback::from_fn(&ctx, |ctx, _, mut stack| {
+				let (ud, k) = stack.consume::<(UserData, piccolo::String)>(ctx)?;
+				// let this = ud.downcast_static::<Rc<RefCell<StrataComp>>>()?;
+
+				match k.as_bytes() {
+					b"quit" => {
+						stack.push_front(
+							Callback::from_fn(&ctx, |ctx, _, mut stack| {
+								let this = stack
+									.consume::<UserData>(ctx)?
+									.downcast_static::<Rc<RefCell<StrataComp>>>()?;
+
+								this.borrow_mut().quit();
+
+								Ok(CallbackReturn::Return)
+							})
+							.into(),
+						);
+					}
+					_ => {
+						panic!("invalid key: {}", k);
+					}
+				};
+
+				Ok(CallbackReturn::Return)
+			}),
+		)?;
+
+		m.set(
+			ctx,
+			MetaMethod::NewIndex,
+			Callback::from_fn(&ctx, |ctx, _, mut stack| {
+				let (ud, k, v) =
+					stack.consume::<(UserData, piccolo::String, piccolo::Value)>(ctx)?;
+
+				match k.as_bytes() {
+					b"" => {}
+					_ => {
+						panic!("invalid key: {}", k);
+					}
+				};
+				// todo
+				Ok(CallbackReturn::Return)
+			}),
+		)?;
+
+		Ok(m)
+	}
+
 	fn init_wayland_listener(
 		display: Display<StrataComp>,
-		event_loop: &mut EventLoop<StrataData>,
+		event_loop: &mut EventLoop<StrataState>,
 	) -> OsString {
 		let listening_socket = ListeningSocketSource::new_auto().unwrap();
 		let socket_name = listening_socket.socket_name().to_os_string();
@@ -227,14 +513,10 @@ impl StrataComp {
 
 		evlh.insert_source(
 			Generic::new(display, Interest::READ, Mode::Level),
-			|_, display, data| {
-				data.rt
-					.with_state(|_, state| {
-						unsafe {
-							display.get_mut().dispatch_clients(&mut state.borrow_mut()).unwrap();
-						}
-					})
-					.unwrap();
+			|_, display, state| {
+				unsafe {
+					display.get_mut().dispatch_clients(&mut state.comp.borrow_mut()).unwrap();
+				}
 
 				Ok(PostAction::Continue)
 			},
