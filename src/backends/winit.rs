@@ -7,7 +7,7 @@ use crate::{
 		self,
 		StrataComp,
 		StrataState,
-	},
+	}, handlers::input::{KeyPattern, ModFlags},
 };
 use piccolo::{
 	Closure,
@@ -120,8 +120,8 @@ pub fn init_winit() {
 			"#
 			.as_bytes(),
 		)?;
-		let quit_key = state::KeyPattern {
-			mods: Vec::from_iter([keysyms::KEY_Control_L.into(), keysyms::KEY_Super_L.into()]),
+		let quit_key = KeyPattern {
+			mods: ModFlags::Super_L | ModFlags::Control_L,
 			key: keysyms::KEY_Escape.into(),
 		};
 		config.insert(quit_key, ctx.stash(quit).into());

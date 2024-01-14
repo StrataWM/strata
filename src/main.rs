@@ -34,6 +34,7 @@ pub struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+	let args = Args::parse();
 	let xdg = xdg::BaseDirectories::with_prefix("strata")?;
 	let config_dir = xdg.find_config_file("");
 	let lib_dir = xdg.find_data_file("lua");
@@ -57,13 +58,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		tracing_subscriber::fmt().with_writer(log_appender).init();
 	}
 
-	let args = Args::parse();
-
-	init_with_backend(&args.backend);
 
 	info!("Initializing Strata WM");
 	info!("Parsing config...");
 	info!("Initializing socket interface...");
+
+	init_with_backend(&args.backend);
+
+	info!("Quitting Strata WM");
 
 	Ok(())
 }

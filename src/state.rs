@@ -1,5 +1,9 @@
 use crate::{
-	handlers::input::Mods,
+	handlers::input::{
+		KeyPattern,
+		ModFlags,
+		Mods,
+	},
 	workspaces::{
 		FocusTarget,
 		Workspaces,
@@ -148,12 +152,6 @@ pub enum Action {
 	Return,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
-pub struct KeyPattern {
-	pub mods: Vec<Keysym>,
-	pub key: Keysym,
-}
-
 pub struct StrataState {
 	pub lua: Lua,
 	pub comp: Rc<RefCell<StrataComp>>,
@@ -190,29 +188,27 @@ impl StrataState {
 			serial,
 			time,
 			|comp, mods, keysym_h| {
-				// match xkb::keysym_get_name(keysym_h.modified_sym()).as_str() {
-				// 	m @ ("Control_L" | "Control_R" | "Shift_L" | "Shift_R" | "Super_L"
-				// 	| "Super_R" | "Alt_L" | "Alt_R" | "ISO_Level3_Shift"
-				// 	| "ISO_Level5_Shift") => {
-				// 	}
-				// 	_ => {
-				// 		println!("meow");
-				// 	}
-				// };
+				let handled_mods = comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
 
-				// println!("{}({:#?})", xkb::keysym_get_name(keysym_h.modified_sym()), event.state());
-				comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
+				match event.state() {
+					KeyState::Pressed => {
+						if !handled_mods {
+							let k =
+								KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym() };
 
-				let k = KeyPattern { mods: comp.get_mods(), key: keysym_h.modified_sym() };
-				println!("{:#?}, {:#?}, {:#?}", self.config, self.config.contains_key(&k), k);
+							println!("{:#?}", self.config);
+							println!("{:#?}\n", k);
 
-				if event.state() == KeyState::Pressed {
-					match self.config.get(&k) {
-						Some(f) => FilterResult::Intercept(f),
-						None => FilterResult::Forward,
+							if let Some(f) = self.config.get(&k) {
+								return FilterResult::Intercept(f);
+							}
+						}
+
+						FilterResult::Forward
 					}
-				} else {
-					FilterResult::Forward
+					KeyState::Released => {
+						return FilterResult::Forward;
+					}
 				}
 			},
 		);
@@ -346,7 +342,7 @@ impl StrataComp {
 			seat,
 			workspaces,
 			pointer_location: Point::from((0.0, 0.0)),
-			mods: Mods { map: HashMap::new(), state: None },
+			mods: Mods { flags: ModFlags::empty(), state: None },
 		}
 	}
 
@@ -483,59 +479,57 @@ impl StrataComp {
 		new_modstate: &ModifiersState,
 		keysym: Keysym,
 		event: &I::KeyboardKeyEvent,
-	) {
+	) -> bool {
+		let mut r = false;
 		let old_modstate = self.mods.state.take().unwrap_or(new_modstate.clone());
 
-		match keysym {
+		let modflag = match keysym {
 			// equivalent to "Control_* + Shift_* + Alt_*"
-			Keysym::Meta_L => {
-				self.mods
-					.map
-					.entry(Keysym::Alt_L)
-					.and_modify(|v| *v = event.state() == KeyState::Pressed)
-					.or_insert(event.state() == KeyState::Pressed);
-			}
-			Keysym::Meta_R => {
-				self.mods
-					.map
-					.entry(Keysym::Alt_R)
-					.and_modify(|v| *v = event.state() == KeyState::Pressed)
-					.or_insert(event.state() == KeyState::Pressed);
-			}
+			Keysym::Meta_L => ModFlags::Alt_L,
+			Keysym::Meta_R => ModFlags::Alt_R,
 
-			_ => {
-				match event.state() {
-					KeyState::Pressed => {
-						let depressed = if new_modstate == &old_modstate {
-							self.mods.map.is_empty() || self.mods.map.contains_key(&keysym)
-						} else {
-							(new_modstate.serialized.depressed - old_modstate.serialized.depressed)
-								> 0
-						};
+			Keysym::Shift_L => ModFlags::Shift_L,
+			Keysym::Shift_R => ModFlags::Shift_R,
 
-						// valid mod
-						if new_modstate.serialized.depressed - new_modstate.serialized.locked > 0
-							&& depressed
-						{
-							self.mods.map.entry(keysym).and_modify(|v| *v = true).or_insert(true);
-						}
-					}
-					KeyState::Released => {
-						self.mods.map.entry(keysym).and_modify(|v| *v = false);
-					}
+			Keysym::Control_L => ModFlags::Control_L,
+			Keysym::Control_R => ModFlags::Control_R,
+
+			Keysym::Alt_L => ModFlags::Alt_L,
+			Keysym::Alt_R => ModFlags::Alt_R,
+
+			Keysym::Super_L => ModFlags::Super_L,
+			Keysym::Super_R => ModFlags::Super_R,
+
+			Keysym::ISO_Level3_Shift => ModFlags::ISO_Level3_Shift,
+			Keysym::ISO_Level5_Shift => ModFlags::ISO_Level5_Shift,
+
+			_ => ModFlags::empty(),
+		};
+
+		match event.state() {
+			KeyState::Pressed => {
+				let depressed = if new_modstate == &old_modstate {
+					self.mods.flags.is_empty()
+				} else {
+					new_modstate.serialized.depressed > old_modstate.serialized.depressed
 				};
+
+				// valid mod
+				if new_modstate.serialized.depressed - new_modstate.serialized.locked > 0
+					&& depressed
+				{
+					self.mods.flags ^= modflag;
+					r = true;
+				}
+			}
+			KeyState::Released => {
+				self.mods.flags ^= modflag;
 			}
 		};
 
 		self.mods.state = Some(new_modstate.clone());
-	}
 
-	pub fn get_mods(&self) -> Vec<Keysym> {
-		self.mods
-			.map
-			.iter()
-			.filter_map(|(k, &v)| if v { Some(k.clone()) } else { None })
-			.collect::<Vec<Keysym>>()
+		r
 	}
 }
 

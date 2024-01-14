@@ -28,7 +28,7 @@ codegen-units = 1
 
 [dependencies]
 tracing-subscriber = { features = ["env-filter"], version = "0.3.17" }
-bitflags = "2.2.1"
+bitflags = "2.4.1"
 colored = "2.0.0"
 clap = { version = "4.3.11", features = ["derive"] }
 anyhow = "1.0.71"

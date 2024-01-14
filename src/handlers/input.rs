@@ -1,9 +1,13 @@
-use std::collections::HashMap;
+use std::{
+	collections::HashMap,
+	fmt::Display,
+};
 
 use crate::{
 	state::StrataComp,
 	workspaces::FocusTarget,
 };
+use bitflags::bitflags;
 use smithay::{
 	backend::input::{
 		AbsolutePositionEvent,
@@ -15,12 +19,18 @@ use smithay::{
 		PointerButtonEvent,
 		PointerMotionEvent,
 	},
-	input::{pointer::{
-		AxisFrame,
-		ButtonEvent,
-		MotionEvent,
-		RelativeMotionEvent,
-	}, keyboard::{Keysym, ModifiersState}},
+	input::{
+		keyboard::{
+			Keysym,
+			ModifiersState,
+		},
+		pointer::{
+			AxisFrame,
+			ButtonEvent,
+			MotionEvent,
+			RelativeMotionEvent,
+		},
+	},
 	utils::{
 		Logical,
 		Point,
@@ -30,26 +40,42 @@ use smithay::{
 
 #[derive(Debug)]
 pub struct Mods {
-	pub map: HashMap<Keysym, bool>,
-	pub state: Option<ModifiersState>
+	pub flags: ModFlags,
+	pub state: Option<ModifiersState>,
 }
 
-// pub struct Mods {
-// 	control_l: bool,
-// 	control_r: bool,
+// complete list, for future reference
 //
-// 	alt_l: bool,
-// 	alt_r: bool,
-//
-// 	shift_l: bool,
-// 	shift_r: bool,
-//
-// 	super_l: bool,
-// 	super_r: bool,
-//
-// 	iso_level3_shift: bool,
-// 	iso_level5_shift: bool,
-// }
+// Shift_L Shift_R
+// Control_L Control_R
+// Meta_L Meta_R
+// Alt_L Alt_R
+// Super_L Super_R
+// Hyper_L Hyper_R
+// ISO_Level2_Latch
+// ISO_Level3_Shift ISO_Level3_Latch ISO_Level3_Lock
+// ISO_Level5_Shift ISO_Level5_Latch ISO_Level5_Lock
+bitflags! {
+	#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+	pub struct ModFlags: u8 {
+		const Shift_L = 1;
+		const Shift_R = 1 << 1;
+		const Control_L = 1 << 1 + 1;
+		const Control_R = 1 << 2;
+		const Alt_L = 1 << 2 + 1;
+		const Alt_R = 1 << 3;
+		const Super_L = 1 << 3 + 1;
+		const Super_R = 1 << 4;
+		const ISO_Level3_Shift = 1 << 4 + 1;
+		const ISO_Level5_Shift = 1 << 5;
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct KeyPattern {
+	pub mods: ModFlags,
+	pub key: Keysym,
+}
 
 impl StrataComp {
 	pub fn clamp_coords(&self, pos: Point<f64, Logical>) -> Point<f64, Logical> {
