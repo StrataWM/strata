@@ -4,11 +4,15 @@ use crate::{
 		CustomRenderElements,
 	},
 	state::{
+		self,
 		StrataComp,
 		StrataState,
 	},
 };
-use piccolo::Lua;
+use piccolo::{
+	Closure,
+	Lua,
+};
 use smithay::{
 	backend::{
 		renderer::{
@@ -28,21 +32,23 @@ use smithay::{
 		space::SpaceElement,
 		LayerSurface,
 	},
+	input::keyboard::{
+		keysyms,
+		xkb,
+		Keysym,
+	},
 	output::{
 		Mode,
 		Output,
 		PhysicalProperties,
 		Subpixel,
 	},
-	reexports::{
-		calloop::{
-			timer::{
-				TimeoutAction,
-				Timer,
-			},
-			EventLoop,
+	reexports::calloop::{
+		timer::{
+			TimeoutAction,
+			Timer,
 		},
-		wayland_server::Display,
+		EventLoop,
 	},
 	utils::{
 		Rectangle,
@@ -53,14 +59,14 @@ use smithay::{
 };
 use std::{
 	cell::RefCell,
-	process::Command,
+	collections::HashMap,
 	rc::Rc,
 	time::Duration,
 };
 
 pub fn init_winit() {
 	let mut event_loop: EventLoop<StrataState> = EventLoop::try_new().unwrap();
-	let display: Display<StrataComp> = Display::new().unwrap();
+	let (display, socket) = state::init_wayland_listener(&event_loop);
 	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
 	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
@@ -78,8 +84,9 @@ pub fn init_winit() {
 	output.set_preferred(mode);
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
 	let mut comp = StrataComp::new(
-		&mut event_loop,
-		display,
+		&event_loop,
+		&display,
+		socket,
 		"winit".to_string(),
 		backend,
 		damage_tracked_renderer,
@@ -90,8 +97,8 @@ pub fn init_winit() {
 	}
 
 	std::env::set_var("WAYLAND_DISPLAY", &comp.socket_name);
-	let timer = Timer::immediate();
 
+	let timer = Timer::immediate();
 	event_loop
 		.handle()
 		.insert_source(timer, move |_, _, data| {
@@ -102,13 +109,31 @@ pub fn init_winit() {
 
 	let mut lua = Lua::core();
 	let comp = Rc::new(RefCell::new(comp));
+	let mut config = HashMap::new();
+
 	lua.try_enter(|ctx| {
+		let quit = Closure::load(
+			ctx,
+			None,
+			r#"
+			strata:quit()
+			"#
+			.as_bytes(),
+		)?;
+		let quit_key = state::KeyPattern {
+			mods: Vec::from_iter([keysyms::KEY_Control_L.into(), keysyms::KEY_Super_L.into()]),
+			key: keysyms::KEY_Escape.into(),
+		};
+		config.insert(quit_key, ctx.stash(quit).into());
+
 		let ud = StrataComp::ud_from_rc_refcell(ctx, Rc::clone(&comp))?;
 		ctx.globals().set(ctx, "strata", ud)?;
+
 		Ok(())
 	})
 	.unwrap();
-	let mut data = StrataState { lua, comp, display_handle };
+
+	let mut data = StrataState { lua, config, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
 

@@ -1,12 +1,19 @@
-use crate::workspaces::{
-	FocusTarget,
-	Workspaces,
+use crate::{
+	handlers::input::Mods,
+	workspaces::{
+		FocusTarget,
+		Workspaces,
+	},
 };
 use gc_arena::{
 	lock::RefLock,
 	Rootable,
 };
 use piccolo::{
+	closure::{
+		UpValue,
+		UpValueState,
+	},
 	meta_ops,
 	Callback,
 	CallbackReturn,
@@ -15,6 +22,8 @@ use piccolo::{
 	Executor,
 	Lua,
 	MetaMethod,
+	StashedExecutor,
+	StashedFunction,
 	StashedUserData,
 	Table,
 	UserData,
@@ -26,6 +35,7 @@ use smithay::{
 			AbsolutePositionEvent,
 			Axis,
 			AxisSource,
+			ButtonState,
 			Event,
 			InputBackend,
 			InputEvent,
@@ -50,6 +60,9 @@ use smithay::{
 		keyboard::{
 			xkb,
 			FilterResult,
+			Keysym,
+			KeysymHandle,
+			ModifiersState,
 			XkbConfig,
 		},
 		pointer::{
@@ -63,9 +76,13 @@ use smithay::{
 	},
 	reexports::{
 		calloop::{
-			generic::Generic,
+			generic::{
+				FdWrapper,
+				Generic,
+			},
 			EventLoop,
 			Interest,
+			LoopHandle,
 			LoopSignal,
 			Mode,
 			PostAction,
@@ -113,17 +130,35 @@ use smithay::{
 };
 use std::{
 	cell::RefCell,
+	collections::{
+		HashMap,
+		HashSet,
+	},
 	ffi::OsString,
+	ops::Deref,
+	os::fd::AsRawFd,
 	process::Command,
 	rc::Rc,
 	sync::Arc,
 	time::Instant,
 };
 
+pub enum Action {
+	LuaExecute(StashedFunction),
+	Return,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct KeyPattern {
+	pub mods: Vec<Keysym>,
+	pub key: Keysym,
+}
+
 pub struct StrataState {
 	pub lua: Lua,
 	pub comp: Rc<RefCell<StrataComp>>,
-	pub display_handle: DisplayHandle,
+	pub config: HashMap<KeyPattern, StashedFunction>,
+	pub display: Display<StrataComp>,
 }
 
 impl StrataState {
@@ -131,7 +166,7 @@ impl StrataState {
 		&mut self,
 		event: InputEvent<I>,
 	) -> anyhow::Result<()> {
-		match &event {
+		match event {
 			InputEvent::Keyboard { event, .. } => self.keyboard::<I>(event),
 			InputEvent::PointerMotion { event, .. } => self.pointer_motion::<I>(event),
 			InputEvent::PointerMotionAbsolute { event, .. } => {
@@ -139,88 +174,55 @@ impl StrataState {
 			}
 			InputEvent::PointerButton { event, .. } => self.pointer_button::<I>(event),
 			InputEvent::PointerAxis { event, .. } => self.pointer_axis::<I>(event),
-			_ => Ok(()),
+			_ => anyhow::bail!("unhandled winit event"),
 		}
 	}
 
-	pub fn keyboard<I: InputBackend>(&mut self, event: &I::KeyboardKeyEvent) -> anyhow::Result<()> {
+	pub fn keyboard<I: InputBackend>(&mut self, event: I::KeyboardKeyEvent) -> anyhow::Result<()> {
 		let serial = SERIAL_COUNTER.next_serial();
-		let time = Event::time_msec(event);
+		let time = Event::time_msec(&event);
 
-		let keyboard = self.comp.borrow_mut().seat.get_keyboard().unwrap();
-		let ex = keyboard.input(
+		let keyboard = self.comp.borrow().seat.get_keyboard().unwrap();
+		let f = keyboard.input(
 			&mut self.comp.borrow_mut(),
 			event.key_code(),
 			event.state(),
 			serial,
 			time,
-			|_, mods, handle| {
-				// for binding in &CONFIG.read().bindings {
-				// 	let mut keysym: Keysym =
-				// 		xkb::utf32_to_keysym(xkb::keysyms::KEY_NoSymbol);
-				// 	let mut modifier_state = ModifiersState::default();
-				//
-				// 	for key in &binding.keys {
-				// 		match key.as_str() {
-				// 			"Super_L" => modifier_state.logo = true,
-				// 			"Super_R" => modifier_state.logo = true,
-				// 			"Shift_L" => modifier_state.shift = true,
-				// 			"Shift_R" => modifier_state.shift = true,
-				// 			"Alt_L" => modifier_state.alt = true,
-				// 			"Alt_R" => modifier_state.alt = true,
-				// 			"Ctrl_L" => modifier_state.ctrl = true,
-				// 			"Ctrl_R" => modifier_state.ctrl = true,
-				// 			"CapsLck" => modifier_state.caps_lock = true,
-				// 			"Caps" => modifier_state.caps_lock = true,
-				// 			&_ => {
-				// 				let sym = xkb::keysym_from_name(
-				// 					key.as_str(),
-				// 					xkb::KEYSYM_NO_FLAGS,
-				// 				);
-				// 				keysym = sym;
-				// 			}
-				// 		}
+			|comp, mods, keysym_h| {
+				// match xkb::keysym_get_name(keysym_h.modified_sym()).as_str() {
+				// 	m @ ("Control_L" | "Control_R" | "Shift_L" | "Shift_R" | "Super_L"
+				// 	| "Super_R" | "Alt_L" | "Alt_R" | "ISO_Level3_Shift"
+				// 	| "ISO_Level5_Shift") => {
 				// 	}
-				// 	if event.state() == KeyState::Released
-				// 		&& modifier_state.alt == mods.alt && modifier_state.ctrl
-				// 		== mods.ctrl && modifier_state.shift == mods.shift
-				// 		&& modifier_state.logo == mods.logo && modifier_state.caps_lock
-				// 		== mods.caps_lock && handle.raw_syms().contains(&keysym)
-				// 	{
+				// 	_ => {
+				// 		println!("meow");
 				// 	}
-				// }
+				// };
 
-				if event.state() == KeyState::Released {
-					let raw_syms = handle.raw_syms();
+				// println!("{}({:#?})", xkb::keysym_get_name(keysym_h.modified_sym()), event.state());
+				comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
 
-					if raw_syms.contains(&xkb::keysyms::KEY_Escape.into()) {
-						let ex = self
-							.lua
-							.try_enter(|ctx| {
-								let func = Closure::load(
-									ctx,
-									None,
-									r#"
-									strata:quit()
-									"#
-									.as_bytes(),
-								)
-								.unwrap();
+				let k = KeyPattern { mods: comp.get_mods(), key: keysym_h.modified_sym() };
+				println!("{:#?}, {:#?}, {:#?}", self.config, self.config.contains_key(&k), k);
 
-								Ok(ctx.stash(Executor::start(ctx, func.into(), ())))
-							})
-							.unwrap();
-
-						return FilterResult::Intercept(ex);
+				if event.state() == KeyState::Pressed {
+					match self.config.get(&k) {
+						Some(f) => FilterResult::Intercept(f),
+						None => FilterResult::Forward,
 					}
+				} else {
+					FilterResult::Forward
 				}
-
-				FilterResult::Forward
 			},
 		);
 
-		if let Some(ex) = ex {
-			self.lua.execute::<()>(&ex)?;
+		if let Some(f) = f {
+			let ex = self.lua.try_enter(|ctx| {
+				let f = ctx.fetch(f);
+				Ok(ctx.stash(Executor::start(ctx, f, ())))
+			})?;
+			let _ = self.lua.execute::<()>(&ex)?;
 		}
 
 		Ok(())
@@ -228,132 +230,41 @@ impl StrataState {
 
 	pub fn pointer_motion<I: InputBackend>(
 		&mut self,
-		event: &I::PointerMotionEvent,
+		event: I::PointerMotionEvent,
 	) -> anyhow::Result<()> {
-		let serial = SERIAL_COUNTER.next_serial();
-		let delta = (event.delta_x(), event.delta_y()).into();
-		self.comp.borrow_mut().pointer_location += delta;
-		self.comp.borrow_mut().pointer_location =
-			self.comp.borrow().clamp_coords(self.comp.borrow().pointer_location);
-
-		let under = self.comp.borrow().surface_under();
-
-		self.comp.borrow_mut().set_input_focus_auto();
-
-		let ptr = self.comp.borrow().seat.get_pointer();
-
-		if let Some(ptr) = ptr {
-			// let pointer_location = s.pointer_location;
-			ptr.motion(
-				&mut self.comp.borrow_mut(),
-				under.clone(),
-				&MotionEvent {
-					location: self.comp.borrow().pointer_location,
-					serial,
-					time: event.time_msec(),
-				},
-			);
-
-			ptr.relative_motion(
-				&mut self.comp.borrow_mut(),
-				under,
-				&RelativeMotionEvent {
-					delta,
-					delta_unaccel: event.delta_unaccel(),
-					utime: event.time(),
-				},
-			)
-		}
+		self.comp.borrow_mut().pointer_motion::<I>(event)?;
 
 		Ok(())
 	}
 
 	pub fn pointer_motion_absolute<I: InputBackend>(
 		&mut self,
-		event: &I::PointerMotionAbsoluteEvent,
+		event: I::PointerMotionAbsoluteEvent,
 	) -> anyhow::Result<()> {
-		let serial = SERIAL_COUNTER.next_serial();
-
-		let output = self.comp.borrow().workspaces.current().outputs().next().unwrap().clone();
-		let output_geo = self.comp.borrow().workspaces.current().output_geometry(&output).unwrap();
-		let pos = event.position_transformed(output_geo.size) + output_geo.loc.to_f64();
-		let pointer = self.comp.borrow().seat.get_pointer().unwrap();
-
-		let pointer_location = self.comp.borrow_mut().clamp_coords(pos);
-		self.comp.borrow_mut().pointer_location = pointer_location;
-
-		self.comp.borrow_mut().set_input_focus_auto();
-		let under = self.comp.borrow().surface_under();
-		pointer.motion(
-			&mut self.comp.borrow_mut(),
-			under,
-			&MotionEvent { location: pos, serial, time: event.time_msec() },
-		);
+		self.comp.borrow_mut().pointer_motion_absolute::<I>(event)?;
 
 		Ok(())
 	}
 
 	pub fn pointer_button<I: InputBackend>(
 		&mut self,
-		event: &I::PointerButtonEvent,
+		event: I::PointerButtonEvent,
 	) -> anyhow::Result<()> {
-		let pointer = self.comp.borrow().seat.get_pointer().unwrap();
-		let serial = SERIAL_COUNTER.next_serial();
-		let button = event.button_code();
-		let button_state = event.state();
-		self.comp.borrow_mut().set_input_focus_auto();
-		pointer.button(
-			&mut self.comp.borrow_mut(),
-			&ButtonEvent { button, state: button_state, serial, time: event.time_msec() },
-		);
+		self.comp.borrow_mut().pointer_button::<I>(event)?;
 
 		Ok(())
 	}
 
 	pub fn pointer_axis<I: InputBackend>(
 		&mut self,
-		event: &I::PointerAxisEvent,
+		event: I::PointerAxisEvent,
 	) -> anyhow::Result<()> {
-		let horizontal_amount = event
-			.amount(Axis::Horizontal)
-			.unwrap_or_else(|| event.amount_discrete(Axis::Horizontal).unwrap_or(0.0) * 3.0);
-		let vertical_amount = event
-			.amount(Axis::Vertical)
-			.unwrap_or_else(|| event.amount_discrete(Axis::Vertical).unwrap_or(0.0) * 3.0);
-		let horizontal_amount_discrete = event.amount_discrete(Axis::Horizontal);
-		let vertical_amount_discrete = event.amount_discrete(Axis::Vertical);
-
-		{
-			let mut frame = AxisFrame::new(event.time_msec()).source(event.source());
-			if horizontal_amount != 0.0 {
-				frame = frame.value(Axis::Horizontal, horizontal_amount);
-				if let Some(discrete) = horizontal_amount_discrete {
-					frame = frame.discrete(Axis::Horizontal, discrete as i32);
-				}
-			} else if event.source() == AxisSource::Finger {
-				frame = frame.stop(Axis::Horizontal);
-			}
-			if vertical_amount != 0.0 {
-				frame = frame.value(Axis::Vertical, vertical_amount);
-				if let Some(discrete) = vertical_amount_discrete {
-					frame = frame.discrete(Axis::Vertical, discrete as i32);
-				}
-			} else if event.source() == AxisSource::Finger {
-				frame = frame.stop(Axis::Vertical);
-			}
-			let ptr = self.comp.borrow().seat.get_pointer();
-
-			if let Some(ptr) = ptr {
-				ptr.axis(&mut self.comp.borrow_mut(), frame);
-			}
-		}
+		self.comp.borrow_mut().pointer_axis::<I>(event)?;
 
 		Ok(())
 	}
 }
 
-#[derive(gc_arena::Collect)]
-#[collect(require_static)]
 pub struct StrataComp {
 	pub dh: DisplayHandle,
 	pub backend: WinitGraphicsBackend<GlowRenderer>,
@@ -371,22 +282,24 @@ pub struct StrataComp {
 	pub layer_shell_state: WlrLayerShellState,
 	pub popup_manager: PopupManager,
 	pub seat: Seat<StrataComp>,
-	pub seat_name: String,
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub pointer_location: Point<f64, Logical>,
+	pub mods: Mods,
 }
 
 impl StrataComp {
 	pub fn new(
-		event_loop: &mut EventLoop<StrataState>,
-		display: Display<StrataComp>,
+		event_loop: &EventLoop<StrataState>,
+		display: &Display<StrataComp>,
+		socket_name: OsString,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
 		damage_tracker: OutputDamageTracker,
 	) -> Self {
 		let start_time = Instant::now();
 		let dh = display.handle();
+		let loop_signal = event_loop.get_signal();
 		let compositor_state = CompositorState::new::<Self>(&dh);
 		let xdg_shell_state = XdgShellState::new::<Self>(&dh);
 		let xdg_decoration_state = XdgDecorationState::new::<Self>(&dh);
@@ -395,22 +308,29 @@ impl StrataComp {
 		let mut seat_state = SeatState::new();
 		let data_device_state = DataDeviceState::new::<Self>(&dh);
 		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
-		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
 
-		seat.add_keyboard(XkbConfig::default(), 500, 250).expect("Couldn't parse XKB config");
+		let mut seat = seat_state.new_wl_seat(&dh, seat_name);
+		seat.add_keyboard(
+			XkbConfig {
+				layout: "it",
+				options: Some("caps:swapescape".to_string()),
+				..Default::default()
+			},
+			500,
+			250,
+		)
+		.expect("Couldn't parse XKB config");
+		seat.add_pointer();
+
 		let config_workspace: u8 = 5;
 		let workspaces = Workspaces::new(config_workspace);
-		seat.add_pointer();
-		let socket_name = Self::init_wayland_listener(display, event_loop);
-		let loop_signal = event_loop.get_signal();
 
 		StrataComp {
 			dh,
 			backend,
 			damage_tracker,
 			start_time,
-			seat_name,
 			socket_name,
 			compositor_state,
 			xdg_shell_state,
@@ -426,6 +346,7 @@ impl StrataComp {
 			seat,
 			workspaces,
 			pointer_location: Point::from((0.0, 0.0)),
+			mods: Mods { map: HashMap::new(), state: None },
 		}
 	}
 
@@ -434,7 +355,7 @@ impl StrataComp {
 		state: Rc<RefCell<StrataComp>>,
 	) -> anyhow::Result<UserData<'gc>> {
 		let ud = UserData::new_static(&ctx, state);
-		ud.set_metatable(&ctx, Some(StrataComp::metatable(ctx)?));
+		ud.set_metatable(&ctx, Some(Self::metatable(ctx)?));
 		Ok(ud)
 	}
 
@@ -446,17 +367,17 @@ impl StrataComp {
 			MetaMethod::Index,
 			Callback::from_fn(&ctx, |ctx, _, mut stack| {
 				let (ud, k) = stack.consume::<(UserData, piccolo::String)>(ctx)?;
-				// let this = ud.downcast_static::<Rc<RefCell<StrataComp>>>()?;
+				// let comp = ud.downcast_static::<Rc<RefCell<StrataComp>>>()?;
 
 				match k.as_bytes() {
 					b"quit" => {
 						stack.push_front(
 							Callback::from_fn(&ctx, |ctx, _, mut stack| {
-								let this = stack
+								let comp = stack
 									.consume::<UserData>(ctx)?
 									.downcast_static::<Rc<RefCell<StrataComp>>>()?;
 
-								this.borrow_mut().quit();
+								comp.borrow_mut().quit();
 
 								Ok(CallbackReturn::Return)
 							})
@@ -491,39 +412,6 @@ impl StrataComp {
 		)?;
 
 		Ok(m)
-	}
-
-	fn init_wayland_listener(
-		display: Display<StrataComp>,
-		event_loop: &mut EventLoop<StrataState>,
-	) -> OsString {
-		let listening_socket = ListeningSocketSource::new_auto().unwrap();
-		let socket_name = listening_socket.socket_name().to_os_string();
-
-		let evlh = event_loop.handle();
-
-		evlh.insert_source(listening_socket, move |client_stream, _, state| {
-			// You may also associate some data with the client when inserting the client.
-			state
-				.display_handle
-				.insert_client(client_stream, Arc::new(ClientState::default()))
-				.unwrap();
-		})
-		.expect("Failed to init the wayland event source.");
-
-		evlh.insert_source(
-			Generic::new(display, Interest::READ, Mode::Level),
-			|_, display, state| {
-				unsafe {
-					display.get_mut().dispatch_clients(&mut state.comp.borrow_mut()).unwrap();
-				}
-
-				Ok(PostAction::Continue)
-			},
-		)
-		.unwrap();
-
-		socket_name
 	}
 
 	pub fn window_under(&mut self) -> Option<(Window, Point<i32, Logical>)> {
@@ -589,20 +477,103 @@ impl StrataComp {
 	pub fn spawn(&mut self, command: &str) {
 		Command::new("/bin/sh").arg("-c").arg(command).spawn().expect("Failed to spawn command");
 	}
+
+	pub fn handle_mods<I: InputBackend>(
+		&mut self,
+		new_modstate: &ModifiersState,
+		keysym: Keysym,
+		event: &I::KeyboardKeyEvent,
+	) {
+		let old_modstate = self.mods.state.take().unwrap_or(new_modstate.clone());
+
+		match keysym {
+			// equivalent to "Control_* + Shift_* + Alt_*"
+			Keysym::Meta_L => {
+				self.mods
+					.map
+					.entry(Keysym::Alt_L)
+					.and_modify(|v| *v = event.state() == KeyState::Pressed)
+					.or_insert(event.state() == KeyState::Pressed);
+			}
+			Keysym::Meta_R => {
+				self.mods
+					.map
+					.entry(Keysym::Alt_R)
+					.and_modify(|v| *v = event.state() == KeyState::Pressed)
+					.or_insert(event.state() == KeyState::Pressed);
+			}
+
+			_ => {
+				match event.state() {
+					KeyState::Pressed => {
+						let depressed = if new_modstate == &old_modstate {
+							self.mods.map.is_empty() || self.mods.map.contains_key(&keysym)
+						} else {
+							(new_modstate.serialized.depressed - old_modstate.serialized.depressed)
+								> 0
+						};
+
+						// valid mod
+						if new_modstate.serialized.depressed - new_modstate.serialized.locked > 0
+							&& depressed
+						{
+							self.mods.map.entry(keysym).and_modify(|v| *v = true).or_insert(true);
+						}
+					}
+					KeyState::Released => {
+						self.mods.map.entry(keysym).and_modify(|v| *v = false);
+					}
+				};
+			}
+		};
+
+		self.mods.state = Some(new_modstate.clone());
+	}
+
+	pub fn get_mods(&self) -> Vec<Keysym> {
+		self.mods
+			.map
+			.iter()
+			.filter_map(|(k, &v)| if v { Some(k.clone()) } else { None })
+			.collect::<Vec<Keysym>>()
+	}
 }
 
-pub struct CommsChannel<T> {
-	pub sender: crossbeam_channel::Sender<T>,
-	pub receiver: crossbeam_channel::Receiver<T>,
-}
+pub fn init_wayland_listener(
+	event_loop: &EventLoop<StrataState>,
+) -> (Display<StrataComp>, OsString) {
+	let loop_handle = event_loop.handle();
+	let mut display: Display<StrataComp> = Display::new().unwrap();
+	let listening_socket = ListeningSocketSource::new_auto().unwrap();
+	let socket_name = listening_socket.socket_name().to_os_string();
 
-pub enum ConfigCommands {
-	Spawn(String),
-	CloseWindow,
-	SwitchWS(u8),
-	MoveWindow(u8),
-	MoveWindowAndFollow(u8),
-	Quit,
+	loop_handle
+		.insert_source(listening_socket, move |client_stream, _, state| {
+			// You may also associate some data with the client when inserting the client.
+			state
+				.display
+				.handle()
+				.insert_client(client_stream, Arc::new(ClientState::default()))
+				.unwrap();
+		})
+		.expect("Failed to init the wayland event source.");
+
+	loop_handle
+		.insert_source(
+			Generic::new(
+				unsafe { FdWrapper::new(display.backend().poll_fd().as_raw_fd()) },
+				Interest::READ,
+				Mode::Level,
+			),
+			|_, _, state| {
+				state.display.dispatch_clients(&mut state.comp.borrow_mut())?;
+
+				Ok(PostAction::Continue)
+			},
+		)
+		.unwrap();
+
+	(display, socket_name)
 }
 
 #[derive(Default)]
