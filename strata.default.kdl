@@ -1,0 +1,52 @@
+config {
+    autostart {
+        { "kitty --title Terminal" }
+    }
+
+    general {
+        workspaces 9
+        gaps-in 8
+        gaps-out 12
+        kb-repeat { 500, 250 }
+    }
+
+    decorations {
+        borders {
+            enabled true
+            width 2
+            active "#f38ba8"
+            inactive "#585b70"
+            radius 5
+        }
+
+        window {
+            opacity 1
+        }
+
+        blur {
+            enabled true
+            size 2
+            passes 3
+            optimize true
+        }
+
+        shadow {
+            enabled false
+            size 2
+            blur 3
+            color = "#FFF"
+        }
+
+        tiling {
+            layout "dwindle"
+        }
+
+        animations {
+            enabled true
+        }
+
+        bindings {
+           bind {"Super", "Q"} {"spawn", "kitty"}
+        }
+    }
+}

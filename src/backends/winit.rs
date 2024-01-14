@@ -118,7 +118,7 @@ pub fn winit_dispatch(
 	let display = &mut data.display_handle;
 	let state = &mut data.state;
 
-	let res = winit.dispatch_new_events(|event| {
+	let res: Result<(), WinitError> = winit.dispatch_new_events(|event: WinitEvent| {
 		match event {
 			WinitEvent::Resized { size, .. } => {
 				output.change_current_state(Some(Mode { size, refresh: 60_000 }), None, None, None);
