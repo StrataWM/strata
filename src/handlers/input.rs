@@ -41,7 +41,7 @@ use smithay::{
 #[derive(Debug)]
 pub struct Mods {
 	pub flags: ModFlags,
-	pub state: Option<ModifiersState>,
+	pub state: ModifiersState,
 }
 
 // complete list, for future reference

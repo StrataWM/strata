@@ -307,20 +307,22 @@ impl StrataComp {
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
 
 		let mut seat = seat_state.new_wl_seat(&dh, seat_name);
-		seat.add_keyboard(
-			XkbConfig {
-				layout: "it",
-				options: Some("caps:swapescape".to_string()),
-				..Default::default()
-			},
-			500,
-			250,
-		)
-		.expect("Couldn't parse XKB config");
+		let keyboard = seat
+			.add_keyboard(
+				XkbConfig {
+					layout: "it",
+					options: Some("caps:swapescape".to_string()),
+					..Default::default()
+				},
+				500,
+				250,
+			)
+			.expect("Couldn't parse XKB config");
 		seat.add_pointer();
 
 		let config_workspace: u8 = 5;
 		let workspaces = Workspaces::new(config_workspace);
+		let mods_state = keyboard.modifier_state();
 
 		StrataComp {
 			dh,
@@ -342,7 +344,7 @@ impl StrataComp {
 			seat,
 			workspaces,
 			pointer_location: Point::from((0.0, 0.0)),
-			mods: Mods { flags: ModFlags::empty(), state: None },
+			mods: Mods { flags: ModFlags::empty(), state: mods_state },
 		}
 	}
 
@@ -479,12 +481,11 @@ impl StrataComp {
 		new_modstate: &ModifiersState,
 		keysym: Keysym,
 		event: &I::KeyboardKeyEvent,
-	) -> bool {
-		let mut r = false;
-		let old_modstate = self.mods.state.take().unwrap_or(new_modstate.clone());
+	) {
+		let old_modstate = self.mods.state;
 
 		let modflag = match keysym {
-			// equivalent to "Control_* + Shift_* + Alt_*"
+			// equivalent to "Control_* + Shift_* + Alt_*" (on my keyboard *smile*)
 			Keysym::Meta_L => ModFlags::Alt_L,
 			Keysym::Meta_R => ModFlags::Alt_R,
 
@@ -527,9 +528,7 @@ impl StrataComp {
 			}
 		};
 
-		self.mods.state = Some(new_modstate.clone());
-
-		r
+		self.mods.state = new_modstate.clone();
 	}
 }
 
