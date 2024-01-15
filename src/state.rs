@@ -188,20 +188,16 @@ impl StrataState {
 			serial,
 			time,
 			|comp, mods, keysym_h| {
-				let handled_mods = comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
+				comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
 
+				println!("{:#?}", comp.mods);
+				println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
 				match event.state() {
 					KeyState::Pressed => {
-						if !handled_mods {
-							let k =
-								KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym() };
+						let k = KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym() };
 
-							println!("{:#?}", self.config);
-							println!("{:#?}\n", k);
-
-							if let Some(f) = self.config.get(&k) {
-								return FilterResult::Intercept(f);
-							}
+						if let Some(f) = self.config.get(&k) {
+							return FilterResult::Intercept(f);
 						}
 
 						FilterResult::Forward
@@ -510,17 +506,21 @@ impl StrataComp {
 		match event.state() {
 			KeyState::Pressed => {
 				let depressed = if new_modstate == &old_modstate {
-					self.mods.flags.is_empty()
+					// ignore previous modstate
+					true
 				} else {
+					// "lock" key modifier or "normal" key modifier
 					new_modstate.serialized.depressed > old_modstate.serialized.depressed
 				};
 
-				// valid mod
-				if new_modstate.serialized.depressed - new_modstate.serialized.locked > 0
-					&& depressed
-				{
+				// "lock" key modifiers (Caps Lock, Num Lock, etc...) => `depressed` == `locked`
+				// "normal" key modifiers (Control_*, Shift_*, etc...) => `depressed` > 0
+				// "normal" keys (a, s, d, f) => `depressed` == 0
+				let is_modifier = new_modstate.serialized.depressed
+					> new_modstate.serialized.locked - old_modstate.serialized.locked;
+
+				if is_modifier && depressed {
 					self.mods.flags ^= modflag;
-					r = true;
 				}
 			}
 			KeyState::Released => {
