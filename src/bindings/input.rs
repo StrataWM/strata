@@ -5,13 +5,13 @@ use piccolo::{
 	Context,
 	FromValue,
 	Function,
+	IntoValue,
 	MetaMethod,
-	String as PiccoloString,
 	Table,
 	Value,
 };
 
-mod modflags {
+pub mod modflags {
 	use super::*;
 
 	impl<'gc> FromValue<'gc> for ModFlags {
@@ -28,15 +28,15 @@ mod modflags {
 					} else {
 						for (_, v) in mods {
 							match v {
-								Value::Integer(bits) => {
-									let Some(n) = Self::from_bits(bits as u8) else {
+								Value::Integer(n) => {
+									let Some(bits) = Self::from_bits(n as u8) else {
 										return Err(piccolo::TypeError {
 											found: v.type_name(),
 											expected: "ModFlags(0..9)",
 										});
 									};
 
-									r |= n;
+									r |= bits;
 								}
 								_ => {
 									return Err(piccolo::TypeError {
@@ -62,29 +62,15 @@ mod modflags {
 			ctx,
 			MetaMethod::Index,
 			Callback::from_fn(&ctx, |ctx, _, mut stack| {
-				let (_, k) = stack.consume::<(Table, PiccoloString)>(ctx)?;
+				let (_, k) = stack.consume::<(Table, piccolo::String)>(ctx)?;
 
-				match k.as_bytes() {
-					b"Shift_L" => stack.push_front(Value::Integer(ModFlags::Shift_L.bits() as i64)),
-					b"Shift_R" => stack.push_front(Value::Integer(ModFlags::Shift_R.bits() as i64)),
-					b"Control_L" => {
-						stack.push_front(Value::Integer(ModFlags::Control_L.bits() as i64))
-					}
-					b"Control_R" => {
-						stack.push_front(Value::Integer(ModFlags::Control_R.bits() as i64))
-					}
-					b"Alt_L" => stack.push_front(Value::Integer(ModFlags::Alt_L.bits() as i64)),
-					b"Alt_R" => stack.push_front(Value::Integer(ModFlags::Alt_R.bits() as i64)),
-					b"Super_L" => stack.push_front(Value::Integer(ModFlags::Super_L.bits() as i64)),
-					b"Super_R" => stack.push_front(Value::Integer(ModFlags::Super_R.bits() as i64)),
-					b"ISO_Level3_Shift" => {
-						stack.push_front(Value::Integer(ModFlags::ISO_Level3_Shift.bits() as i64))
-					}
-					b"ISO_Level5_Shift" => {
-						stack.push_front(Value::Integer(ModFlags::ISO_Level5_Shift.bits() as i64))
-					}
-					_ => stack.push_front(Value::Integer(ModFlags::empty().bits() as i64)),
-				};
+				let k = k.to_str()?;
+				let bits = ModFlags::from_name(k).ok_or(Into::<piccolo::Error>::into(
+					piccolo::String::from_slice(&ctx, format!("invalid index key: {}", k))
+						.into_value(ctx),
+				))?;
+				stack.push_front(Value::Integer(bits.bits().into()));
+
 				Ok(CallbackReturn::Return)
 			}),
 		)?;
@@ -101,7 +87,7 @@ mod modflags {
 	}
 }
 
-mod key {
+pub mod keys {
 	use super::*;
 
 	pub fn metatable<'gc>(ctx: piccolo::Context<'gc>) -> anyhow::Result<Table<'gc>> {
