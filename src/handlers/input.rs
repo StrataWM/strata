@@ -1,8 +1,3 @@
-use std::{
-	collections::HashMap,
-	fmt::Display,
-};
-
 use crate::{
 	state::StrataComp,
 	workspaces::FocusTarget,
