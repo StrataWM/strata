@@ -3,11 +3,15 @@ use crate::{
 		BorderShader,
 		CustomRenderElements,
 	},
+	handlers::input::{
+		KeyPattern,
+		ModFlags,
+	},
 	state::{
 		self,
 		StrataComp,
 		StrataState,
-	}, handlers::input::{KeyPattern, ModFlags},
+	},
 };
 use piccolo::{
 	Closure,
@@ -22,7 +26,6 @@ use smithay::{
 		},
 		winit::{
 			self,
-			WinitError,
 			WinitEvent,
 			WinitEventLoop,
 		},
@@ -43,12 +46,15 @@ use smithay::{
 		PhysicalProperties,
 		Subpixel,
 	},
-	reexports::calloop::{
-		timer::{
-			TimeoutAction,
-			Timer,
+	reexports::{
+		calloop::{
+			timer::{
+				TimeoutAction,
+				Timer,
+			},
+			EventLoop,
 		},
-		EventLoop,
+		winit::platform::pump_events::PumpStatus,
 	},
 	utils::{
 		Rectangle,
@@ -60,6 +66,7 @@ use smithay::{
 use std::{
 	cell::RefCell,
 	collections::HashMap,
+	process::Command,
 	rc::Rc,
 	time::Duration,
 };
@@ -69,7 +76,7 @@ pub fn init_winit() {
 	let (display, socket) = state::init_wayland_listener(&event_loop);
 	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
-	let mode = Mode { size: backend.window_size().physical_size, refresh: 60_000 };
+	let mode = Mode { size: backend.window_size(), refresh: 60_000 };
 	let output = Output::new(
 		"winit".to_string(),
 		PhysicalProperties {
@@ -133,6 +140,8 @@ pub fn init_winit() {
 	})
 	.unwrap();
 
+	Command::new("kitty").spawn().unwrap();
+
 	let mut data = StrataState { lua, config, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
@@ -184,7 +193,7 @@ pub fn state_winit_update(state: &mut StrataComp) {
 		.unwrap();
 
 	// damage tracking
-	let size = state.backend.window_size().physical_size;
+	let size = state.backend.window_size();
 	let damage = Rectangle::from_loc_and_size((0, 0), size);
 	state.backend.bind().unwrap();
 	state.backend.submit(Some(&[damage])).unwrap();
@@ -217,7 +226,7 @@ pub fn winit_dispatch(winit: &mut WinitEventLoop, state: &mut StrataState, outpu
 		}
 	});
 
-	if let Err(WinitError::WindowClosed) = res {
+	if let PumpStatus::Exit(_) = res {
 		state.comp.borrow().loop_signal.stop();
 	} else {
 		state_winit_update(&mut state.comp.borrow_mut());

@@ -52,8 +52,8 @@ strum = { version = "0.25.0", features = ["derive"] }
 [dependencies.smithay]
 default-features = false
 git = "https://github.com/stratawm/smithay"
-version = "0.3"
-rev = "4e41ab0"
+version = "0.3.0"
+rev = "f1e7fc1"
 features = [
     "backend_winit",
     "wayland_frontend",

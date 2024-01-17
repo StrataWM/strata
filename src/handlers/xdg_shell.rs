@@ -78,6 +78,10 @@ impl XdgShellHandler for StrataComp {
 	}
 
 	fn grab(&mut self, _surface: PopupSurface, _seat: WlSeat, _serial: Serial) {}
+
+fn reposition_request(&mut self, surface: PopupSurface, positioner: PositionerState, token: u32) {
+        todo!()
+    }
 }
 
 delegate_xdg_shell!(StrataComp);

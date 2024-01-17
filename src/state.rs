@@ -190,8 +190,8 @@ impl StrataState {
 			|comp, mods, keysym_h| {
 				comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
 
-				println!("{:#?}", comp.mods);
-				println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
+				// println!("{:#?}", comp.mods);
+				// println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
 				match event.state() {
 					KeyState::Pressed => {
 						let k = KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym() };
@@ -310,8 +310,8 @@ impl StrataComp {
 					options: Some("caps:swapescape".to_string()),
 					..Default::default()
 				},
-				500,
-				250,
+				160,
+				40,
 			)
 			.expect("Couldn't parse XKB config");
 		seat.add_pointer();
