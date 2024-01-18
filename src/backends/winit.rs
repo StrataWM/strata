@@ -128,7 +128,7 @@ pub fn init_winit() {
 			.as_bytes(),
 		)?;
 		let quit_key = KeyPattern {
-			mods: ModFlags::Super_L | ModFlags::Control_L,
+			mods: ModFlags::XK_Super_L | ModFlags::XK_Control_L,
 			key: keysyms::KEY_Escape.into(),
 		};
 		config.insert(quit_key, ctx.stash(quit).into());

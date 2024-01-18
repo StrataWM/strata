@@ -482,23 +482,23 @@ impl StrataComp {
 
 		let modflag = match keysym {
 			// equivalent to "Control_* + Shift_* + Alt_*" (on my keyboard *smile*)
-			Keysym::Meta_L => ModFlags::Alt_L,
-			Keysym::Meta_R => ModFlags::Alt_R,
+			Keysym::Meta_L => ModFlags::XK_Alt_L,
+			Keysym::Meta_R => ModFlags::XK_Alt_R,
 
-			Keysym::Shift_L => ModFlags::Shift_L,
-			Keysym::Shift_R => ModFlags::Shift_R,
+			Keysym::Shift_L => ModFlags::XK_Shift_L,
+			Keysym::Shift_R => ModFlags::XK_Shift_R,
 
-			Keysym::Control_L => ModFlags::Control_L,
-			Keysym::Control_R => ModFlags::Control_R,
+			Keysym::Control_L => ModFlags::XK_Control_L,
+			Keysym::Control_R => ModFlags::XK_Control_R,
 
-			Keysym::Alt_L => ModFlags::Alt_L,
-			Keysym::Alt_R => ModFlags::Alt_R,
+			Keysym::Alt_L => ModFlags::XK_Alt_L,
+			Keysym::Alt_R => ModFlags::XK_Alt_R,
 
-			Keysym::Super_L => ModFlags::Super_L,
-			Keysym::Super_R => ModFlags::Super_R,
+			Keysym::Super_L => ModFlags::XK_Super_L,
+			Keysym::Super_R => ModFlags::XK_Super_R,
 
-			Keysym::ISO_Level3_Shift => ModFlags::ISO_Level3_Shift,
-			Keysym::ISO_Level5_Shift => ModFlags::ISO_Level5_Shift,
+			Keysym::ISO_Level3_Shift => ModFlags::XK_ISO_Level3_Shift,
+			Keysym::ISO_Level5_Shift => ModFlags::XK_ISO_Level5_Shift,
 
 			_ => ModFlags::empty(),
 		};

@@ -53,16 +53,19 @@ pub struct Mods {
 bitflags! {
 	#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 	pub struct ModFlags: u8 {
-		const Shift_L = 1;
-		const Shift_R = 1 << 1;
-		const Control_L = 1 << 1 + 1;
-		const Control_R = 1 << 2;
-		const Alt_L = 1 << 2 + 1;
-		const Alt_R = 1 << 3;
-		const Super_L = 1 << 3 + 1;
-		const Super_R = 1 << 4;
-		const ISO_Level3_Shift = 1 << 4 + 1;
-		const ISO_Level5_Shift = 1 << 5;
+		const XK_Shift_L = 1;
+		const XK_Shift_R = 1 << 1;
+		const XK_Control_L = 1 << 1 + 1;
+		const XK_Control_R = 1 << 2;
+		const XK_Alt_L = 1 << 2 + 1;
+		const XK_Alt_R = 1 << 3;
+		const XK_Super_L = 1 << 3 + 1;
+		const XK_Super_R = 1 << 4;
+		const XK_ISO_Level3_Shift = 1 << 4 + 1;
+		const XK_ISO_Level5_Shift = 1 << 5;
+	}
+}
+
 	}
 }
 
