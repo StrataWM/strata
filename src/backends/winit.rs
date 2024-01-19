@@ -124,7 +124,11 @@ pub fn init_winit() {
 				-- print(Mod.Super_L)
 				-- print(Key.Escape)
 
-				local _ = Key({ Mod.Super_L, Mod.Control_L }, Key.Escape, function()
+				local _ = Key({ Mod.Control_L, Mod.Alt_L }, Key.Return, function()
+					strata.spawn('kitty')
+				end)
+
+				local _ = Key({ Mod.Control_L, Mod.Alt_L }, Key.Escape, function()
 					strata:quit()
 				end)
 				"#
@@ -138,8 +142,6 @@ pub fn init_winit() {
 	if let Err(e) = lua.execute::<()>(&ex) {
 		println!("{:#?}", e);
 	}
-
-	Command::new("kitty").spawn().unwrap();
 
 	let mut data = StrataState { lua, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();

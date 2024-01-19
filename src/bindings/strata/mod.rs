@@ -1,6 +1,6 @@
 use std::{
 	cell::RefCell,
-	rc::Rc,
+	rc::Rc, process::Command,
 };
 
 use piccolo::{
@@ -33,6 +33,19 @@ pub fn module<'gc>(
 				}
 
 				"workspaces" => Ok(lua::CallbackReturn::Return),
+
+				"spawn" => {
+					stack.push_front(
+						lua::Callback::from_fn(&ctx, |ctx, _, mut stack| {
+							let (cmd, opts) = stack.consume::<(lua::String, lua::Value)>(ctx)?;
+                            let _ = Command::new(cmd.to_str()?).spawn()?;
+
+							Ok(lua::CallbackReturn::Return)
+						})
+						.into(),
+					);
+					Ok(lua::CallbackReturn::Return)
+				}
 
 				"quit" => {
 					stack.push_front(
