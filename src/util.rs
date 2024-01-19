@@ -86,15 +86,18 @@ macro_rules! enum_table {
 								stringify!($Flag) => {
 									let ud = piccolo::UserData::new_static(&ctx, $Name($value));
 									ud.set_metatable(&ctx, Some(v_meta));
-                                    stack.push_front(piccolo::Value::UserData(ud));
-                                    Ok(piccolo::CallbackReturn::Return)
+						                              stack.push_front(piccolo::Value::UserData(ud));
+						                              Ok(piccolo::CallbackReturn::Return)
 								},
 							)*
-                            _ => {
+						                      _ => {
 								return Err(anyhow::anyhow!("invalid index key: {}", k).into())
 							}
 
 						}
+
+						// println!("{:#?}", stack.drain(..));
+						// Ok(piccolo::CallbackReturn::Return)
 					})
 				);
 

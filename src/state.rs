@@ -1,4 +1,5 @@
 use crate::{
+	bindings::input,
 	handlers::input::{
 		Key,
 		KeyPattern,
@@ -15,6 +16,7 @@ use piccolo::{
 	CallbackReturn,
 	Context,
 	Executor,
+	FromValue,
 	Lua,
 	MetaMethod,
 	StashedFunction,
@@ -186,7 +188,10 @@ impl StrataState {
 				// println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
 				match event.state() {
 					KeyState::Pressed => {
-						let k = KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym().into() };
+						let k = KeyPattern {
+							mods: comp.mods.flags,
+							key: keysym_h.modified_sym().into(),
+						};
 
 						if let Some(f) = comp.config.keybinds.get(&k) {
 							return FilterResult::Intercept(f.clone());
@@ -304,8 +309,8 @@ impl StrataComp {
 					options: Some("caps:swapescape".to_string()),
 					..Default::default()
 				},
-				500,
-				250,
+				160,
+				40,
 			)
 			.expect("Couldn't parse XKB config");
 		seat.add_pointer();
@@ -337,62 +342,6 @@ impl StrataComp {
 			mods: Mods { flags: ModFlags::empty(), state: mods_state },
 			config: StrataConfig { keybinds: HashMap::new() },
 		}
-	}
-
-	pub fn ud_from_rc_refcell<'gc>(
-		ctx: Context<'gc>,
-		state: Rc<RefCell<StrataComp>>,
-	) -> anyhow::Result<UserData<'gc>> {
-		let ud = UserData::new_static(&ctx, state);
-		ud.set_metatable(&ctx, Some(Self::metatable(ctx)?));
-		Ok(ud)
-	}
-
-	pub fn metatable<'gc>(ctx: Context<'gc>) -> anyhow::Result<Table<'gc>> {
-		let m = Table::new(&ctx);
-
-		m.set(
-			ctx,
-			MetaMethod::Index,
-			Callback::from_fn(&ctx, |ctx, _, mut stack| {
-				let (ud, k) = stack.consume::<(UserData, piccolo::String)>(ctx)?;
-				// let comp = ud.downcast_static::<Rc<RefCell<StrataComp>>>()?;
-
-				let k = k.to_str()?;
-				match k {
-					"quit" => {
-						stack.push_front(
-							Callback::from_fn(&ctx, |ctx, _, mut stack| {
-								let comp = stack
-									.consume::<UserData>(ctx)?
-									.downcast_static::<Rc<RefCell<StrataComp>>>()?;
-
-								comp.borrow_mut().quit();
-
-								Ok(CallbackReturn::Return)
-							})
-							.into(),
-						);
-						Ok(CallbackReturn::Return)
-					}
-					_ => Err(anyhow::anyhow!("invalid index key: {}", k).into()),
-				}
-			}),
-		)?;
-
-		m.set(
-			ctx,
-			MetaMethod::NewIndex,
-			Callback::from_fn(&ctx, |ctx, _, mut stack| {
-				let (ud, k, v) =
-					stack.consume::<(UserData, piccolo::String, piccolo::Value)>(ctx)?;
-
-				let k = k.to_str()?;
-				Ok(CallbackReturn::Return)
-			}),
-		)?;
-
-		Ok(m)
 	}
 
 	pub fn window_under(&mut self) -> Option<(Window, Point<i32, Logical>)> {
@@ -520,7 +469,7 @@ impl StrataComp {
 }
 
 pub struct StrataConfig {
-	pub keybinds: HashMap<KeyPattern, StashedFunction>
+	pub keybinds: HashMap<KeyPattern, StashedFunction>,
 }
 
 pub fn init_wayland_listener(

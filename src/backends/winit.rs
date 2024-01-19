@@ -4,11 +4,6 @@ use crate::{
 		BorderShader,
 		CustomRenderElements,
 	},
-	handlers::input::{
-		Key,
-		KeyPattern,
-		ModFlags,
-	},
 	state::{
 		self,
 		StrataComp,
@@ -17,7 +12,8 @@ use crate::{
 };
 use piccolo::{
 	Closure,
-	Lua, Executor,
+	Executor,
+	Lua,
 };
 use smithay::{
 	backend::{
@@ -36,11 +32,6 @@ use smithay::{
 		layer_map_for_output,
 		space::SpaceElement,
 		LayerSurface,
-	},
-	input::keyboard::{
-		keysyms,
-		xkb,
-		Keysym,
 	},
 	output::{
 		Mode,
@@ -67,7 +58,6 @@ use smithay::{
 };
 use std::{
 	cell::RefCell,
-	collections::HashMap,
 	process::Command,
 	rc::Rc,
 	time::Duration,
@@ -119,32 +109,31 @@ pub fn init_winit() {
 	let mut lua = Lua::full();
 	let comp = Rc::new(RefCell::new(comp));
 
-	let ex = lua.try_enter(|ctx| {
-		let ud = StrataComp::ud_from_rc_refcell(ctx, Rc::clone(&comp))?;
-		ctx.globals().set(ctx, "strata", ud)?;
+	let ex = lua
+		.try_enter(|ctx| {
+			let strata = bindings::strata::module(ctx, Rc::clone(&comp))?;
+			ctx.globals().set(ctx, "strata", strata)?;
 
-		let input_module = bindings::input::module(ctx, Rc::clone(&comp))?;
-		ctx.globals().set(ctx, "input", input_module)?;
+			let main = Closure::load(
+				ctx,
+				None,
+				r#"
+				local Key = strata.input.Key
+				local Mod = strata.input.Mod
 
-		let main = Closure::load(
-			ctx,
-			None,
-			r#"
-			local Key = input.Key
-			local Mod = input.Mod
+				-- print(Mod.Super_L)
+				-- print(Key.Escape)
 
-			-- print(Key.Escape)
+				local _ = Key({ Mod.Super_L, Mod.Control_L }, Key.Escape, function()
+					strata:quit()
+				end)
+				"#
+				.as_bytes(),
+			)?;
 
-			local _ = Key({ Mod.Super_L, Mod.Control_L }, Key.Escape, function()
-				strata:quit()
-			end)
-			"#
-			.as_bytes(),
-		)?;
-
-		Ok(ctx.stash(Executor::start(ctx, main.into(), ())))
-	})
-	.unwrap();
+			Ok(ctx.stash(Executor::start(ctx, main.into(), ())))
+		})
+		.unwrap();
 
 	if let Err(e) = lua.execute::<()>(&ex) {
 		println!("{:#?}", e);
