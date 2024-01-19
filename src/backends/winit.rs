@@ -1,9 +1,11 @@
 use crate::{
+	bindings,
 	decorations::{
 		BorderShader,
 		CustomRenderElements,
 	},
 	handlers::input::{
+		Key,
 		KeyPattern,
 		ModFlags,
 	},
@@ -15,7 +17,7 @@ use crate::{
 };
 use piccolo::{
 	Closure,
-	Lua,
+	Lua, Executor,
 };
 use smithay::{
 	backend::{
@@ -114,35 +116,43 @@ pub fn init_winit() {
 		})
 		.unwrap();
 
-	let mut lua = Lua::core();
+	let mut lua = Lua::full();
 	let comp = Rc::new(RefCell::new(comp));
-	let mut config = HashMap::new();
 
-	lua.try_enter(|ctx| {
-		let quit = Closure::load(
-			ctx,
-			None,
-			r#"
-			strata:quit()
-			"#
-			.as_bytes(),
-		)?;
-		let quit_key = KeyPattern {
-			mods: ModFlags::XK_Super_L | ModFlags::XK_Control_L,
-			key: keysyms::KEY_Escape.into(),
-		};
-		config.insert(quit_key, ctx.stash(quit).into());
-
+	let ex = lua.try_enter(|ctx| {
 		let ud = StrataComp::ud_from_rc_refcell(ctx, Rc::clone(&comp))?;
 		ctx.globals().set(ctx, "strata", ud)?;
 
-		Ok(())
+		let input_module = bindings::input::module(ctx, Rc::clone(&comp))?;
+		ctx.globals().set(ctx, "input", input_module)?;
+
+		let main = Closure::load(
+			ctx,
+			None,
+			r#"
+			local Key = input.Key
+			local Mod = input.Mod
+
+			-- print(Key.Escape)
+
+			local _ = Key({ Mod.Super_L, Mod.Control_L }, Key.Escape, function()
+				strata:quit()
+			end)
+			"#
+			.as_bytes(),
+		)?;
+
+		Ok(ctx.stash(Executor::start(ctx, main.into(), ())))
 	})
 	.unwrap();
 
+	if let Err(e) = lua.execute::<()>(&ex) {
+		println!("{:#?}", e);
+	}
+
 	Command::new("kitty").spawn().unwrap();
 
-	let mut data = StrataState { lua, config, comp, display };
+	let mut data = StrataState { lua, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
 
@@ -220,7 +230,9 @@ pub fn winit_dispatch(winit: &mut WinitEventLoop, state: &mut StrataState, outpu
 				output.change_current_state(Some(Mode { size, refresh: 60_000 }), None, None, None);
 			}
 			WinitEvent::Input(event) => {
-				let _ = state.process_input_event(event);
+				if let Err(e) = state.process_input_event(event) {
+					panic!("{:#?}", e);
+				}
 			}
 			_ => (),
 		}

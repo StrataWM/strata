@@ -1,5 +1,6 @@
 use crate::{
 	handlers::input::{
+		Key,
 		KeyPattern,
 		ModFlags,
 		Mods,
@@ -9,45 +10,25 @@ use crate::{
 		Workspaces,
 	},
 };
-use gc_arena::{
-	lock::RefLock,
-	Rootable,
-};
 use piccolo::{
-	closure::{
-		UpValue,
-		UpValueState,
-	},
-	meta_ops,
 	Callback,
 	CallbackReturn,
-	Closure,
 	Context,
 	Executor,
 	Lua,
 	MetaMethod,
-	StashedExecutor,
 	StashedFunction,
-	StashedUserData,
 	Table,
 	UserData,
-	Value,
 };
 use smithay::{
 	backend::{
 		input::{
-			AbsolutePositionEvent,
-			Axis,
-			AxisSource,
-			ButtonState,
 			Event,
 			InputBackend,
 			InputEvent,
 			KeyState,
 			KeyboardKeyEvent,
-			PointerAxisEvent,
-			PointerButtonEvent,
-			PointerMotionEvent,
 		},
 		renderer::{
 			damage::OutputDamageTracker,
@@ -62,18 +43,10 @@ use smithay::{
 	},
 	input::{
 		keyboard::{
-			xkb,
 			FilterResult,
 			Keysym,
-			KeysymHandle,
 			ModifiersState,
 			XkbConfig,
-		},
-		pointer::{
-			AxisFrame,
-			ButtonEvent,
-			MotionEvent,
-			RelativeMotionEvent,
 		},
 		Seat,
 		SeatState,
@@ -86,7 +59,6 @@ use smithay::{
 			},
 			EventLoop,
 			Interest,
-			LoopHandle,
 			LoopSignal,
 			Mode,
 			PostAction,
@@ -103,9 +75,7 @@ use smithay::{
 	},
 	utils::{
 		Logical,
-		Physical,
 		Point,
-		Size,
 		SERIAL_COUNTER,
 	},
 	wayland::{
@@ -134,12 +104,8 @@ use smithay::{
 };
 use std::{
 	cell::RefCell,
-	collections::{
-		HashMap,
-		HashSet,
-	},
+	collections::HashMap,
 	ffi::OsString,
-	ops::Deref,
 	os::fd::AsRawFd,
 	process::Command,
 	rc::Rc,
@@ -155,7 +121,6 @@ pub enum Action {
 pub struct StrataState {
 	pub lua: Lua,
 	pub comp: Rc<RefCell<StrataComp>>,
-	pub config: HashMap<KeyPattern, StashedFunction>,
 	pub display: Display<StrataComp>,
 }
 
@@ -165,20 +130,47 @@ impl StrataState {
 		event: InputEvent<I>,
 	) -> anyhow::Result<()> {
 		match event {
-			InputEvent::Keyboard { event, .. } => self.keyboard::<I>(event),
-			InputEvent::PointerMotion { event, .. } => self.pointer_motion::<I>(event),
+			InputEvent::Keyboard { event, .. } => self.keyboard::<I>(event)?,
+			InputEvent::PointerMotion { event, .. } => self.pointer_motion::<I>(event)?,
 			InputEvent::PointerMotionAbsolute { event, .. } => {
-				self.pointer_motion_absolute::<I>(event)
+				self.pointer_motion_absolute::<I>(event)?
 			}
-			InputEvent::PointerButton { event, .. } => self.pointer_button::<I>(event),
-			InputEvent::PointerAxis { event, .. } => self.pointer_axis::<I>(event),
-			_ => anyhow::bail!("unhandled winit event"),
-		}
+			InputEvent::PointerButton { event, .. } => self.pointer_button::<I>(event)?,
+			InputEvent::PointerAxis { event, .. } => self.pointer_axis::<I>(event)?,
+			InputEvent::DeviceAdded { device } => {
+				// todo
+				println!("device added");
+			}
+			InputEvent::DeviceRemoved { device } => todo!(),
+			InputEvent::GestureSwipeBegin { event } => todo!(),
+			InputEvent::GestureSwipeUpdate { event } => todo!(),
+			InputEvent::GestureSwipeEnd { event } => todo!(),
+			InputEvent::GesturePinchBegin { event } => todo!(),
+			InputEvent::GesturePinchUpdate { event } => todo!(),
+			InputEvent::GesturePinchEnd { event } => todo!(),
+			InputEvent::GestureHoldBegin { event } => todo!(),
+			InputEvent::GestureHoldEnd { event } => todo!(),
+			InputEvent::TouchDown { event } => todo!(),
+			InputEvent::TouchMotion { event } => todo!(),
+			InputEvent::TouchUp { event } => todo!(),
+			InputEvent::TouchCancel { event } => todo!(),
+			InputEvent::TouchFrame { event } => todo!(),
+			InputEvent::TabletToolAxis { event } => todo!(),
+			InputEvent::TabletToolProximity { event } => todo!(),
+			InputEvent::TabletToolTip { event } => todo!(),
+			InputEvent::TabletToolButton { event } => todo!(),
+			InputEvent::Special(_) => todo!(),
+			// _ => anyhow::bail!("unhandled winit event: {:#?}", &event),
+		};
+
+		Ok(())
 	}
 
 	pub fn keyboard<I: InputBackend>(&mut self, event: I::KeyboardKeyEvent) -> anyhow::Result<()> {
 		let serial = SERIAL_COUNTER.next_serial();
 		let time = Event::time_msec(&event);
+
+		// println!("key: {:#?}, {:#?}", Key::from_name("b"), Keysym::b);
 
 		let keyboard = self.comp.borrow().seat.get_keyboard().unwrap();
 		let f = keyboard.input(
@@ -190,14 +182,14 @@ impl StrataState {
 			|comp, mods, keysym_h| {
 				comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
 
-				println!("{:#?}", comp.mods);
-				println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
+				// println!("{:#?}", comp.mods);
+				// println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
 				match event.state() {
 					KeyState::Pressed => {
-						let k = KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym() };
+						let k = KeyPattern { mods: comp.mods.flags, key: keysym_h.modified_sym().into() };
 
-						if let Some(f) = self.config.get(&k) {
-							return FilterResult::Intercept(f);
+						if let Some(f) = comp.config.keybinds.get(&k) {
+							return FilterResult::Intercept(f.clone());
 						}
 
 						FilterResult::Forward
@@ -211,9 +203,10 @@ impl StrataState {
 
 		if let Some(f) = f {
 			let ex = self.lua.try_enter(|ctx| {
-				let f = ctx.fetch(f);
+				let f = ctx.fetch(&f);
 				Ok(ctx.stash(Executor::start(ctx, f, ())))
 			})?;
+
 			let _ = self.lua.execute::<()>(&ex)?;
 		}
 
@@ -278,6 +271,7 @@ pub struct StrataComp {
 	pub workspaces: Workspaces,
 	pub pointer_location: Point<f64, Logical>,
 	pub mods: Mods,
+	pub config: StrataConfig,
 }
 
 impl StrataComp {
@@ -341,6 +335,7 @@ impl StrataComp {
 			workspaces,
 			pointer_location: Point::from((0.0, 0.0)),
 			mods: Mods { flags: ModFlags::empty(), state: mods_state },
+			config: StrataConfig { keybinds: HashMap::new() },
 		}
 	}
 
@@ -363,8 +358,9 @@ impl StrataComp {
 				let (ud, k) = stack.consume::<(UserData, piccolo::String)>(ctx)?;
 				// let comp = ud.downcast_static::<Rc<RefCell<StrataComp>>>()?;
 
-				match k.as_bytes() {
-					b"quit" => {
+				let k = k.to_str()?;
+				match k {
+					"quit" => {
 						stack.push_front(
 							Callback::from_fn(&ctx, |ctx, _, mut stack| {
 								let comp = stack
@@ -377,13 +373,10 @@ impl StrataComp {
 							})
 							.into(),
 						);
+						Ok(CallbackReturn::Return)
 					}
-					_ => {
-						panic!("invalid key: {}", k);
-					}
-				};
-
-				Ok(CallbackReturn::Return)
+					_ => Err(anyhow::anyhow!("invalid index key: {}", k).into()),
+				}
 			}),
 		)?;
 
@@ -394,13 +387,7 @@ impl StrataComp {
 				let (ud, k, v) =
 					stack.consume::<(UserData, piccolo::String, piccolo::Value)>(ctx)?;
 
-				match k.as_bytes() {
-					b"" => {}
-					_ => {
-						panic!("invalid key: {}", k);
-					}
-				};
-				// todo
+				let k = k.to_str()?;
 				Ok(CallbackReturn::Return)
 			}),
 		)?;
@@ -482,23 +469,23 @@ impl StrataComp {
 
 		let modflag = match keysym {
 			// equivalent to "Control_* + Shift_* + Alt_*" (on my keyboard *smile*)
-			Keysym::Meta_L => ModFlags::XK_Alt_L,
-			Keysym::Meta_R => ModFlags::XK_Alt_R,
+			Keysym::Meta_L => ModFlags::Alt_L,
+			Keysym::Meta_R => ModFlags::Alt_R,
 
-			Keysym::Shift_L => ModFlags::XK_Shift_L,
-			Keysym::Shift_R => ModFlags::XK_Shift_R,
+			Keysym::Shift_L => ModFlags::Shift_L,
+			Keysym::Shift_R => ModFlags::Shift_R,
 
-			Keysym::Control_L => ModFlags::XK_Control_L,
-			Keysym::Control_R => ModFlags::XK_Control_R,
+			Keysym::Control_L => ModFlags::Control_L,
+			Keysym::Control_R => ModFlags::Control_R,
 
-			Keysym::Alt_L => ModFlags::XK_Alt_L,
-			Keysym::Alt_R => ModFlags::XK_Alt_R,
+			Keysym::Alt_L => ModFlags::Alt_L,
+			Keysym::Alt_R => ModFlags::Alt_R,
 
-			Keysym::Super_L => ModFlags::XK_Super_L,
-			Keysym::Super_R => ModFlags::XK_Super_R,
+			Keysym::Super_L => ModFlags::Super_L,
+			Keysym::Super_R => ModFlags::Super_R,
 
-			Keysym::ISO_Level3_Shift => ModFlags::XK_ISO_Level3_Shift,
-			Keysym::ISO_Level5_Shift => ModFlags::XK_ISO_Level5_Shift,
+			Keysym::ISO_Level3_Shift => ModFlags::ISO_Level3_Shift,
+			Keysym::ISO_Level5_Shift => ModFlags::ISO_Level5_Shift,
 
 			_ => ModFlags::empty(),
 		};
@@ -530,6 +517,10 @@ impl StrataComp {
 
 		self.mods.state = new_modstate.clone();
 	}
+}
+
+pub struct StrataConfig {
+	pub keybinds: HashMap<KeyPattern, StashedFunction>
 }
 
 pub fn init_wayland_listener(

@@ -1,6 +1,17 @@
-use crate::handlers::input::{
-	Key,
-	ModFlags,
+use std::{
+	cell::RefCell,
+	rc::{
+		self,
+		Rc,
+	},
+};
+
+use crate::{
+	handlers::input::{
+		Key,
+		ModFlags,
+	},
+	state::StrataComp,
 };
 use piccolo::{
 	self as lua,
@@ -15,7 +26,9 @@ use piccolo::{
 	Value,
 };
 
-pub mod modflags {
+mod modflags {
+	use lua::IntoValue;
+
 	use super::*;
 
 	impl<'gc> FromValue<'gc> for ModFlags {
@@ -60,11 +73,26 @@ pub mod modflags {
 			MetaMethod::Index,
 			Callback::from_fn(&ctx, |ctx, _, mut stack| {
 				let (_, k) = stack.consume::<(Table, lua::String)>(ctx)?;
-
 				let k = k.to_str()?;
 				let bits =
 					ModFlags::from_name(k).ok_or_else(|| anyhow::anyhow!("invalid key: {}", k))?;
-				stack.push_front(Value::UserData(UserData::new_static(&ctx, bits)));
+				let bits = UserData::new_static(&ctx, bits);
+
+				let bits_meta = lua::Table::new(&ctx);
+				bits_meta.set(
+					ctx,
+					MetaMethod::ToString,
+					lua::Callback::from_fn(&ctx, |ctx, _, mut stack| {
+						let this = stack.consume::<UserData>(ctx)?;
+						let this = this.downcast_static::<ModFlags>()?;
+
+						stack.push_front(format!("{:#?}", this).into_value(ctx));
+						Ok(lua::CallbackReturn::Return)
+					}),
+				)?;
+				bits.set_metatable(&ctx, Some(bits_meta));
+
+				stack.push_front(Value::UserData(bits));
 
 				Ok(CallbackReturn::Return)
 			}),
@@ -73,69 +101,65 @@ pub mod modflags {
 		Ok(meta)
 	}
 
-	pub fn module<'gc>(ctx: lua::Context<'gc>) -> anyhow::Result<Table<'gc>> {
+	pub fn module<'gc>(ctx: lua::Context<'gc>) -> anyhow::Result<lua::Value<'gc>> {
 		let m = Table::new(&ctx);
 
 		let _ = m.set_metatable(&ctx, Some(metatable(ctx)?));
 
-		Ok(m)
+		Ok(lua::Value::Table(m))
 	}
 }
 
-pub mod keys {
+mod keys {
+	use crate::handlers::input::KeyPattern;
+
 	use super::*;
 
-	impl<'gc> FromValue<'gc> for Key {
-		fn from_value(_: Context<'gc>, value: Value<'gc>) -> Result<Self, lua::TypeError> {
-			match value {
-				Value::UserData(ud) => {
-					let k = *ud.downcast_static::<Self>().map_err(|_| {
-						lua::TypeError { expected: "Key", found: value.type_name() }
-					})?;
+	pub fn module<'gc>(
+		ctx: lua::Context<'gc>,
+		comp: Rc<RefCell<StrataComp>>,
+	) -> anyhow::Result<Value<'gc>> {
+		let key = lua::UserData::new_static(&ctx, comp);
+		let meta = lua::Table::from_value(ctx, Key::metatable(ctx))?;
 
-					Ok(k)
-				}
-				_ => Err(lua::TypeError { expected: "Key", found: value.type_name() }),
-			}
-		}
-	}
-
-	pub fn metatable<'gc>(ctx: lua::Context<'gc>) -> anyhow::Result<Table<'gc>> {
-		let meta = Table::new(&ctx);
-
-		meta.set(
-			ctx,
-			MetaMethod::Index,
-			Callback::from_fn(&ctx, |ctx, _, mut stack| {
-				let (_, k) = stack.consume::<(Table, lua::String)>(ctx)?;
-
-				let k = k.to_str()?;
-				let bits =
-					Key::from_name(k).ok_or_else(|| anyhow::anyhow!("invalid key: {}", k))?;
-				stack.push_front(Value::UserData(UserData::new_static(&ctx, bits)));
-
-				Ok(CallbackReturn::Return)
-			}),
-		)?;
-
-		// local k = Key({ Mod.Control_L, Mod.Super_L }, Key.Q, function(...) end)
+		// local k = Key({ Mod.XK_Control_L, Mod.XK_Super_L }, Key.XK_q, function(...) end)
 		meta.set(
 			ctx,
 			MetaMethod::Call,
 			Callback::from_fn(&ctx, |ctx, _, mut stack| {
-				let (_, mods, key, cb) = stack.consume::<(Table, ModFlags, Key, Function)>(ctx)?;
+				let (comp, mods, key, cb) =
+					stack.consume::<(UserData, ModFlags, Key, Function)>(ctx)?;
+				let comp = comp.downcast_static::<Rc<RefCell<StrataComp>>>()?;
+
+				let keypat = KeyPattern { mods, key };
+
+				comp.borrow_mut().config.keybinds.insert(keypat, ctx.stash(cb));
+
+				println!("{:#?}: {:#?}", mods, key);
+
 				Ok(CallbackReturn::Return)
 			}),
 		)?;
 
-		Ok(meta)
+		key.set_metatable(&ctx, Some(meta));
+
+		Ok(lua::Value::UserData(key))
 	}
+}
 
-	pub fn module<'gc>(ctx: lua::Context<'gc>) -> anyhow::Result<Table<'gc>> {
-		let m = Table::new(&ctx);
+pub fn module<'gc>(
+	ctx: lua::Context<'gc>,
+	comp: Rc<RefCell<StrataComp>>,
+) -> anyhow::Result<lua::Value<'gc>> {
+	let input = lua::UserData::new_static(&ctx, comp.clone());
+	let meta = lua::Table::new(&ctx);
 
-		let _ = m.set_metatable(&ctx, Some(metatable(ctx)?));
+	let index = lua::Table::new(&ctx);
+	index.set(ctx, "Key", keys::module(ctx, comp)?)?;
+	index.set(ctx, "Mod", modflags::module(ctx)?)?;
 
-		Ok(m)
-	}
+	meta.set(ctx, MetaMethod::Index, lua::Value::Table(index))?;
+	input.set_metatable(&ctx, Some(meta));
+
+	Ok(lua::Value::UserData(input))
 }

@@ -7,6 +7,7 @@ pub mod state;
 pub mod tiling;
 pub mod workspaces;
 pub mod bindings;
+pub mod util;
 
 use crate::backends::init_with_backend;
 use chrono::Local;
