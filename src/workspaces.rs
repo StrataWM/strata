@@ -4,7 +4,6 @@ use crate::{
 		BorderShader,
 	},
 	tiling::refresh_geometry,
-	CONFIG,
 };
 use smithay::{
 	backend::renderer::{
@@ -135,7 +134,8 @@ impl Workspace {
 		let mut render_elements: Vec<C> = Vec::new();
 		for element in &self.windows {
 			let window = &element.borrow().smithay_window;
-			if CONFIG.read().decorations.border.width > 0 {
+			// if CONFIG.read().decorations.border.width > 0 {
+			if 3 > 0 {
 				render_elements.push(C::from(BorderShader::element(
 					renderer.glow_renderer_mut(),
 					window,

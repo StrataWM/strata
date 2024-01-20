@@ -1,5 +1,5 @@
 use crate::{
-	state::StrataState,
+	state::StrataComp,
 	workspaces::FocusTarget,
 };
 use smithay::desktop::Window;
@@ -52,15 +52,15 @@ impl From<FocusTarget> for WlSurface {
 	}
 }
 
-impl PointerTarget<StrataState> for FocusTarget {
-	fn enter(&self, seat: &Seat<StrataState>, data: &mut StrataState, event: &MotionEvent) {
+impl PointerTarget<StrataComp> for FocusTarget {
+	fn enter(&self, seat: &Seat<StrataComp>, data: &mut StrataComp, event: &MotionEvent) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::enter(w, seat, data, event),
 			FocusTarget::LayerSurface(l) => PointerTarget::enter(l, seat, data, event),
 			FocusTarget::Popup(p) => PointerTarget::enter(p.wl_surface(), seat, data, event),
 		}
 	}
-	fn motion(&self, seat: &Seat<StrataState>, data: &mut StrataState, event: &MotionEvent) {
+	fn motion(&self, seat: &Seat<StrataComp>, data: &mut StrataComp, event: &MotionEvent) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::motion(w, seat, data, event),
 			FocusTarget::LayerSurface(l) => PointerTarget::motion(l, seat, data, event),
@@ -69,8 +69,8 @@ impl PointerTarget<StrataState> for FocusTarget {
 	}
 	fn relative_motion(
 		&self,
-		seat: &Seat<StrataState>,
-		data: &mut StrataState,
+		seat: &Seat<StrataComp>,
+		data: &mut StrataComp,
 		event: &RelativeMotionEvent,
 	) {
 		match self {
@@ -81,21 +81,21 @@ impl PointerTarget<StrataState> for FocusTarget {
 			}
 		}
 	}
-	fn button(&self, seat: &Seat<StrataState>, data: &mut StrataState, event: &ButtonEvent) {
+	fn button(&self, seat: &Seat<StrataComp>, data: &mut StrataComp, event: &ButtonEvent) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::button(w, seat, data, event),
 			FocusTarget::LayerSurface(l) => PointerTarget::button(l, seat, data, event),
 			FocusTarget::Popup(p) => PointerTarget::button(p.wl_surface(), seat, data, event),
 		}
 	}
-	fn axis(&self, seat: &Seat<StrataState>, data: &mut StrataState, frame: AxisFrame) {
+	fn axis(&self, seat: &Seat<StrataComp>, data: &mut StrataComp, frame: AxisFrame) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::axis(w, seat, data, frame),
 			FocusTarget::LayerSurface(l) => PointerTarget::axis(l, seat, data, frame),
 			FocusTarget::Popup(p) => PointerTarget::axis(p.wl_surface(), seat, data, frame),
 		}
 	}
-	fn leave(&self, seat: &Seat<StrataState>, data: &mut StrataState, serial: Serial, time: u32) {
+	fn leave(&self, seat: &Seat<StrataComp>, data: &mut StrataComp, serial: Serial, time: u32) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::leave(w, seat, data, serial, time),
 			FocusTarget::LayerSurface(l) => PointerTarget::leave(l, seat, data, serial, time),
@@ -104,70 +104,70 @@ impl PointerTarget<StrataState> for FocusTarget {
 	}
 	fn gesture_swipe_update(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GestureSwipeUpdateEvent,
 	) {
 		todo!()
 	}
 	fn gesture_swipe_end(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GestureSwipeEndEvent,
 	) {
 		todo!()
 	}
 	fn gesture_swipe_begin(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GestureSwipeBeginEvent,
 	) {
 		todo!()
 	}
 	fn gesture_pinch_update(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GesturePinchUpdateEvent,
 	) {
 		todo!()
 	}
 	fn gesture_pinch_end(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GesturePinchEndEvent,
 	) {
 		todo!()
 	}
 	fn gesture_pinch_begin(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GesturePinchBeginEvent,
 	) {
 		todo!()
 	}
 	fn gesture_hold_begin(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GestureHoldBeginEvent,
 	) {
 		todo!()
 	}
 	fn gesture_hold_end(
 		&self,
-		_: &smithay::input::Seat<StrataState>,
-		_: &mut StrataState,
+		_: &smithay::input::Seat<StrataComp>,
+		_: &mut StrataComp,
 		_: &smithay::input::pointer::GestureHoldEndEvent,
 	) {
 		todo!()
 	}
 
-	fn frame(&self, seat: &Seat<StrataState>, data: &mut StrataState) {
+	fn frame(&self, seat: &Seat<StrataComp>, data: &mut StrataComp) {
 		match self {
 			FocusTarget::Window(w) => PointerTarget::frame(w, seat, data),
 			FocusTarget::LayerSurface(l) => PointerTarget::frame(l, seat, data),
@@ -176,11 +176,11 @@ impl PointerTarget<StrataState> for FocusTarget {
 	}
 }
 
-impl KeyboardTarget<StrataState> for FocusTarget {
+impl KeyboardTarget<StrataComp> for FocusTarget {
 	fn enter(
 		&self,
-		seat: &Seat<StrataState>,
-		data: &mut StrataState,
+		seat: &Seat<StrataComp>,
+		data: &mut StrataComp,
 		keys: Vec<KeysymHandle<'_>>,
 		serial: Serial,
 	) {
@@ -192,7 +192,7 @@ impl KeyboardTarget<StrataState> for FocusTarget {
 			}
 		}
 	}
-	fn leave(&self, seat: &Seat<StrataState>, data: &mut StrataState, serial: Serial) {
+	fn leave(&self, seat: &Seat<StrataComp>, data: &mut StrataComp, serial: Serial) {
 		match self {
 			FocusTarget::Window(w) => KeyboardTarget::leave(w, seat, data, serial),
 			FocusTarget::LayerSurface(l) => KeyboardTarget::leave(l, seat, data, serial),
@@ -201,8 +201,8 @@ impl KeyboardTarget<StrataState> for FocusTarget {
 	}
 	fn key(
 		&self,
-		seat: &Seat<StrataState>,
-		data: &mut StrataState,
+		seat: &Seat<StrataComp>,
+		data: &mut StrataComp,
 		key: KeysymHandle<'_>,
 		state: KeyState,
 		serial: Serial,
@@ -220,8 +220,8 @@ impl KeyboardTarget<StrataState> for FocusTarget {
 	}
 	fn modifiers(
 		&self,
-		seat: &Seat<StrataState>,
-		data: &mut StrataState,
+		seat: &Seat<StrataComp>,
+		data: &mut StrataComp,
 		modifiers: ModifiersState,
 		serial: Serial,
 	) {

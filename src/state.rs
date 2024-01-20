@@ -1,12 +1,26 @@
 use crate::{
+	handlers::input::{
+		KeyPattern,
+		ModFlags,
+		Mods,
+	},
 	workspaces::{
 		FocusTarget,
 		Workspaces,
 	},
-	CONFIG,
+};
+use piccolo::{
+	self as lua,
 };
 use smithay::{
 	backend::{
+		input::{
+			Event,
+			InputBackend,
+			InputEvent,
+			KeyState,
+			KeyboardKeyEvent,
+		},
 		renderer::{
 			damage::OutputDamageTracker,
 			glow::GlowRenderer,
@@ -19,13 +33,21 @@ use smithay::{
 		Window,
 	},
 	input::{
-		keyboard::XkbConfig,
+		keyboard::{
+			FilterResult,
+			Keysym,
+			ModifiersState,
+			XkbConfig,
+		},
 		Seat,
 		SeatState,
 	},
 	reexports::{
 		calloop::{
-			generic::Generic,
+			generic::{
+				FdWrapper,
+				Generic,
+			},
 			EventLoop,
 			Interest,
 			LoopSignal,
@@ -45,6 +67,7 @@ use smithay::{
 	utils::{
 		Logical,
 		Point,
+		SERIAL_COUNTER,
 	},
 	wayland::{
 		compositor::{
@@ -71,18 +94,152 @@ use smithay::{
 	},
 };
 use std::{
+	cell::RefCell,
+	collections::HashMap,
 	ffi::OsString,
+	os::fd::AsRawFd,
 	process::Command,
+	rc::Rc,
 	sync::Arc,
 	time::Instant,
 };
 
-pub struct CalloopData {
-	pub state: StrataState,
-	pub display_handle: DisplayHandle,
+pub struct StrataState {
+	pub lua: lua::Lua,
+	pub comp: Rc<RefCell<StrataComp>>,
+	pub display: Display<StrataComp>,
 }
 
-pub struct StrataState {
+impl StrataState {
+	pub fn process_input_event<I: InputBackend>(
+		&mut self,
+		event: InputEvent<I>,
+	) -> anyhow::Result<()> {
+		match event {
+			InputEvent::Keyboard { event, .. } => self.keyboard::<I>(event)?,
+			InputEvent::PointerMotion { event, .. } => self.pointer_motion::<I>(event)?,
+			InputEvent::PointerMotionAbsolute { event, .. } => {
+				self.pointer_motion_absolute::<I>(event)?
+			}
+			InputEvent::PointerButton { event, .. } => self.pointer_button::<I>(event)?,
+			InputEvent::PointerAxis { event, .. } => self.pointer_axis::<I>(event)?,
+			InputEvent::DeviceAdded { device } => {
+				// todo
+				println!("device added");
+			}
+			InputEvent::DeviceRemoved { device } => todo!(),
+			InputEvent::GestureSwipeBegin { event } => todo!(),
+			InputEvent::GestureSwipeUpdate { event } => todo!(),
+			InputEvent::GestureSwipeEnd { event } => todo!(),
+			InputEvent::GesturePinchBegin { event } => todo!(),
+			InputEvent::GesturePinchUpdate { event } => todo!(),
+			InputEvent::GesturePinchEnd { event } => todo!(),
+			InputEvent::GestureHoldBegin { event } => todo!(),
+			InputEvent::GestureHoldEnd { event } => todo!(),
+			InputEvent::TouchDown { event } => todo!(),
+			InputEvent::TouchMotion { event } => todo!(),
+			InputEvent::TouchUp { event } => todo!(),
+			InputEvent::TouchCancel { event } => todo!(),
+			InputEvent::TouchFrame { event } => todo!(),
+			InputEvent::TabletToolAxis { event } => todo!(),
+			InputEvent::TabletToolProximity { event } => todo!(),
+			InputEvent::TabletToolTip { event } => todo!(),
+			InputEvent::TabletToolButton { event } => todo!(),
+			InputEvent::Special(_) => todo!(),
+			// _ => anyhow::bail!("unhandled winit event: {:#?}", &event),
+		};
+
+		Ok(())
+	}
+
+	pub fn keyboard<I: InputBackend>(&mut self, event: I::KeyboardKeyEvent) -> anyhow::Result<()> {
+		let serial = SERIAL_COUNTER.next_serial();
+		let time = Event::time_msec(&event);
+
+		// println!("key: {:#?}, {:#?}", Key::from_name("b"), Keysym::b);
+
+		let keyboard = self.comp.borrow().seat.get_keyboard().unwrap();
+		let f = keyboard.input(
+			&mut self.comp.borrow_mut(),
+			event.key_code(),
+			event.state(),
+			serial,
+			time,
+			|comp, mods, keysym_h| {
+				comp.handle_mods::<I>(mods, keysym_h.modified_sym(), &event);
+
+				// println!("{:#?}", comp.mods);
+				// println!("{:#?}({:#?})", event.state(), keysym_h.modified_sym());
+				match event.state() {
+					KeyState::Pressed => {
+						let k = KeyPattern {
+							mods: comp.mods.flags,
+							key: keysym_h.modified_sym().into(),
+						};
+
+						if let Some(f) = comp.config.keybinds.get(&k) {
+							return FilterResult::Intercept(f.clone());
+						}
+
+						FilterResult::Forward
+					}
+					KeyState::Released => {
+						return FilterResult::Forward;
+					}
+				}
+			},
+		);
+
+		if let Some(f) = f {
+			let ex = self.lua.try_enter(|ctx| {
+				let f = ctx.fetch(&f);
+				Ok(ctx.stash(lua::Executor::start(ctx, f, ())))
+			})?;
+
+			let _ = self.lua.execute::<()>(&ex)?;
+		}
+
+		Ok(())
+	}
+
+	pub fn pointer_motion<I: InputBackend>(
+		&mut self,
+		event: I::PointerMotionEvent,
+	) -> anyhow::Result<()> {
+		self.comp.borrow_mut().pointer_motion::<I>(event)?;
+
+		Ok(())
+	}
+
+	pub fn pointer_motion_absolute<I: InputBackend>(
+		&mut self,
+		event: I::PointerMotionAbsoluteEvent,
+	) -> anyhow::Result<()> {
+		self.comp.borrow_mut().pointer_motion_absolute::<I>(event)?;
+
+		Ok(())
+	}
+
+	pub fn pointer_button<I: InputBackend>(
+		&mut self,
+		event: I::PointerButtonEvent,
+	) -> anyhow::Result<()> {
+		self.comp.borrow_mut().pointer_button::<I>(event)?;
+
+		Ok(())
+	}
+
+	pub fn pointer_axis<I: InputBackend>(
+		&mut self,
+		event: I::PointerAxisEvent,
+	) -> anyhow::Result<()> {
+		self.comp.borrow_mut().pointer_axis::<I>(event)?;
+
+		Ok(())
+	}
+}
+
+pub struct StrataComp {
 	pub dh: DisplayHandle,
 	pub backend: WinitGraphicsBackend<GlowRenderer>,
 	pub damage_tracker: OutputDamageTracker,
@@ -95,28 +252,29 @@ pub struct StrataState {
 	pub output_manager_state: OutputManagerState,
 	pub data_device_state: DataDeviceState,
 	pub primary_selection_state: PrimarySelectionState,
-	pub seat_state: SeatState<StrataState>,
+	pub seat_state: SeatState<StrataComp>,
 	pub layer_shell_state: WlrLayerShellState,
 	pub popup_manager: PopupManager,
-	pub seat: Seat<Self>,
-	pub seat_name: String,
+	pub seat: Seat<StrataComp>,
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub pointer_location: Point<f64, Logical>,
+	pub mods: Mods,
+	pub config: StrataConfig,
 }
 
-impl StrataState {
+impl StrataComp {
 	pub fn new(
-		event_loop: &mut EventLoop<CalloopData>,
-		display: Display<StrataState>,
+		event_loop: &EventLoop<StrataState>,
+		display: &Display<StrataComp>,
+		socket_name: OsString,
 		seat_name: String,
 		backend: WinitGraphicsBackend<GlowRenderer>,
 		damage_tracker: OutputDamageTracker,
 	) -> Self {
-		let config = &CONFIG.read();
-
 		let start_time = Instant::now();
 		let dh = display.handle();
+		let loop_signal = event_loop.get_signal();
 		let compositor_state = CompositorState::new::<Self>(&dh);
 		let xdg_shell_state = XdgShellState::new::<Self>(&dh);
 		let xdg_decoration_state = XdgDecorationState::new::<Self>(&dh);
@@ -125,28 +283,31 @@ impl StrataState {
 		let mut seat_state = SeatState::new();
 		let data_device_state = DataDeviceState::new::<Self>(&dh);
 		let primary_selection_state = PrimarySelectionState::new::<Self>(&dh);
-		let mut seat = seat_state.new_wl_seat(&dh, seat_name.clone());
 		let layer_shell_state = WlrLayerShellState::new::<Self>(&dh);
-		if !config.general.kb_repeat.is_empty() {
-			let key_delay: i32 = config.general.kb_repeat[0];
-			let key_repeat: i32 = config.general.kb_repeat[1];
-			seat.add_keyboard(XkbConfig::default(), key_delay, key_repeat)
-				.expect("Couldn't parse XKB config");
-		} else {
-			seat.add_keyboard(XkbConfig::default(), 500, 250).expect("Couldn't parse XKB config");
-		}
-		let config_workspace: u8 = config.general.workspaces.clone();
-		let workspaces = Workspaces::new(config_workspace);
-		seat.add_pointer();
-		let socket_name = Self::init_wayland_listener(display, event_loop);
-		let loop_signal = event_loop.get_signal();
 
-		Self {
+		let mut seat = seat_state.new_wl_seat(&dh, seat_name);
+		let keyboard = seat
+			.add_keyboard(
+				XkbConfig {
+					layout: "it",
+					options: Some("caps:swapescape".to_string()),
+					..Default::default()
+				},
+				160,
+				40,
+			)
+			.expect("Couldn't parse XKB config");
+		seat.add_pointer();
+
+		let config_workspace: u8 = 5;
+		let workspaces = Workspaces::new(config_workspace);
+		let mods_state = keyboard.modifier_state();
+
+		StrataComp {
 			dh,
 			backend,
 			damage_tracker,
 			start_time,
-			seat_name,
 			socket_name,
 			compositor_state,
 			xdg_shell_state,
@@ -162,42 +323,9 @@ impl StrataState {
 			seat,
 			workspaces,
 			pointer_location: Point::from((0.0, 0.0)),
+			mods: Mods { flags: ModFlags::empty(), state: mods_state },
+			config: StrataConfig { keybinds: HashMap::new() },
 		}
-	}
-
-	fn init_wayland_listener(
-		display: Display<StrataState>,
-		event_loop: &mut EventLoop<CalloopData>,
-	) -> OsString {
-		let listening_socket = ListeningSocketSource::new_auto().unwrap();
-		let socket_name = listening_socket.socket_name().to_os_string();
-
-		let handle = event_loop.handle();
-
-		event_loop
-			.handle()
-			.insert_source(listening_socket, move |client_stream, _, state| {
-				// You may also associate some data with the client when inserting the client.
-				state
-					.display_handle
-					.insert_client(client_stream, Arc::new(ClientState::default()))
-					.unwrap();
-			})
-			.expect("Failed to init the wayland event source.");
-
-		handle
-			.insert_source(
-				Generic::new(display, Interest::READ, Mode::Level),
-				|_, display, state| {
-					unsafe {
-						display.get_mut().dispatch_clients(&mut state.state).unwrap();
-					}
-					Ok(PostAction::Continue)
-				},
-			)
-			.unwrap();
-
-		socket_name
 	}
 
 	pub fn window_under(&mut self) -> Option<(Window, Point<i32, Logical>)> {
@@ -263,20 +391,106 @@ impl StrataState {
 	pub fn spawn(&mut self, command: &str) {
 		Command::new("/bin/sh").arg("-c").arg(command).spawn().expect("Failed to spawn command");
 	}
+
+	pub fn handle_mods<I: InputBackend>(
+		&mut self,
+		new_modstate: &ModifiersState,
+		keysym: Keysym,
+		event: &I::KeyboardKeyEvent,
+	) {
+		let old_modstate = self.mods.state;
+
+		let modflag = match keysym {
+			// equivalent to "Control_* + Shift_* + Alt_*" (on my keyboard *smile*)
+			Keysym::Meta_L => ModFlags::Alt_L,
+			Keysym::Meta_R => ModFlags::Alt_R,
+
+			Keysym::Shift_L => ModFlags::Shift_L,
+			Keysym::Shift_R => ModFlags::Shift_R,
+
+			Keysym::Control_L => ModFlags::Control_L,
+			Keysym::Control_R => ModFlags::Control_R,
+
+			Keysym::Alt_L => ModFlags::Alt_L,
+			Keysym::Alt_R => ModFlags::Alt_R,
+
+			Keysym::Super_L => ModFlags::Super_L,
+			Keysym::Super_R => ModFlags::Super_R,
+
+			Keysym::ISO_Level3_Shift => ModFlags::ISO_Level3_Shift,
+			Keysym::ISO_Level5_Shift => ModFlags::ISO_Level5_Shift,
+
+			_ => ModFlags::empty(),
+		};
+
+		match event.state() {
+			KeyState::Pressed => {
+				let depressed = if new_modstate == &old_modstate {
+					// ignore previous modstate
+					true
+				} else {
+					// "lock" key modifier or "normal" key modifier
+					new_modstate.serialized.depressed > old_modstate.serialized.depressed
+				};
+
+				// "lock" key modifiers (Caps Lock, Num Lock, etc...) => `depressed` == `locked`
+				// "normal" key modifiers (Control_*, Shift_*, etc...) => `depressed` > 0
+				// "normal" keys (a, s, d, f) => `depressed` == 0
+				let is_modifier = new_modstate.serialized.depressed
+					> new_modstate.serialized.locked - old_modstate.serialized.locked;
+
+				if is_modifier && depressed {
+					self.mods.flags ^= modflag;
+				}
+			}
+			KeyState::Released => {
+				self.mods.flags ^= modflag;
+			}
+		};
+
+		self.mods.state = new_modstate.clone();
+	}
 }
 
-pub struct CommsChannel<T> {
-	pub sender: crossbeam_channel::Sender<T>,
-	pub receiver: crossbeam_channel::Receiver<T>,
+pub struct StrataConfig {
+	pub keybinds: HashMap<KeyPattern, lua::StashedFunction>,
 }
 
-pub enum ConfigCommands {
-	Spawn(String),
-	CloseWindow,
-	SwitchWS(u8),
-	MoveWindow(u8),
-	MoveWindowAndFollow(u8),
-	Quit,
+pub fn init_wayland_listener(
+	event_loop: &EventLoop<StrataState>,
+) -> (Display<StrataComp>, OsString) {
+	let loop_handle = event_loop.handle();
+	let mut display: Display<StrataComp> = Display::new().unwrap();
+	let listening_socket = ListeningSocketSource::new_auto().unwrap();
+	let socket_name = listening_socket.socket_name().to_os_string();
+
+	loop_handle
+		.insert_source(listening_socket, move |client_stream, _, state| {
+			// You may also associate some data with the client when inserting the client.
+			state
+				.display
+				.handle()
+				.insert_client(client_stream, Arc::new(ClientState::default()))
+				.unwrap();
+		})
+		.expect("Failed to init the wayland event source.");
+
+	loop_handle
+		.insert_source(
+			Generic::new(
+				unsafe { FdWrapper::new(display.backend().poll_fd().as_raw_fd()) },
+				Interest::READ,
+				Mode::Level,
+			),
+			|_, _, state| {
+				state.display.dispatch_clients(&mut state.comp.borrow_mut())?;
+
+				Ok(PostAction::Continue)
+			},
+		)
+		.unwrap();
+
+	(display, socket_name)
 }
 
 #[derive(Default)]

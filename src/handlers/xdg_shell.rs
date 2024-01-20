@@ -1,5 +1,5 @@
 use crate::{
-	state::StrataState,
+	state::StrataComp,
 	workspaces::{
 		StrataWindow,
 		Workspaces,
@@ -50,7 +50,7 @@ use std::{
 	sync::Mutex,
 };
 
-impl XdgShellHandler for StrataState {
+impl XdgShellHandler for StrataComp {
 	fn xdg_shell_state(&mut self) -> &mut XdgShellState {
 		&mut self.xdg_shell_state
 	}
@@ -78,9 +78,13 @@ impl XdgShellHandler for StrataState {
 	}
 
 	fn grab(&mut self, _surface: PopupSurface, _seat: WlSeat, _serial: Serial) {}
+
+fn reposition_request(&mut self, surface: PopupSurface, positioner: PositionerState, token: u32) {
+        todo!()
+    }
 }
 
-delegate_xdg_shell!(StrataState);
+delegate_xdg_shell!(StrataComp);
 
 pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager: &PopupManager) {
 	if let Some(window) = workspaces.all_windows().find(|w| w.toplevel().wl_surface() == surface) {
@@ -144,7 +148,7 @@ pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager
 	};
 }
 
-impl XdgDecorationHandler for StrataState {
+impl XdgDecorationHandler for StrataComp {
 	fn new_decoration(&mut self, toplevel: ToplevelSurface) {
 		toplevel.with_pending_state(|state| {
 			state.decoration_mode = Some(Mode::ServerSide);
@@ -161,4 +165,4 @@ impl XdgDecorationHandler for StrataState {
 
 	fn unset_mode(&mut self, _toplevel: ToplevelSurface) {}
 }
-delegate_xdg_decoration!(StrataState);
+delegate_xdg_decoration!(StrataComp);
