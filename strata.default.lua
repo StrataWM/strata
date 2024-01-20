@@ -6,7 +6,7 @@ local function close_all_windows()
 	end
 end
 
-config = {
+local config = {
 	autostart = {
 		{ "kitty --title Terminal" },
 	},
