@@ -11,9 +11,7 @@ use crate::{
 	},
 };
 use piccolo::{
-	Closure,
-	Executor,
-	Lua,
+	self as lua,
 };
 use smithay::{
 	backend::{
@@ -58,7 +56,6 @@ use smithay::{
 };
 use std::{
 	cell::RefCell,
-	process::Command,
 	rc::Rc,
 	time::Duration,
 };
@@ -106,15 +103,14 @@ pub fn init_winit() {
 		})
 		.unwrap();
 
-	let mut lua = Lua::full();
+	let mut lua_vm = lua::Lua::full();
 	let comp = Rc::new(RefCell::new(comp));
 
-	let ex = lua
+	let ex = lua_vm
 		.try_enter(|ctx| {
-			let strata = bindings::strata::module(ctx, Rc::clone(&comp))?;
-			ctx.globals().set(ctx, "strata", strata)?;
+			bindings::register(ctx, Rc::clone(&comp))?;
 
-			let main = Closure::load(
+			let main = lua::Closure::load(
 				ctx,
 				None,
 				r#"
@@ -135,15 +131,15 @@ pub fn init_winit() {
 				.as_bytes(),
 			)?;
 
-			Ok(ctx.stash(Executor::start(ctx, main.into(), ())))
+			Ok(ctx.stash(lua::Executor::start(ctx, main.into(), ())))
 		})
 		.unwrap();
 
-	if let Err(e) = lua.execute::<()>(&ex) {
+	if let Err(e) = lua_vm.execute::<()>(&ex) {
 		println!("{:#?}", e);
 	}
 
-	let mut data = StrataState { lua, comp, display };
+	let mut data = StrataState { lua: lua_vm, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
 
@@ -207,7 +203,6 @@ pub fn state_winit_update(state: &mut StrataComp) {
 
 		window.refresh();
 	});
-	// workspace.windows().for_each(|e| e.refresh());
 	state.dh.flush_clients().unwrap();
 	state.popup_manager.cleanup();
 	BorderShader::cleanup(state.backend.renderer());

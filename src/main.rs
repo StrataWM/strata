@@ -13,14 +13,6 @@ use crate::backends::init_with_backend;
 use chrono::Local;
 use clap::Parser;
 use log::info;
-use once_cell::sync::{
-	Lazy,
-	OnceCell,
-};
-use parking_lot::{
-	ReentrantMutex,
-	RwLock,
-};
 use std::{
 	error::Error,
 	io::stdout,

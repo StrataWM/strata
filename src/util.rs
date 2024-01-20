@@ -53,66 +53,42 @@ macro_rules! enum_table {
                 }
             }
 
-
-            pub fn metatable<'gc>(ctx: piccolo::Context<'gc>) -> piccolo::Value<'gc> {
+            pub fn metatable<'gc>(ctx: piccolo::Context<'gc>) -> anyhow::Result<piccolo::Value<'gc>> {
 				use piccolo::IntoValue;
 
                 let meta = piccolo::Table::new(&ctx);
+				let index = piccolo::Table::new(&ctx);
 
-				let _ = meta.set(
+				let v_meta = piccolo::Table::new(&ctx);
+				v_meta.set(
 					ctx,
-					piccolo::MetaMethod::Index,
+					piccolo::MetaMethod::ToString,
 					piccolo::Callback::from_fn(&ctx, |ctx, _, mut stack| {
-						let _ = stack.pop_front();
-						let k = stack.consume::<piccolo::String>(ctx)?;
+						let ud = stack.consume::<piccolo::UserData>(ctx)?;
+						let this = ud.downcast_static::<$Name>()?;
 
-						let v_meta = piccolo::Table::new(&ctx);
-						let _ = v_meta.set(
-							ctx,
-							piccolo::MetaMethod::ToString,
-							piccolo::Callback::from_fn(&ctx, |ctx, _, mut stack| {
-								let ud = stack.consume::<piccolo::UserData>(ctx)?;
-								let this = ud.downcast_static::<$Name>()?;
+						stack.push_front(format!("{:#?}", this.0).into_value(ctx));
 
-								stack.push_front(format!("{:#?}", this.0).into_value(ctx));
+						Ok(piccolo::CallbackReturn::Return)
+					}),
+				)?;
 
-								Ok(piccolo::CallbackReturn::Return)
-							}),
-						);
+				$(
+				let ud = piccolo::UserData::new_static(&ctx, $Name($value));
+				ud.set_metatable(&ctx, Some(v_meta));
+				index.set(ctx, stringify!($Flag), ud)?;
+				)*
 
-						let k = k.to_str()?;
-						match k {
-							$(
-								stringify!($Flag) => {
-									let ud = piccolo::UserData::new_static(&ctx, $Name($value));
-									ud.set_metatable(&ctx, Some(v_meta));
-						                              stack.push_front(piccolo::Value::UserData(ud));
-						                              Ok(piccolo::CallbackReturn::Return)
-								},
-							)*
-						                      _ => {
-								return Err(anyhow::anyhow!("invalid index key: {}", k).into())
-							}
-
-						}
-
-						// println!("{:#?}", stack.drain(..));
-						// Ok(piccolo::CallbackReturn::Return)
-					})
-				);
-
-
-
-                let _ = meta.set(
+				meta.set(ctx, piccolo::MetaMethod::Index, index)?;
+                meta.set(
                     ctx,
                     piccolo::MetaMethod::NewIndex,
                     piccolo::Callback::from_fn(&ctx, |_, _, _| {
                         Ok(piccolo::CallbackReturn::Return)
                     })
-                );
+                )?;
 
-
-                piccolo::Value::Table(meta)
+                Ok(piccolo::Value::Table(meta))
             }
         }
         };

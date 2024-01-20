@@ -20,7 +20,7 @@ pub fn module<'gc>(
 	ctx: lua::Context<'gc>,
 	comp: Rc<RefCell<StrataComp>>,
 ) -> anyhow::Result<lua::Value<'gc>> {
-	let meta = lua::Table::from_value(ctx, Key::metatable(ctx))?;
+	let meta = lua::Table::from_value(ctx, Key::metatable(ctx)?)?;
 
 	// local k = Key({ Mod.Control_L, Mod.Super_L }, Key.Escape, function(...) end)
 	meta.set(

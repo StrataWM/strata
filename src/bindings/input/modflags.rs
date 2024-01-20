@@ -57,7 +57,7 @@ pub fn module<'gc>(
 			let k = stack.consume::<lua::String>(ctx)?;
 			let k = k.to_str()?;
 			let bits =
-				ModFlags::from_name(k).ok_or_else(|| anyhow::anyhow!("invalid key: {}", k))?;
+				ModFlags::from_name(k).ok_or_else(|| anyhow::anyhow!("invalid Mod key: {}", k))?;
 			let bits = lua::UserData::new_static(&ctx, bits);
 
 			let bits_meta = lua::Table::new(&ctx);

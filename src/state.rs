@@ -1,7 +1,5 @@
 use crate::{
-	bindings::input,
 	handlers::input::{
-		Key,
 		KeyPattern,
 		ModFlags,
 		Mods,
@@ -12,16 +10,7 @@ use crate::{
 	},
 };
 use piccolo::{
-	Callback,
-	CallbackReturn,
-	Context,
-	Executor,
-	FromValue,
-	Lua,
-	MetaMethod,
-	StashedFunction,
-	Table,
-	UserData,
+	self as lua,
 };
 use smithay::{
 	backend::{
@@ -115,13 +104,8 @@ use std::{
 	time::Instant,
 };
 
-pub enum Action {
-	LuaExecute(StashedFunction),
-	Return,
-}
-
 pub struct StrataState {
-	pub lua: Lua,
+	pub lua: lua::Lua,
 	pub comp: Rc<RefCell<StrataComp>>,
 	pub display: Display<StrataComp>,
 }
@@ -209,7 +193,7 @@ impl StrataState {
 		if let Some(f) = f {
 			let ex = self.lua.try_enter(|ctx| {
 				let f = ctx.fetch(&f);
-				Ok(ctx.stash(Executor::start(ctx, f, ())))
+				Ok(ctx.stash(lua::Executor::start(ctx, f, ())))
 			})?;
 
 			let _ = self.lua.execute::<()>(&ex)?;
@@ -469,7 +453,7 @@ impl StrataComp {
 }
 
 pub struct StrataConfig {
-	pub keybinds: HashMap<KeyPattern, StashedFunction>,
+	pub keybinds: HashMap<KeyPattern, lua::StashedFunction>,
 }
 
 pub fn init_wayland_listener(
