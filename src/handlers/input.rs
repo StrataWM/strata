@@ -2671,15 +2671,14 @@ impl StrataComp {
 	) -> anyhow::Result<()> {
 		let serial = SERIAL_COUNTER.next_serial();
 		let delta = (event.delta_x(), event.delta_y()).into();
-		self.pointer_location += delta;
-		self.pointer_location = self.clamp_coords(self.pointer_location);
 
 		self.set_input_focus_auto();
 
 		if let Some(ptr) = self.seat.get_pointer() {
+			let location = self.clamp_coords(ptr.current_location() + delta);
+
 			let under = self.surface_under();
 
-			let location = self.pointer_location;
 			ptr.motion(
 				self,
 				under.clone(),
@@ -2711,7 +2710,7 @@ impl StrataComp {
 		let output_geo = curr_workspace.output_geometry(&output).unwrap();
 		let pos = event.position_transformed(output_geo.size) + output_geo.loc.to_f64();
 
-		self.pointer_location = self.clamp_coords(pos);
+		let location = self.clamp_coords(pos);
 
 		self.set_input_focus_auto();
 

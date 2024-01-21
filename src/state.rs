@@ -258,7 +258,6 @@ pub struct StrataComp {
 	pub seat: Seat<StrataComp>,
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
-	pub pointer_location: Point<f64, Logical>,
 	pub mods: Mods,
 	pub config: StrataConfig,
 }
@@ -322,18 +321,17 @@ impl StrataComp {
 			layer_shell_state,
 			seat,
 			workspaces,
-			pointer_location: Point::from((0.0, 0.0)),
 			mods: Mods { flags: ModFlags::empty(), state: mods_state },
 			config: StrataConfig { keybinds: HashMap::new() },
 		}
 	}
 
 	pub fn window_under(&mut self) -> Option<(Window, Point<i32, Logical>)> {
-		let pos = self.pointer_location;
+		let pos = self.seat.get_pointer().unwrap().current_location();
 		self.workspaces.current().window_under(pos).map(|(w, p)| (w.clone(), p))
 	}
 	pub fn surface_under(&self) -> Option<(FocusTarget, Point<i32, Logical>)> {
-		let pos = self.pointer_location;
+		let pos = self.seat.get_pointer().unwrap().current_location();
 		let output = self.workspaces.current().outputs().find(|o| {
 			let geometry = self.workspaces.current().output_geometry(o).unwrap();
 			geometry.contains(pos.to_i32_round())
@@ -360,7 +358,8 @@ impl StrataComp {
 	}
 
 	pub fn close_window(&mut self) {
-		if let Some((window, _)) = self.workspaces.current().window_under(self.pointer_location) {
+		let pos = self.seat.get_pointer().unwrap().current_location();
+		if let Some((window, _)) = self.workspaces.current().window_under(pos) {
 			window.toplevel().send_close()
 		}
 	}
@@ -371,8 +370,9 @@ impl StrataComp {
 	}
 
 	pub fn move_window_to_workspace(&mut self, id: u8) {
+		let pos = self.seat.get_pointer().unwrap().current_location();
 		let window =
-			self.workspaces.current().window_under(self.pointer_location).map(|d| d.0.clone());
+			self.workspaces.current().window_under(pos).map(|d| d.0.clone());
 
 		if let Some(window) = window {
 			self.workspaces.move_window_to_workspace(&window, id);
