@@ -125,6 +125,18 @@ impl Workspace {
 		R: Renderer + ImportAll + AsGlowRenderer,
 		C: From<WaylandSurfaceRenderElement<R>> + From<PixelShaderElement>,
 	>(
+	pub fn clamp_coords(&self, pos: Point<f64, Logical>) -> Point<f64, Logical> {
+		let Some(output) = self.outputs().next() else {
+			return pos;
+		};
+
+		let (pos_x, pos_y) = pos.into();
+		let (max_x, max_y) = self.output_geometry(output).unwrap().size.into();
+		let clamped_x = pos_x.max(0.0).min(max_x as f64);
+		let clamped_y = pos_y.max(0.0).min(max_y as f64);
+		(clamped_x, clamped_y).into()
+	}
+
 		&self,
 		renderer: &mut R,
 	) -> Vec<C>
@@ -244,6 +256,7 @@ impl Workspaces {
 	pub fn activate(&mut self, id: u8) {
 		self.current = id;
 	}
+
 	pub fn move_window_to_workspace(&mut self, window: &Window, workspace: u8) {
 		let mut removed = None;
 		if let Some(ws) = self.workspace_from_window(window) {
