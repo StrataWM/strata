@@ -128,28 +128,28 @@ impl StrataState {
 			}
 			InputEvent::PointerButton { event, .. } => self.pointer_button::<I>(event)?,
 			InputEvent::PointerAxis { event, .. } => self.pointer_axis::<I>(event)?,
-			InputEvent::DeviceAdded { device } => {
+			InputEvent::DeviceAdded { device: _ } => {
 				// todo
 				println!("device added");
 			}
-			InputEvent::DeviceRemoved { device } => todo!(),
-			InputEvent::GestureSwipeBegin { event } => todo!(),
-			InputEvent::GestureSwipeUpdate { event } => todo!(),
-			InputEvent::GestureSwipeEnd { event } => todo!(),
-			InputEvent::GesturePinchBegin { event } => todo!(),
-			InputEvent::GesturePinchUpdate { event } => todo!(),
-			InputEvent::GesturePinchEnd { event } => todo!(),
-			InputEvent::GestureHoldBegin { event } => todo!(),
-			InputEvent::GestureHoldEnd { event } => todo!(),
-			InputEvent::TouchDown { event } => todo!(),
-			InputEvent::TouchMotion { event } => todo!(),
-			InputEvent::TouchUp { event } => todo!(),
-			InputEvent::TouchCancel { event } => todo!(),
-			InputEvent::TouchFrame { event } => todo!(),
-			InputEvent::TabletToolAxis { event } => todo!(),
-			InputEvent::TabletToolProximity { event } => todo!(),
-			InputEvent::TabletToolTip { event } => todo!(),
-			InputEvent::TabletToolButton { event } => todo!(),
+			InputEvent::DeviceRemoved { device: _ } => todo!(),
+			InputEvent::GestureSwipeBegin { event: _ } => todo!(),
+			InputEvent::GestureSwipeUpdate { event: _ } => todo!(),
+			InputEvent::GestureSwipeEnd { event: _ } => todo!(),
+			InputEvent::GesturePinchBegin { event: _ } => todo!(),
+			InputEvent::GesturePinchUpdate { event: _ } => todo!(),
+			InputEvent::GesturePinchEnd { event: _ } => todo!(),
+			InputEvent::GestureHoldBegin { event: _ } => todo!(),
+			InputEvent::GestureHoldEnd { event: _ } => todo!(),
+			InputEvent::TouchDown { event: _ } => todo!(),
+			InputEvent::TouchMotion { event: _ } => todo!(),
+			InputEvent::TouchUp { event: _ } => todo!(),
+			InputEvent::TouchCancel { event: _ } => todo!(),
+			InputEvent::TouchFrame { event: _ } => todo!(),
+			InputEvent::TabletToolAxis { event: _ } => todo!(),
+			InputEvent::TabletToolProximity { event: _ } => todo!(),
+			InputEvent::TabletToolTip { event: _ } => todo!(),
+			InputEvent::TabletToolButton { event: _ } => todo!(),
 			InputEvent::Special(_) => todo!(),
 			// _ => anyhow::bail!("unhandled winit event: {:#?}", &event),
 		};
@@ -390,8 +390,8 @@ impl StrataComp {
 	}
 
 	pub fn close_window(&mut self) {
-		let pos = self.seat.get_pointer().unwrap().current_location();
-		if let Some((window, _)) = self.workspaces.current().window_under(pos) {
+		let ptr = self.seat.get_pointer().unwrap();
+		if let Some((window, _)) = self.workspaces.current().window_under(ptr.current_location()) {
 			window.toplevel().send_close()
 		}
 	}
@@ -403,8 +403,7 @@ impl StrataComp {
 
 	pub fn move_window_to_workspace(&mut self, id: u8) {
 		let pos = self.seat.get_pointer().unwrap().current_location();
-		let window =
-			self.workspaces.current().window_under(pos).map(|d| d.0.clone());
+		let window = self.workspaces.current().window_under(pos).map(|d| d.0.clone());
 
 		if let Some(window) = window {
 			self.workspaces.move_window_to_workspace(&window, id);

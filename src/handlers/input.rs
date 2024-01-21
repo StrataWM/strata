@@ -1,6 +1,7 @@
 use crate::{
+	enum_table,
 	state::StrataComp,
-	workspaces::FocusTarget, enum_table,
+	workspaces::FocusTarget,
 };
 use bitflags::bitflags;
 use smithay::{
@@ -26,11 +27,7 @@ use smithay::{
 			RelativeMotionEvent,
 		},
 	},
-	utils::{
-		Logical,
-		Point,
-		SERIAL_COUNTER,
-	},
+	utils::SERIAL_COUNTER,
 };
 
 #[derive(Debug)]
@@ -102,8 +99,6 @@ bitflags! {
 		const ISO_Level5_Shift = 1 << 5;
 	}
 }
-
-
 
 enum_table! {
 	#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -968,7 +963,6 @@ enum_table! {
 		const Cyrillic_lje = Keysym::Cyrillic_lje;
 		const Serbian_lje = Keysym::Serbian_lje;
 		const Cyrillic_nje = Keysym::Cyrillic_nje;
-		const Serbian_nje = Keysym::Serbian_nje;
 		const Serbian_tshe = Keysym::Serbian_tshe;
 		const Macedonia_kje = Keysym::Macedonia_kje;
 		const Ukrainian_ghe_with_upturn = Keysym::Ukrainian_ghe_with_upturn;
@@ -2688,8 +2682,8 @@ impl StrataComp {
 		let serial = SERIAL_COUNTER.next_serial();
 
 		let curr_workspace = self.workspaces.current();
-		let output = curr_workspace.outputs().next().unwrap().clone();
-		let output_geo = curr_workspace.output_geometry(&output).unwrap();
+		let output = curr_workspace.outputs().next().unwrap();
+		let output_geo = curr_workspace.output_geometry(output).unwrap();
 		let pos = event.position_transformed(output_geo.size) + output_geo.loc.to_f64();
 
 		let location = self.workspaces.current().clamp_coords(pos);
@@ -2698,11 +2692,7 @@ impl StrataComp {
 
 		let under = self.surface_under();
 		if let Some(ptr) = self.seat.get_pointer() {
-			ptr.motion(
-				self,
-				under,
-				&MotionEvent { location: pos, serial, time: event.time_msec() },
-			);
+			ptr.motion(self, under, &MotionEvent { location, serial, time: event.time_msec() });
 		}
 
 		Ok(())
