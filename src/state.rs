@@ -1,4 +1,5 @@
 use crate::{
+	decorations::BorderShader,
 	handlers::input::{
 		KeyPattern,
 		ModFlags,
@@ -29,8 +30,8 @@ use smithay::{
 	},
 	desktop::{
 		layer_map_for_output,
+		space::SpaceElement,
 		PopupManager,
-		Window,
 	},
 	input::{
 		keyboard::{
@@ -67,6 +68,7 @@ use smithay::{
 	utils::{
 		Logical,
 		Point,
+		Rectangle,
 		SERIAL_COUNTER,
 	},
 	wayland::{
@@ -101,7 +103,10 @@ use std::{
 	process::Command,
 	rc::Rc,
 	sync::Arc,
-	time::Instant,
+	time::{
+		Duration,
+		Instant,
+	},
 };
 
 pub struct StrataState {
@@ -326,9 +331,11 @@ impl StrataComp {
 		}
 	}
 
-	pub fn window_under(&mut self) -> Option<(Window, Point<i32, Logical>)> {
-		let pos = self.seat.get_pointer().unwrap().current_location();
-		self.workspaces.current().window_under(pos).map(|(w, p)| (w.clone(), p))
+	fn winit_render(&mut self) {
+		let render_elements = self.workspaces.current().render_elements(self.backend.renderer());
+		self.damage_tracker
+			.render_output(self.backend.renderer(), 0, &render_elements, [0.1, 0.1, 0.1, 1.0])
+			.unwrap();
 	}
 	pub fn surface_under(&self) -> Option<(FocusTarget, Point<i32, Logical>)> {
 		let pos = self.seat.get_pointer().unwrap().current_location();
@@ -355,6 +362,31 @@ impl StrataComp {
 			under = Some((layer.clone().into(), output_geo.loc + layer_loc));
 		};
 		under
+	}
+
+	pub fn winit_update(&mut self) {
+		self.winit_render();
+
+		self.set_input_focus_auto();
+
+		// damage tracking
+		let size = self.backend.window_size();
+		let damage = Rectangle::from_loc_and_size((0, 0), size);
+		self.backend.bind().unwrap();
+		self.backend.submit(Some(&[damage])).unwrap();
+
+		// sync and cleanups
+		let output = self.workspaces.current().outputs().next().unwrap();
+		self.workspaces.current().windows().for_each(|window| {
+			window.send_frame(output, self.start_time.elapsed(), Some(Duration::ZERO), |_, _| {
+				Some(output.clone())
+			});
+
+			window.refresh();
+		});
+		self.dh.flush_clients().unwrap();
+		self.popup_manager.cleanup();
+		BorderShader::cleanup(self.backend.renderer());
 	}
 
 	pub fn close_window(&mut self) {

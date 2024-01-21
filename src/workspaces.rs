@@ -2,21 +2,19 @@ use crate::{
 	decorations::{
 		AsGlowRenderer,
 		BorderShader,
+		CustomRenderElements,
 	},
 	tiling::refresh_geometry,
 };
 use smithay::{
 	backend::renderer::{
-		element::{
-			surface::WaylandSurfaceRenderElement,
-			AsRenderElements,
-		},
-		gles::element::PixelShaderElement,
+		element::AsRenderElements,
 		ImportAll,
 		Renderer,
 		Texture,
 	},
 	desktop::{
+		layer_map_for_output,
 		space::SpaceElement,
 		LayerSurface,
 		PopupKind,
@@ -30,6 +28,7 @@ use smithay::{
 		Scale,
 		Transform,
 	},
+	wayland::shell::wlr_layer::Layer,
 };
 use std::{
 	cell::{
@@ -121,10 +120,6 @@ impl Workspace {
 		removed
 	}
 
-	pub fn render_elements<
-		R: Renderer + ImportAll + AsGlowRenderer,
-		C: From<WaylandSurfaceRenderElement<R>> + From<PixelShaderElement>,
-	>(
 	pub fn clamp_coords(&self, pos: Point<f64, Logical>) -> Point<f64, Logical> {
 		let Some(output) = self.outputs().next() else {
 			return pos;
@@ -137,18 +132,43 @@ impl Workspace {
 		(clamped_x, clamped_y).into()
 	}
 
+	pub fn render_elements<R: Renderer + ImportAll + AsGlowRenderer>(
 		&self,
 		renderer: &mut R,
-	) -> Vec<C>
+	) -> Vec<CustomRenderElements<R>>
 	where
 		<R as Renderer>::TextureId: Texture + 'static,
 	{
-		let mut render_elements: Vec<C> = Vec::new();
+		let output = self.outputs().next().unwrap();
+		let layer_map = layer_map_for_output(output);
+		let (lower, upper): (Vec<&LayerSurface>, Vec<&LayerSurface>) = layer_map
+			.layers()
+			.rev()
+			.partition(|s| matches!(s.layer(), Layer::Background | Layer::Bottom));
+
+		let mut render_elements: Vec<CustomRenderElements<_>> = Vec::new();
+		render_elements.extend(
+			upper
+				.into_iter()
+				.filter_map(|surface| {
+					layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface))
+				})
+				.flat_map(|(loc, surface)| {
+					AsRenderElements::<R>::render_elements::<CustomRenderElements<_>>(
+						surface,
+						renderer,
+						loc.to_physical_precise_round(1),
+						Scale::from(1.0),
+						1.0,
+					)
+				}),
+		);
+
 		for element in &self.windows {
 			let window = &element.borrow().smithay_window;
 			// if CONFIG.read().decorations.border.width > 0 {
 			if 3 > 0 {
-				render_elements.push(C::from(BorderShader::element(
+				render_elements.push(CustomRenderElements::Shader(BorderShader::element(
 					renderer.glow_renderer_mut(),
 					window,
 					element.borrow().rec.loc,
@@ -161,6 +181,23 @@ impl Workspace {
 				1.0,
 			));
 		}
+
+		render_elements.extend(
+			lower
+				.into_iter()
+				.filter_map(|surface| {
+					layer_map.layer_geometry(surface).map(|geo| (geo.loc, surface))
+				})
+				.flat_map(|(loc, surface)| {
+					AsRenderElements::<R>::render_elements::<CustomRenderElements<_>>(
+						surface,
+						renderer,
+						loc.to_physical_precise_round(1),
+						Scale::from(1.0),
+						1.0,
+					)
+				}),
+		);
 		render_elements
 	}
 
