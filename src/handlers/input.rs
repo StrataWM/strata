@@ -1,6 +1,7 @@
 use crate::{
+	enum_table,
 	state::StrataComp,
-	workspaces::FocusTarget, enum_table,
+	workspaces::FocusTarget,
 };
 use bitflags::bitflags;
 use smithay::{
@@ -26,11 +27,7 @@ use smithay::{
 			RelativeMotionEvent,
 		},
 	},
-	utils::{
-		Logical,
-		Point,
-		SERIAL_COUNTER,
-	},
+	utils::SERIAL_COUNTER,
 };
 
 #[derive(Debug)]
@@ -102,8 +99,6 @@ bitflags! {
 		const ISO_Level5_Shift = 1 << 5;
 	}
 }
-
-
 
 enum_table! {
 	#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -968,7 +963,6 @@ enum_table! {
 		const Cyrillic_lje = Keysym::Cyrillic_lje;
 		const Serbian_lje = Keysym::Serbian_lje;
 		const Cyrillic_nje = Keysym::Cyrillic_nje;
-		const Serbian_nje = Keysym::Serbian_nje;
 		const Serbian_tshe = Keysym::Serbian_tshe;
 		const Macedonia_kje = Keysym::Macedonia_kje;
 		const Ukrainian_ghe_with_upturn = Keysym::Ukrainian_ghe_with_upturn;
@@ -2634,24 +2628,6 @@ pub struct KeyPattern {
 }
 
 impl StrataComp {
-	pub fn clamp_coords(&self, pos: Point<f64, Logical>) -> Point<f64, Logical> {
-		if self.workspaces.current().outputs().next().is_none() {
-			return pos;
-		}
-
-		let (pos_x, pos_y) = pos.into();
-		let (max_x, max_y) = self
-			.workspaces
-			.current()
-			.output_geometry(self.workspaces.current().outputs().next().unwrap())
-			.unwrap()
-			.size
-			.into();
-		let clamped_x = pos_x.max(0.0).min(max_x as f64);
-		let clamped_y = pos_y.max(0.0).min(max_y as f64);
-		(clamped_x, clamped_y).into()
-	}
-
 	pub fn set_input_focus(&mut self, target: FocusTarget) {
 		let keyboard = self.seat.get_keyboard().unwrap();
 		let serial = SERIAL_COUNTER.next_serial();
@@ -2671,15 +2647,14 @@ impl StrataComp {
 	) -> anyhow::Result<()> {
 		let serial = SERIAL_COUNTER.next_serial();
 		let delta = (event.delta_x(), event.delta_y()).into();
-		self.pointer_location += delta;
-		self.pointer_location = self.clamp_coords(self.pointer_location);
 
 		self.set_input_focus_auto();
 
 		if let Some(ptr) = self.seat.get_pointer() {
+			let location = self.workspaces.current().clamp_coords(ptr.current_location() + delta);
+
 			let under = self.surface_under();
 
-			let location = self.pointer_location;
 			ptr.motion(
 				self,
 				under.clone(),
@@ -2707,21 +2682,17 @@ impl StrataComp {
 		let serial = SERIAL_COUNTER.next_serial();
 
 		let curr_workspace = self.workspaces.current();
-		let output = curr_workspace.outputs().next().unwrap().clone();
-		let output_geo = curr_workspace.output_geometry(&output).unwrap();
+		let output = curr_workspace.outputs().next().unwrap();
+		let output_geo = curr_workspace.output_geometry(output).unwrap();
 		let pos = event.position_transformed(output_geo.size) + output_geo.loc.to_f64();
 
-		self.pointer_location = self.clamp_coords(pos);
+		let location = self.workspaces.current().clamp_coords(pos);
 
 		self.set_input_focus_auto();
 
 		let under = self.surface_under();
 		if let Some(ptr) = self.seat.get_pointer() {
-			ptr.motion(
-				self,
-				under,
-				&MotionEvent { location: pos, serial, time: event.time_msec() },
-			);
+			ptr.motion(self, under, &MotionEvent { location, serial, time: event.time_msec() });
 		}
 
 		Ok(())
