@@ -120,11 +120,11 @@ pub fn init_winit() {
 				-- print(Mod.Super_L)
 				-- print(Key.Escape)
 
-				local _ = Key({ Mod.Control_L, Mod.Alt_L }, Key.Return, function()
-					strata.spawn('kitty')
+				local _ = Key({ Mod.Alt_L }, Key.Return, function()
+					strata.spawn('foot')
 				end)
 
-				local _ = Key({ Mod.Control_L, Mod.Alt_L }, Key.Escape, function()
+				local _ = Key({ Mod.Alt_L }, Key.m, function()
 					strata:quit()
 				end)
 				"#
