@@ -274,7 +274,7 @@ pub struct UdevData {
 	backends: HashMap<DrmNode, BackendData>,
 	pointer_images: Vec<(xcursor::parser::Image, TextureBuffer<MultiTexture>)>,
 	pointer_element: PointerElement<MultiTexture>,
-	pointer_image: crate::cursor::Cursor,
+	pointer_image: crate::backends::cursor::Cursor,
 }
 
 pub enum Backend {
