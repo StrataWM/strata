@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use smithay::{
 	backend::{
 		allocator::{
@@ -8,18 +9,9 @@ use smithay::{
 			Allocator,
 		},
 		drm::DrmNode,
-		input::{
-			Event,
-			InputBackend,
-			InputEvent,
-			KeyState,
-			KeyboardKeyEvent,
-		},
 		renderer::{
-			damage::OutputDamageTracker,
 			element::texture::TextureBuffer,
 			gles::GlesRenderer,
-			glow::GlowRenderer,
 			multigpu::{
 				gbm::GbmGlesBackend,
 				GpuManager,
@@ -27,77 +19,17 @@ use smithay::{
 			},
 		},
 		session::libseat::LibSeatSession,
-		winit::WinitGraphicsBackend,
-	},
-	desktop::{
-		layer_map_for_output,
-		space::SpaceElement,
-		PopupManager,
-	},
-	input::{
-		keyboard::{
-			FilterResult,
-			Keysym,
-			ModifiersState,
-			XkbConfig,
-		},
-		Seat,
-		SeatState,
 	},
 	reexports::{
-		calloop::{
-			generic::{
-				FdWrapper,
-				Generic,
-			},
-			EventLoop,
-			Interest,
-			LoopSignal,
-			Mode,
-			PostAction,
-		},
 		wayland_server::{
-			backend::{
-				ClientData,
-				ClientId,
-				DisconnectReason,
-			},
-			Display,
 			DisplayHandle,
 		},
 	},
-	utils::{
-		Logical,
-		Point,
-		Rectangle,
-		SERIAL_COUNTER,
-	},
 	wayland::{
-		compositor::{
-			CompositorClientState,
-			CompositorState,
-		},
 		dmabuf::{
 			DmabufGlobal,
 			DmabufState,
 		},
-		output::OutputManagerState,
-		selection::{
-			data_device::DataDeviceState,
-			primary_selection::PrimarySelectionState,
-		},
-		shell::{
-			wlr_layer::{
-				Layer,
-				WlrLayerShellState,
-			},
-			xdg::{
-				decoration::XdgDecorationState,
-				XdgShellState,
-			},
-		},
-		shm::ShmState,
-		socket::ListeningSocketSource,
 	},
 };
 
