@@ -36,7 +36,7 @@ impl Cursor {
 					yhot: 1,
 					delay: 1,
 					pixels_rgba: Vec::from(FALLBACK_CURSOR_DATA),
-					pixels_argb: vec![], //unused
+					pixels_argb: vec![],
 				}]
 			});
 
