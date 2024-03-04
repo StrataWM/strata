@@ -43,6 +43,11 @@ use std::{
 	time::Duration,
 };
 
+pub struct WinitData {
+	backend: WinitGraphicsBackend<GlowRenderer>,
+	damage_tracker: OutputDamageTracker,
+}
+
 pub fn init_winit() {
 	let mut event_loop: EventLoop<StrataState> = EventLoop::try_new().unwrap();
 	let (display, socket) = state::init_wayland_listener(&event_loop);

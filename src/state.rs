@@ -197,10 +197,7 @@ impl StrataState {
 	}
 }
 
-pub struct WinitData {
-	backend: WinitGraphicsBackend<GlowRenderer>,
-	damage_tracker: OutputDamageTracker,
-}
+
 
 pub struct UdevData {
 	pub session: LibSeatSession,
