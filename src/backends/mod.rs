@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 pub mod cursor;
+pub mod udev;
 use log::error;
 
 use crate::backends::{
