@@ -104,7 +104,7 @@ pub fn init_winit() {
 				-- print(Key.Escape)
 
 				local _ = Key({ Mod.Alt_L }, Key.Return, function()
-					strata.spawn('foot')
+					strata.spawn('kitty')
 				end)
 
 				local _ = Key({ Mod.Alt_L }, Key.m, function()
