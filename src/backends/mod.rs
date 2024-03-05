@@ -1,9 +1,11 @@
+use log::error;
+
 // Copyright 2023 the Strata authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 pub mod cursor;
+mod drawing;
 pub mod udev;
-use log::error;
 
 use crate::backends::{
 	udev::UdevData,
