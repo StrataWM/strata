@@ -13,12 +13,8 @@ keywords = [
     "compositor",
     "wayland",
     "linux",
-    "linux-utilities",
-    "wm",
-    "windows",
-    "manager",
+    "window-manager",
 ]
-categories = ["linux-utilities"]
 
 [profile.release]
 strip = true
