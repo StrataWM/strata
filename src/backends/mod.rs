@@ -1,7 +1,9 @@
+use log::error;
+
 pub mod cursor;
+mod drawing;
 pub mod udev;
 pub mod winit;
-use log::error;
 
 pub fn init_with_backend(backend_name: &str) {
 	match backend_name {
