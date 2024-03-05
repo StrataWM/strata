@@ -7,26 +7,53 @@ use smithay::{
 				AnyError,
 				Dmabuf,
 			},
+			gbm::GbmDevice,
 			Allocator,
 		},
-		drm::DrmNode,
+		drm::{
+			DrmDevice,
+			DrmDeviceFd,
+			DrmNode,
+		},
 		renderer::{
-			element::texture::TextureBuffer,
+			element::{
+				texture::TextureBuffer,
+				AsRenderElements,
+			},
 			gles::GlesRenderer,
 			multigpu::{
 				gbm::GbmGlesBackend,
 				GpuManager,
 				MultiTexture,
 			},
+			Renderer,
 		},
-		session::libseat::LibSeatSession,
+		session::{
+			libseat::LibSeatSession,
+			Session,
+		},
 	},
-	reexports::wayland_server::DisplayHandle,
-	wayland::dmabuf::{
-		DmabufGlobal,
-		DmabufState,
+	reexports::{
+		calloop::RegistrationToken,
+		drm::control::{
+			connector,
+			crtc,
+		},
+		wayland_server::DisplayHandle,
+	},
+	wayland::{
+		compositor::SurfaceData,
+		dmabuf::{
+			DmabufGlobal,
+			DmabufState,
+		},
+		drm_lease::{
+			DrmLease,
+			DrmLeaseState,
+		},
 	},
 };
+use smithay_drm_extras::drm_scanner::DrmScanner;
 
 struct BackendData {
 	surfaces: HashMap<crtc::Handle, SurfaceData>,
