@@ -2,36 +2,22 @@ use std::collections::HashMap;
 
 use smithay::{
 	backend::{
-		allocator::{
-			dmabuf::{
-				AnyError,
-				Dmabuf,
-			},
-			gbm::GbmDevice,
-			Allocator,
-		},
+		allocator::gbm::GbmDevice,
 		drm::{
 			DrmDevice,
 			DrmDeviceFd,
 			DrmNode,
 		},
 		renderer::{
-			element::{
-				texture::TextureBuffer,
-				AsRenderElements,
-			},
+			element::memory::MemoryRenderBuffer,
 			gles::GlesRenderer,
 			multigpu::{
 				gbm::GbmGlesBackend,
 				GpuManager,
-				MultiTexture,
 			},
-			Renderer,
+			DebugFlags,
 		},
-		session::{
-			libseat::LibSeatSession,
-			Session,
-		},
+		session::libseat::LibSeatSession,
 	},
 	reexports::{
 		calloop::RegistrationToken,
@@ -55,6 +41,11 @@ use smithay::{
 };
 use smithay_drm_extras::drm_scanner::DrmScanner;
 
+use crate::backends::{
+	cursor::Cursor,
+	drawing::PointerElement,
+};
+
 struct BackendData {
 	surfaces: HashMap<crtc::Handle, SurfaceData>,
 	non_desktop_connectors: Vec<(connector::Handle, crtc::Handle)>,
@@ -72,10 +63,13 @@ pub struct UdevData {
 	dh: DisplayHandle,
 	dmabuf_state: Option<(DmabufState, DmabufGlobal)>,
 	primary_gpu: DrmNode,
-	allocator: Option<Box<dyn Allocator<Buffer = Dmabuf, Error = AnyError>>>,
 	gpus: GpuManager<GbmGlesBackend<GlesRenderer>>,
 	backends: HashMap<DrmNode, BackendData>,
-	pointer_images: Vec<(xcursor::parser::Image, TextureBuffer<MultiTexture>)>,
-	pointer_element: PointerElement<MultiTexture>,
-	pointer_image: crate::backends::cursor::Cursor,
+	pointer_images: Vec<(xcursor::parser::Image, MemoryRenderBuffer)>,
+	pointer_element: PointerElement,
+	#[cfg(feature = "debug")]
+	fps_texture: Option<MultiTexture>,
+	pointer_image: Cursor,
+	debug_flags: DebugFlags,
+	keyboards: Vec<smithay::reexports::input::Device>,
 }
