@@ -1,56 +1,3 @@
-use crate::{
-	decorations::BorderShader,
-	handlers::input::{KeyPattern, ModFlags, Mods},
-	workspaces::{FocusTarget, Workspaces},
-};
-use piccolo::{self as lua};
-use smithay::{
-	backend::{
-		allocator::{
-			dmabuf::{AnyError, Dmabuf},
-			Allocator,
-		},
-		drm::DrmNode,
-		input::{Event, InputBackend, InputEvent, KeyState, KeyboardKeyEvent},
-		renderer::{
-			damage::OutputDamageTracker,
-			element::texture::TextureBuffer,
-			gles::GlesRenderer,
-			glow::GlowRenderer,
-			multigpu::{gbm::GbmGlesBackend, GpuManager, MultiTexture},
-		},
-		session::libseat::LibSeatSession,
-		winit::WinitGraphicsBackend,
-	},
-	desktop::{layer_map_for_output, space::SpaceElement, PopupManager},
-	input::{
-		keyboard::{FilterResult, Keysym, ModifiersState, XkbConfig},
-		Seat, SeatState,
-	},
-	reexports::{
-		calloop::{
-			generic::{FdWrapper, Generic},
-			EventLoop, Interest, LoopSignal, Mode, PostAction,
-		},
-		wayland_server::{
-			backend::{ClientData, ClientId, DisconnectReason},
-			Display, DisplayHandle,
-		},
-	},
-	utils::{Logical, Point, Rectangle, SERIAL_COUNTER},
-	wayland::{
-		compositor::{CompositorClientState, CompositorState},
-		dmabuf::{DmabufGlobal, DmabufState},
-		output::OutputManagerState,
-		selection::{data_device::DataDeviceState, primary_selection::PrimarySelectionState},
-		shell::{
-			wlr_layer::{Layer, WlrLayerShellState},
-			xdg::{decoration::XdgDecorationState, XdgShellState},
-		},
-		shm::ShmState,
-		socket::ListeningSocketSource,
-	},
-};
 use std::{
 	cell::RefCell,
 	collections::HashMap,
@@ -59,7 +6,111 @@ use std::{
 	process::Command,
 	rc::Rc,
 	sync::Arc,
-	time::{Duration, Instant},
+	time::{
+		Duration,
+		Instant,
+	},
+};
+
+use piccolo as lua;
+use smithay::{
+	backend::{
+		input::{
+			Event,
+			InputBackend,
+			InputEvent,
+			KeyState,
+			KeyboardKeyEvent,
+		},
+		renderer::{
+			damage::OutputDamageTracker,
+			glow::GlowRenderer,
+		},
+		winit::WinitGraphicsBackend,
+	},
+	desktop::{
+		layer_map_for_output,
+		space::SpaceElement,
+		PopupManager,
+	},
+	input::{
+		keyboard::{
+			FilterResult,
+			Keysym,
+			ModifiersState,
+			XkbConfig,
+		},
+		Seat,
+		SeatState,
+	},
+	reexports::{
+		calloop::{
+			generic::{
+				FdWrapper,
+				Generic,
+			},
+			EventLoop,
+			Interest,
+			LoopSignal,
+			Mode,
+			PostAction,
+		},
+		wayland_server::{
+			backend::{
+				ClientData,
+				ClientId,
+				DisconnectReason,
+			},
+			Display,
+			DisplayHandle,
+		},
+	},
+	utils::{
+		Logical,
+		Point,
+		Rectangle,
+		SERIAL_COUNTER,
+	},
+	wayland::{
+		compositor::{
+			CompositorClientState,
+			CompositorState,
+		},
+		output::OutputManagerState,
+		selection::{
+			data_device::DataDeviceState,
+			primary_selection::PrimarySelectionState,
+		},
+		shell::{
+			wlr_layer::{
+				Layer,
+				WlrLayerShellState,
+			},
+			xdg::{
+				decoration::XdgDecorationState,
+				XdgShellState,
+			},
+		},
+		shm::ShmState,
+		socket::ListeningSocketSource,
+	},
+};
+
+use crate::{
+	backends::{
+		udev::UdevData,
+		winit::WinitData,
+	},
+	decorations::BorderShader,
+	handlers::input::{
+		KeyPattern,
+		ModFlags,
+		Mods,
+	},
+	workspaces::{
+		FocusTarget,
+		Workspaces,
+	},
 };
 
 pub struct StrataState {
