@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 use smithay::{
 	backend::{
 		allocator::{
@@ -20,18 +21,24 @@ use smithay::{
 		},
 		session::libseat::LibSeatSession,
 	},
-	reexports::{
-		wayland_server::{
-			DisplayHandle,
-		},
-	},
-	wayland::{
-		dmabuf::{
-			DmabufGlobal,
-			DmabufState,
-		},
+	reexports::wayland_server::DisplayHandle,
+	wayland::dmabuf::{
+		DmabufGlobal,
+		DmabufState,
 	},
 };
+
+struct BackendData {
+	surfaces: HashMap<crtc::Handle, SurfaceData>,
+	non_desktop_connectors: Vec<(connector::Handle, crtc::Handle)>,
+	leasing_global: Option<DrmLeaseState>,
+	active_leases: Vec<DrmLease>,
+	gbm: GbmDevice<DrmDeviceFd>,
+	drm: DrmDevice,
+	drm_scanner: DrmScanner,
+	render_node: DrmNode,
+	registration_token: RegistrationToken,
+}
 
 pub struct UdevData {
 	pub session: LibSeatSession,
