@@ -32,7 +32,7 @@ log = "0.4.21"
 tokio = { version = "1.36.0", features = ["full"] }
 chrono = "0.4.34"
 tracing-appender = "0.2.3"
-smithay-drm-extras = { git = "https://github.com/Smithay/smithay.git" }
+smithay-drm-extras = { git = "https://github.com/stratawm/smithay.git" }
 once_cell = "1.19.0"
 gc-arena = { version = "0.5.0", features = ["allocator-api2", "hashbrown"] }
 piccolo = { git = "https://github.com/kyren/piccolo.git" }
@@ -54,11 +54,7 @@ git = "https://github.com/stratawm/smithay"
 version = "0.3.0"
 rev = "f1e7fc1"
 features = [
-    "backend_winit",
     "wayland_frontend",
-    "desktop",
-    "backend_session_libseat",
-    "backend_drm",
     "renderer_multi",
     "renderer_glow",
     "backend_drm",
@@ -72,8 +68,5 @@ features = [
     "backend_x11",
     "desktop",
     "use_system_lib",
-    "renderer_glow",
-    "renderer_multi",
-    "wayland_frontend",
     "xwayland",
 ]

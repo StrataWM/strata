@@ -1686,7 +1686,7 @@ dependencies = [
 [[package]]
 name = "smithay-drm-extras"
 version = "0.1.0"
-source = "git+https://github.com/Smithay/smithay.git#418190e4992ce642e6bac873307d4fc4fa9a1e89"
+source = "git+https://github.com/stratawm/smithay.git#418190e4992ce642e6bac873307d4fc4fa9a1e89"
 dependencies = [
  "drm",
  "edid-rs",
