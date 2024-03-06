@@ -42,6 +42,7 @@ use crate::{
 	decorations::BorderShader,
 	state::{
 		self,
+		Backend,
 		StrataComp,
 		StrataState,
 	},
@@ -70,8 +71,14 @@ pub fn init_winit() {
 	let _global = output.create_global::<StrataComp>(&display_handle);
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
-	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
-	let mut comp = StrataComp::new(&event_loop, &display, socket, "winit".to_string());
+	let damage_tracker = OutputDamageTracker::from_output(&output);
+	let mut comp = StrataComp::new(
+		&event_loop,
+		&display,
+		socket,
+		"winit".to_string(),
+		Backend::Winit(WinitData { backend, damage_tracker }),
+	);
 	BorderShader::init(comp.backend.renderer());
 	for workspace in comp.workspaces.iter() {
 		workspace.add_output(output.clone());
