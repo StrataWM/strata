@@ -255,8 +255,7 @@ pub enum Backend {
 
 pub struct StrataComp {
 	pub dh: DisplayHandle,
-	pub backend: WinitGraphicsBackend<GlowRenderer>,
-	pub damage_tracker: OutputDamageTracker,
+	pub backend: Backend,
 	pub start_time: Instant,
 	pub loop_signal: LoopSignal,
 	pub compositor_state: CompositorState,
