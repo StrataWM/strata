@@ -90,10 +90,7 @@ use smithay::{
 };
 
 use crate::{
-	backends::{
-		udev::UdevData,
-		winit::WinitData,
-	},
+	backends::Backend,
 	decorations::BorderShader,
 	handlers::input::{
 		KeyPattern,
@@ -239,11 +236,6 @@ impl StrataState {
 
 		Ok(())
 	}
-}
-
-pub enum Backend {
-	Winit(WinitData),
-	Udev(UdevData),
 }
 
 pub struct StrataComp {
