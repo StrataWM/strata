@@ -26,7 +26,7 @@ impl Backend {
 	pub fn udev(&mut self) -> &mut UdevData {
 		match self {
 			Backend::Udev(data) => data,
-			_ => unreachable!("Tried to retrieve Winit backend when not initialized with it."),
+			_ => unreachable!("Tried to retrieve Udev backend when not initialized with it."),
 		}
 	}
 }
