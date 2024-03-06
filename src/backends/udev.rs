@@ -54,6 +54,7 @@ struct BackendData {
 	gbm: GbmDevice<DrmDeviceFd>,
 	drm: DrmDevice,
 	drm_scanner: DrmScanner,
+
 	render_node: DrmNode,
 	registration_token: RegistrationToken,
 }
