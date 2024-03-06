@@ -77,3 +77,21 @@ pub struct UdevData {
 	debug_flags: DebugFlags,
 	keyboards: Vec<smithay::reexports::input::Device>,
 }
+
+impl UdevData {
+	pub fn set_debug_flags(&mut self, flags: DebugFlags) {
+		if self.debug_flags != flags {
+			self.debug_flags = flags;
+
+			for (_, backend) in self.backends.iter_mut() {
+				for (_, surface) in backend.surfaces.iter_mut() {
+					surface.compositor.set_debug_flags(flags);
+				}
+			}
+		}
+	}
+
+	pub fn debug_flags(&self) -> DebugFlags {
+		self.debug_flags
+	}
+}
