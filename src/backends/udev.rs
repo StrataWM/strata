@@ -41,49 +41,6 @@ use smithay::{
 };
 use smithay_drm_extras::drm_scanner::DrmScanner;
 
-use std::collections::HashMap;
-
-use smithay::{
-	backend::{
-		allocator::gbm::GbmDevice,
-		drm::{
-			DrmDevice,
-			DrmDeviceFd,
-			DrmNode,
-		},
-		renderer::{
-			element::memory::MemoryRenderBuffer,
-			gles::GlesRenderer,
-			multigpu::{
-				gbm::GbmGlesBackend,
-				GpuManager,
-			},
-			DebugFlags,
-		},
-		session::libseat::LibSeatSession,
-	},
-	reexports::{
-		calloop::RegistrationToken,
-		drm::control::{
-			connector,
-			crtc,
-		},
-		wayland_server::DisplayHandle,
-	},
-	wayland::{
-		compositor::SurfaceData,
-		dmabuf::{
-			DmabufGlobal,
-			DmabufState,
-		},
-		drm_lease::{
-			DrmLease,
-			DrmLeaseState,
-		},
-	},
-};
-use smithay_drm_extras::drm_scanner::DrmScanner;
-
 use crate::backends::{
 	cursor::Cursor,
 	drawing::PointerElement,
