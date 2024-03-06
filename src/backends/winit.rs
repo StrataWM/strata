@@ -1,22 +1,21 @@
-use crate::{
-	bindings,
-	decorations::BorderShader,
-	state::{
-		self,
-		StrataComp,
-		StrataState,
-	},
+use std::{
+	cell::RefCell,
+	rc::Rc,
+	time::Duration,
 };
-use piccolo::{
-	self as lua,
-};
+
+use piccolo as lua;
 use smithay::{
 	backend::{
-		renderer::damage::OutputDamageTracker,
+		renderer::{
+			damage::OutputDamageTracker,
+			glow::GlowRenderer,
+		},
 		winit::{
 			self,
 			WinitEvent,
 			WinitEventLoop,
+			WinitGraphicsBackend,
 		},
 	},
 	output::{
@@ -37,10 +36,15 @@ use smithay::{
 	},
 	utils::Transform,
 };
-use std::{
-	cell::RefCell,
-	rc::Rc,
-	time::Duration,
+
+use crate::{
+	bindings,
+	decorations::BorderShader,
+	state::{
+		self,
+		StrataComp,
+		StrataState,
+	},
 };
 
 pub struct WinitData {
