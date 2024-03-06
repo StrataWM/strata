@@ -58,6 +58,12 @@ struct BackendData {
 	registration_token: RegistrationToken,
 }
 
+#[derive(Debug, PartialEq)]
+struct UdevOutputId {
+	device_id: DrmNode,
+	crtc: crtc::Handle,
+}
+
 pub struct UdevData {
 	pub session: LibSeatSession,
 	dh: DisplayHandle,
