@@ -14,19 +14,12 @@ use std::{
 
 use piccolo as lua;
 use smithay::{
-	backend::{
-		input::{
-			Event,
-			InputBackend,
-			InputEvent,
-			KeyState,
-			KeyboardKeyEvent,
-		},
-		renderer::{
-			damage::OutputDamageTracker,
-			glow::GlowRenderer,
-		},
-		winit::WinitGraphicsBackend,
+	backend::input::{
+		Event,
+		InputBackend,
+		InputEvent,
+		KeyState,
+		KeyboardKeyEvent,
 	},
 	desktop::{
 		layer_map_for_output,
@@ -281,8 +274,7 @@ impl StrataComp {
 		display: &Display<StrataComp>,
 		socket_name: OsString,
 		seat_name: String,
-		backend: WinitGraphicsBackend<GlowRenderer>,
-		damage_tracker: OutputDamageTracker,
+		backend: Backend,
 	) -> Self {
 		let start_time = Instant::now();
 		let dh = display.handle();
@@ -318,7 +310,6 @@ impl StrataComp {
 		StrataComp {
 			dh,
 			backend,
-			damage_tracker,
 			start_time,
 			socket_name,
 			compositor_state,
@@ -341,7 +332,7 @@ impl StrataComp {
 
 	fn winit_render(&mut self) {
 		let render_elements = self.workspaces.current().render_elements(self.backend.renderer());
-		self.damage_tracker
+		self.backend
 			.render_output(self.backend.renderer(), 0, &render_elements, [0.1, 0.1, 0.1, 1.0])
 			.unwrap();
 	}

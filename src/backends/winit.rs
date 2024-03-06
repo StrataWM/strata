@@ -71,14 +71,7 @@ pub fn init_winit() {
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
 	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
-	let mut comp = StrataComp::new(
-		&event_loop,
-		&display,
-		socket,
-		"winit".to_string(),
-		backend,
-		damage_tracked_renderer,
-	);
+	let mut comp = StrataComp::new(&event_loop, &display, socket, "winit".to_string());
 	BorderShader::init(comp.backend.renderer());
 	for workspace in comp.workspaces.iter() {
 		workspace.add_output(output.clone());
