@@ -41,6 +41,49 @@ use smithay::{
 };
 use smithay_drm_extras::drm_scanner::DrmScanner;
 
+use std::collections::HashMap;
+
+use smithay::{
+	backend::{
+		allocator::gbm::GbmDevice,
+		drm::{
+			DrmDevice,
+			DrmDeviceFd,
+			DrmNode,
+		},
+		renderer::{
+			element::memory::MemoryRenderBuffer,
+			gles::GlesRenderer,
+			multigpu::{
+				gbm::GbmGlesBackend,
+				GpuManager,
+			},
+			DebugFlags,
+		},
+		session::libseat::LibSeatSession,
+	},
+	reexports::{
+		calloop::RegistrationToken,
+		drm::control::{
+			connector,
+			crtc,
+		},
+		wayland_server::DisplayHandle,
+	},
+	wayland::{
+		compositor::SurfaceData,
+		dmabuf::{
+			DmabufGlobal,
+			DmabufState,
+		},
+		drm_lease::{
+			DrmLease,
+			DrmLeaseState,
+		},
+	},
+};
+use smithay_drm_extras::drm_scanner::DrmScanner;
+
 use crate::backends::{
 	cursor::Cursor,
 	drawing::PointerElement,
@@ -67,8 +110,6 @@ pub struct UdevData {
 	backends: HashMap<DrmNode, BackendData>,
 	pointer_images: Vec<(xcursor::parser::Image, MemoryRenderBuffer)>,
 	pointer_element: PointerElement,
-	#[cfg(feature = "debug")]
-	fps_texture: Option<MultiTexture>,
 	pointer_image: Cursor,
 	debug_flags: DebugFlags,
 	keyboards: Vec<smithay::reexports::input::Device>,
