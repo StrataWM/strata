@@ -1,11 +1,14 @@
-use crate::{
-	decorations::{
-		AsGlowRenderer,
-		BorderShader,
-		CustomRenderElements,
+// Copyright 2023 the Strata authors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+use std::{
+	cell::{
+		Ref,
+		RefCell,
 	},
-	tiling::refresh_geometry,
+	rc::Rc,
 };
+
 use smithay::{
 	backend::renderer::{
 		element::AsRenderElements,
@@ -30,12 +33,14 @@ use smithay::{
 	},
 	wayland::shell::wlr_layer::Layer,
 };
-use std::{
-	cell::{
-		Ref,
-		RefCell,
+
+use crate::{
+	decorations::{
+		AsGlowRenderer,
+		BorderShader,
+		CustomRenderElements,
 	},
-	rc::Rc,
+	tiling::refresh_geometry,
 };
 
 pub struct StrataWindow {

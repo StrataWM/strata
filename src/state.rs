@@ -1,18 +1,21 @@
-use crate::{
-	decorations::BorderShader,
-	handlers::input::{
-		KeyPattern,
-		ModFlags,
-		Mods,
-	},
-	workspaces::{
-		FocusTarget,
-		Workspaces,
+// Copyright 2023 the Strata authors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+use std::{
+	cell::RefCell,
+	collections::HashMap,
+	ffi::OsString,
+	os::fd::AsRawFd,
+	process::Command,
+	rc::Rc,
+	sync::Arc,
+	time::{
+		Duration,
+		Instant,
 	},
 };
-use piccolo::{
-	self as lua,
-};
+
+use piccolo as lua;
 use smithay::{
 	backend::{
 		input::{
@@ -95,17 +98,17 @@ use smithay::{
 		socket::ListeningSocketSource,
 	},
 };
-use std::{
-	cell::RefCell,
-	collections::HashMap,
-	ffi::OsString,
-	os::fd::AsRawFd,
-	process::Command,
-	rc::Rc,
-	sync::Arc,
-	time::{
-		Duration,
-		Instant,
+
+use crate::{
+	decorations::BorderShader,
+	handlers::input::{
+		KeyPattern,
+		ModFlags,
+		Mods,
+	},
+	workspaces::{
+		FocusTarget,
+		Workspaces,
 	},
 };
 
