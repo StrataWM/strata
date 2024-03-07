@@ -5,20 +5,13 @@ use std::{
 	cell::RefCell,
 	rc::Rc,
 	time::Duration,
-use std::{
-	cell::RefCell,
-	rc::Rc,
-	time::Duration,
 };
 
 use piccolo as lua;
 use smithay::{
 	backend::{
 		renderer::{
-			{
 			damage::OutputDamageTracker,
-			glow::GlowRenderer,
-		},
 			glow::GlowRenderer,
 		},
 		winit::{
