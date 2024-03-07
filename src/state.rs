@@ -17,7 +17,6 @@ use std::{
 
 use piccolo as lua;
 
-use piccolo as lua;
 use smithay::{
 	backend::{
 		input::{
