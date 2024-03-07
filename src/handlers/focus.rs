@@ -1,7 +1,6 @@
-use crate::{
-	state::StrataComp,
-	workspaces::FocusTarget,
-};
+// Copyright 2023 the Strata authors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use smithay::desktop::Window;
 pub use smithay::{
 	backend::input::KeyState,
@@ -34,6 +33,11 @@ pub use smithay::{
 		Serial,
 	},
 	wayland::seat::WaylandFocus,
+};
+
+use crate::{
+	state::StrataComp,
+	workspaces::FocusTarget,
 };
 
 impl IsAlive for FocusTarget {
