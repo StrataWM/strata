@@ -1,12 +1,6 @@
-use crate::{
-	handlers::xdg_shell::handle_commit,
-	state::{
-		ClientState,
-		StrataComp,
-	},
-	tiling::refresh_geometry,
-	workspaces::FocusTarget,
-};
+// Copyright 2023 the Strata authors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use smithay::{
 	backend::renderer::utils::on_commit_buffer_handler,
 	delegate_compositor,
@@ -67,6 +61,16 @@ use smithay::{
 			ShmState,
 		},
 	},
+};
+
+use crate::{
+	handlers::xdg_shell::handle_commit,
+	state::{
+		ClientState,
+		StrataComp,
+	},
+	tiling::refresh_geometry,
+	workspaces::FocusTarget,
 };
 
 impl CompositorHandler for StrataComp {
