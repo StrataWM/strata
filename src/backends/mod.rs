@@ -1,31 +1,15 @@
-use log::error;
-
-use crate::backends::{
-	udev::UdevData,
-	winit::WinitData,
-};
-
 // Copyright 2023 the Strata authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 pub mod cursor;
 mod drawing;
 pub mod udev;
+pub mod winit;
 
 use crate::backends::{
 	udev::UdevData,
 	winit::WinitData,
 };
-
-pub mod cursor;
-mod drawing;
-pub mod udev;
-pub mod winit;
-
-pub enum Backend {
-	Winit(WinitData),
-	Udev(UdevData),
-}
 
 pub enum Backend {
 	Winit(WinitData),
