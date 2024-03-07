@@ -1,10 +1,12 @@
-use crate::{
-	state::StrataComp,
-	workspaces::{
-		StrataWindow,
-		Workspaces,
-	},
+// Copyright 2023 the Strata authors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+use std::{
+	cell::RefCell,
+	rc::Rc,
+	sync::Mutex,
 };
+
 use log::warn;
 use smithay::{
 	delegate_xdg_decoration,
@@ -44,10 +46,13 @@ use smithay::{
 		},
 	},
 };
-use std::{
-	cell::RefCell,
-	rc::Rc,
-	sync::Mutex,
+
+use crate::{
+	state::StrataComp,
+	workspaces::{
+		StrataWindow,
+		Workspaces,
+	},
 };
 
 impl XdgShellHandler for StrataComp {
