@@ -1,16 +1,11 @@
+// Copyright 2023 the Strata authors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use std::{
 	cell::RefCell,
 	rc::Rc,
 };
 
-use crate::{
-	workspaces::{
-		Dwindle,
-		HorizontalOrVertical,
-		StrataWindow,
-		Workspace,
-	},
-};
 use smithay::{
 	desktop::layer_map_for_output,
 	utils::{
@@ -22,10 +17,15 @@ use smithay::{
 	},
 };
 
+use crate::workspaces::{
+	Dwindle,
+	HorizontalOrVertical,
+	StrataWindow,
+	Workspace,
+};
+
 pub fn refresh_geometry(workspace: &mut Workspace) {
-	let gaps = {
-		(3, 3)
-	};
+	let gaps = { (3, 3) };
 	let output = layer_map_for_output(workspace.outputs().next().unwrap()).non_exclusive_zone();
 	let output_full = workspace.outputs().next().unwrap().current_mode().unwrap().size;
 
