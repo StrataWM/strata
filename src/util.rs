@@ -1,6 +1,3 @@
-// Copyright 2023 the Strata authors
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 #[macro_export]
 macro_rules! enum_table {
     (

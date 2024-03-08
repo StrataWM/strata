@@ -1,28 +1,23 @@
-// Copyright 2023 the Strata authors
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-use std::{
-	error::Error,
-	io::stdout,
-};
-
-use chrono::Local;
-use clap::Parser;
-use log::info;
-use tracing_subscriber::fmt::writer::MakeWriterExt;
-
-use crate::backends::init_with_backend;
-
 pub mod backends;
-pub mod bindings;
 pub mod config;
 pub mod decorations;
 pub mod handlers;
 pub mod layouts;
 pub mod state;
 pub mod tiling;
-pub mod util;
 pub mod workspaces;
+pub mod bindings;
+pub mod util;
+
+use crate::backends::init_with_backend;
+use chrono::Local;
+use clap::Parser;
+use log::info;
+use std::{
+	error::Error,
+	io::stdout,
+};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -56,6 +51,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	} else {
 		tracing_subscriber::fmt().with_writer(log_appender).init();
 	}
+
 
 	info!("Initializing Strata WM");
 	info!("Parsing config...");
