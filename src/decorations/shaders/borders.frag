@@ -1,6 +1,3 @@
-// Copyright 2023 the Strata authors
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 precision mediump float;
 uniform vec2 size;
 varying vec2 v_coords;
