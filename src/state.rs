@@ -130,6 +130,7 @@ impl Strata {
 			"Strata".to_string(),
 		)));
 		let lua = Lua::full();
+		Strata { lua, comp, display, backend: Backend::Unset }
 	}
 	pub fn process_input_event<I: InputBackend>(
 		&mut self,
