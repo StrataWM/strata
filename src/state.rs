@@ -47,6 +47,7 @@ use smithay::{
 			},
 			EventLoop,
 			Interest,
+			LoopHandle,
 			LoopSignal,
 			Mode,
 			PostAction,
@@ -114,6 +115,15 @@ pub struct Strata {
 }
 
 impl Strata {
+	pub fn new(
+		display: Display<Compositor>,
+		socket: OsString,
+		loop_signal: LoopSignal,
+		loop_handle: LoopHandle<Compositor>,
+	) -> Self {
+		let mut comp =
+			Compositor::new(loop_handle, loop_signal, &display, socket, "Strata".to_string());
+	}
 	pub fn process_input_event<I: InputBackend>(
 		&mut self,
 		event: InputEvent<I>,
