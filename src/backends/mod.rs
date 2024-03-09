@@ -16,6 +16,7 @@ pub mod winit;
 pub enum Backend {
 	Winit(WinitData),
 	Udev(UdevData),
+	Unset,
 }
 
 impl Backend {

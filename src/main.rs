@@ -11,7 +11,10 @@ use clap::Parser;
 use log::info;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
-use crate::backends::init_with_backend;
+use crate::{
+	backends::init_with_backend,
+	state::Strata,
+};
 
 pub mod backends;
 pub mod bindings;
@@ -52,6 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	}
 
 	info!("Initializing Strata WM");
+	let state = Strata::new();
 
 	init_with_backend(&args.backend);
 
