@@ -46,8 +46,8 @@ use crate::{
 	decorations::BorderShader,
 	state::{
 		self,
-		StrataComp,
-		StrataState,
+		Compositor,
+		Strata,
 	},
 };
 
@@ -57,7 +57,7 @@ pub struct WinitData {
 }
 
 pub fn init_winit() {
-	let mut event_loop: EventLoop<StrataState> = EventLoop::try_new().unwrap();
+	let mut event_loop: EventLoop<Strata> = EventLoop::try_new().unwrap();
 	let (display, socket) = state::init_wayland_listener(&event_loop);
 	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
@@ -71,11 +71,11 @@ pub fn init_winit() {
 			model: "Winit".into(),
 		},
 	);
-	let _global = output.create_global::<StrataComp>(&display_handle);
+	let _global = output.create_global::<Compositor>(&display_handle);
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
 	let damage_tracker = OutputDamageTracker::from_output(&output);
-	let mut comp = StrataComp::new(
+	let mut comp = Compositor::new(
 		&event_loop,
 		&display,
 		socket,
@@ -134,11 +134,11 @@ pub fn init_winit() {
 		println!("{:#?}", e);
 	}
 
-	let mut data = StrataState { lua: lua_vm, comp, display };
+	let mut data = Strata { lua: lua_vm, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
 
-pub fn winit_dispatch(winit: &mut WinitEventLoop, state: &mut StrataState, output: &Output) {
+pub fn winit_dispatch(winit: &mut WinitEventLoop, state: &mut Strata, output: &Output) {
 	// process winit events
 	let res = winit.dispatch_new_events(|event| {
 		match event {

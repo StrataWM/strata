@@ -6,22 +6,21 @@ use std::{
 	rc::Rc,
 };
 
+use lua::FromValue;
+use piccolo as lua;
+
 use crate::{
 	handlers::input::{
 		Key,
 		KeyPattern,
 		ModFlags,
 	},
-	state::StrataComp,
-};
-use lua::FromValue;
-use piccolo::{
-	self as lua,
+	state::Compositor,
 };
 
 pub fn module<'gc>(
 	ctx: lua::Context<'gc>,
-	comp: Rc<RefCell<StrataComp>>,
+	comp: Rc<RefCell<Compositor>>,
 ) -> anyhow::Result<lua::Value<'gc>> {
 	let meta = lua::Table::from_value(ctx, Key::metatable(ctx)?)?;
 
@@ -32,7 +31,7 @@ pub fn module<'gc>(
 		lua::Callback::from_fn(&ctx, |ctx, _, mut stack| {
 			let (comp, mods, key, cb) =
 				stack.consume::<(lua::UserData, ModFlags, Key, lua::Function)>(ctx)?;
-			let comp = comp.downcast_static::<Rc<RefCell<StrataComp>>>()?;
+			let comp = comp.downcast_static::<Rc<RefCell<Compositor>>>()?;
 
 			let keypat = KeyPattern { mods, key };
 

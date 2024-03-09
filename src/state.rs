@@ -106,13 +106,13 @@ use crate::{
 	},
 };
 
-pub struct StrataState {
+pub struct Strata {
 	pub lua: lua::Lua,
-	pub comp: Rc<RefCell<StrataComp>>,
-	pub display: Display<StrataComp>,
+	pub comp: Rc<RefCell<Compositor>>,
+	pub display: Display<Compositor>,
 }
 
-impl StrataState {
+impl Strata {
 	pub fn process_input_event<I: InputBackend>(
 		&mut self,
 		event: InputEvent<I>,
@@ -241,7 +241,7 @@ impl StrataState {
 	}
 }
 
-pub struct StrataComp {
+pub struct Compositor {
 	pub dh: DisplayHandle,
 	pub backend: Backend,
 	pub start_time: Instant,
@@ -253,20 +253,20 @@ pub struct StrataComp {
 	pub output_manager_state: OutputManagerState,
 	pub data_device_state: DataDeviceState,
 	pub primary_selection_state: PrimarySelectionState,
-	pub seat_state: SeatState<StrataComp>,
+	pub seat_state: SeatState<Compositor>,
 	pub layer_shell_state: WlrLayerShellState,
 	pub popup_manager: PopupManager,
-	pub seat: Seat<StrataComp>,
+	pub seat: Seat<Compositor>,
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub mods: Mods,
 	pub config: StrataConfig,
 }
 
-impl StrataComp {
+impl Compositor {
 	pub fn new(
-		event_loop: &EventLoop<StrataState>,
-		display: &Display<StrataComp>,
+		event_loop: &EventLoop<Strata>,
+		display: &Display<Compositor>,
 		socket_name: OsString,
 		seat_name: String,
 		backend: Backend,
@@ -302,7 +302,7 @@ impl StrataComp {
 		let workspaces = Workspaces::new(config_workspace);
 		let mods_state = keyboard.modifier_state();
 
-		StrataComp {
+		Compositor {
 			dh,
 			backend,
 			start_time,
@@ -489,11 +489,9 @@ pub struct StrataConfig {
 	pub keybinds: HashMap<KeyPattern, lua::StashedFunction>,
 }
 
-pub fn init_wayland_listener(
-	event_loop: &EventLoop<StrataState>,
-) -> (Display<StrataComp>, OsString) {
+pub fn init_wayland_listener(event_loop: &EventLoop<Strata>) -> (Display<Compositor>, OsString) {
 	let loop_handle = event_loop.handle();
-	let mut display: Display<StrataComp> = Display::new().unwrap();
+	let mut display: Display<Compositor> = Display::new().unwrap();
 	let listening_socket = ListeningSocketSource::new_auto().unwrap();
 	let socket_name = listening_socket.socket_name().to_os_string();
 

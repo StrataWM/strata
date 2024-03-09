@@ -1,22 +1,21 @@
 // Copyright 2023 the Strata authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-mod key;
-mod modflags;
-
 use std::{
 	cell::RefCell,
 	rc::Rc,
 };
 
-use crate::state::StrataComp;
-use piccolo::{
-	self as lua,
-};
+use piccolo as lua;
+
+use crate::state::Compositor;
+
+mod key;
+mod modflags;
 
 pub fn module<'gc>(
 	ctx: lua::Context<'gc>,
-	comp: Rc<RefCell<StrataComp>>,
+	comp: Rc<RefCell<Compositor>>,
 ) -> anyhow::Result<lua::Value<'gc>> {
 	let ud = lua::UserData::new_static(&ctx, comp.clone());
 	let meta = lua::Table::new(&ctx);

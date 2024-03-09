@@ -14,7 +14,7 @@ use piccolo::{
 
 use crate::{
 	handlers::input::ModFlags,
-	state::StrataComp,
+	state::Compositor,
 };
 
 impl<'gc> FromValue<'gc> for ModFlags {
@@ -47,7 +47,7 @@ impl<'gc> FromValue<'gc> for ModFlags {
 
 pub fn module<'gc>(
 	ctx: lua::Context<'gc>,
-	comp: Rc<RefCell<StrataComp>>,
+	comp: Rc<RefCell<Compositor>>,
 ) -> anyhow::Result<lua::Value<'gc>> {
 	let meta = lua::Table::new(&ctx);
 

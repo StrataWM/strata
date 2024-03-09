@@ -9,11 +9,11 @@ use std::{
 
 use piccolo as lua;
 
-use crate::state::StrataComp;
+use crate::state::Compositor;
 
 pub mod input;
 
-pub fn register<'gc>(ctx: lua::Context<'gc>, comp: Rc<RefCell<StrataComp>>) -> anyhow::Result<()> {
+pub fn register<'gc>(ctx: lua::Context<'gc>, comp: Rc<RefCell<Compositor>>) -> anyhow::Result<()> {
 	let index = lua::Table::new(&ctx);
 	index.set(ctx, "input", input::module(ctx, comp.clone())?)?;
 	index.set(
@@ -32,7 +32,7 @@ pub fn register<'gc>(ctx: lua::Context<'gc>, comp: Rc<RefCell<StrataComp>>) -> a
 		lua::Callback::from_fn(&ctx, |ctx, _, mut stack| {
 			let comp = stack
 				.consume::<lua::UserData>(ctx)?
-				.downcast_static::<Rc<RefCell<StrataComp>>>()?;
+				.downcast_static::<Rc<RefCell<Compositor>>>()?;
 
 			comp.borrow_mut().quit();
 
