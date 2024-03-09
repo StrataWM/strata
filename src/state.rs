@@ -16,6 +16,7 @@ use std::{
 };
 
 use piccolo as lua;
+use piccolo::Lua;
 use smithay::{
 	backend::input::{
 		Event,
@@ -121,8 +122,14 @@ impl Strata {
 		loop_signal: LoopSignal,
 		loop_handle: LoopHandle<Compositor>,
 	) -> Self {
-		let mut comp =
-			Compositor::new(loop_handle, loop_signal, &display, socket, "Strata".to_string());
+		let mut comp = Rc::new(RefCell::new(Compositor::new(
+			loop_handle,
+			loop_signal,
+			&display,
+			socket,
+			"Strata".to_string(),
+		)));
+		let lua = Lua::full();
 	}
 	pub fn process_input_event<I: InputBackend>(
 		&mut self,
@@ -254,7 +261,6 @@ impl Strata {
 
 pub struct Compositor {
 	pub dh: DisplayHandle,
-	pub backend: Backend,
 	pub start_time: Instant,
 	pub loop_signal: LoopSignal,
 	pub compositor_state: CompositorState,
@@ -276,15 +282,14 @@ pub struct Compositor {
 
 impl Compositor {
 	pub fn new(
-		event_loop: &EventLoop<Strata>,
+		loop_handle: LoopHandle<Compositor>,
+		loop_signal: LoopSignal,
 		display: &Display<Compositor>,
 		socket_name: OsString,
 		seat_name: String,
-		backend: Backend,
 	) -> Self {
 		let start_time = Instant::now();
 		let dh = display.handle();
-		let loop_signal = event_loop.get_signal();
 		let compositor_state = CompositorState::new::<Self>(&dh);
 		let xdg_shell_state = XdgShellState::new::<Self>(&dh);
 		let xdg_decoration_state = XdgDecorationState::new::<Self>(&dh);
@@ -315,7 +320,6 @@ impl Compositor {
 
 		Compositor {
 			dh,
-			backend,
 			start_time,
 			socket_name,
 			compositor_state,
