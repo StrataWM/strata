@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use smithay::{
 	backend::{
 		allocator::gbm::GbmDevice,

@@ -12,39 +12,17 @@ use std::{
 	time::{
 		Duration,
 		Instant,
-// Copyright 2023 the Strata authors
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-use std::{
-	cell::RefCell,
-	collections::HashMap,
-	ffi::OsString,
-	os::fd::AsRawFd,
-	process::Command,
-	rc::Rc,
-	sync::Arc,
-	time::{
-		Duration,
-		Instant,
 	},
 };
 
 use piccolo as lua;
-
 use smithay::{
-	backend::{
-		input::{
-			Event,
-			InputBackend,
-			InputEvent,
-			KeyState,
-			KeyboardKeyEvent,
-		},
-		renderer::{
-			damage::OutputDamageTracker,
-			glow::GlowRenderer,
-		},
-		winit::WinitGraphicsBackend,
+	backend::input::{
+		Event,
+		InputBackend,
+		InputEvent,
+		KeyState,
+		KeyboardKeyEvent,
 	},
 	desktop::{
 		layer_map_for_output,
@@ -348,9 +326,17 @@ impl StrataComp {
 	}
 
 	fn winit_render(&mut self) {
-		let render_elements = self.workspaces.current().render_elements(self.backend.renderer());
+		let render_elements =
+			self.workspaces.current().render_elements(self.backend.winit().backend.renderer());
 		self.backend
-			.render_output(self.backend.renderer(), 0, &render_elements, [0.1, 0.1, 0.1, 1.0])
+			.winit()
+			.damage_tracker
+			.render_output(
+				self.backend.winit().backend.renderer(),
+				0,
+				&render_elements,
+				[0.1, 0.1, 0.1, 1.0],
+			)
 			.unwrap();
 	}
 	pub fn surface_under(&self) -> Option<(FocusTarget, Point<i32, Logical>)> {
@@ -386,10 +372,10 @@ impl StrataComp {
 		self.set_input_focus_auto();
 
 		// damage tracking
-		let size = self.backend.window_size();
+		let size = self.backend.winit().backend.window_size();
 		let damage = Rectangle::from_loc_and_size((0, 0), size);
-		self.backend.bind().unwrap();
-		self.backend.submit(Some(&[damage])).unwrap();
+		self.backend.winit().backend.bind().unwrap();
+		self.backend.winit().backend.submit(Some(&[damage])).unwrap();
 
 		// sync and cleanups
 		let output = self.workspaces.current().outputs().next().unwrap();
@@ -402,7 +388,7 @@ impl StrataComp {
 		});
 		self.dh.flush_clients().unwrap();
 		self.popup_manager.cleanup();
-		BorderShader::cleanup(self.backend.renderer());
+		BorderShader::cleanup(self.backend.winit().backend.renderer());
 	}
 
 	pub fn close_window(&mut self) {

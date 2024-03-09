@@ -13,12 +13,6 @@ mod drawing;
 pub mod udev;
 pub mod winit;
 
-use crate::backends::{
-	udev::UdevData,
-	winit::WinitData,
-};
-use log::error;
-
 pub enum Backend {
 	Winit(WinitData),
 	Udev(UdevData),

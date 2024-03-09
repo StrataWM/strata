@@ -41,6 +41,7 @@ use smithay::{
 };
 
 use crate::{
+	backends::Backend,
 	bindings,
 	decorations::BorderShader,
 	state::{
@@ -51,8 +52,8 @@ use crate::{
 };
 
 pub struct WinitData {
-	backend: WinitGraphicsBackend<GlowRenderer>,
-	damage_tracker: OutputDamageTracker,
+	pub backend: WinitGraphicsBackend<GlowRenderer>,
+	pub damage_tracker: OutputDamageTracker,
 }
 
 pub fn init_winit() {
@@ -81,7 +82,7 @@ pub fn init_winit() {
 		"winit".to_string(),
 		Backend::Winit(WinitData { backend, damage_tracker }),
 	);
-	BorderShader::init(comp.backend.renderer());
+	BorderShader::init(comp.backend.winit().backend.renderer());
 	for workspace in comp.workspaces.iter() {
 		workspace.add_output(output.clone());
 	}
