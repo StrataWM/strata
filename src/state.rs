@@ -110,6 +110,7 @@ pub struct Strata {
 	pub lua: lua::Lua,
 	pub comp: Rc<RefCell<Compositor>>,
 	pub display: Display<Compositor>,
+	pub backend: Backend,
 }
 
 impl Strata {
