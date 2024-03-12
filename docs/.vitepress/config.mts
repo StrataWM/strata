@@ -11,10 +11,10 @@ export default defineConfig({
 
     sidebar: [
       {
-        text: 'Examples',
+        text: 'Get Started',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
+          { text: 'Binary Packages', link: '/get-started/binary' },
+          { text: 'Compiling', link: '/get-started/compiling' }
         ]
       }
     ],
