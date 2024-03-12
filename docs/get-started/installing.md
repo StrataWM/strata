@@ -1,1 +1,2 @@
-However do note that packages are only update when new versions are released, so bleeding edge features might not be available. To ensure that you get all the latest fixes and features (and bugs :sweat-smile:), see [compiling]
+# Installing
+Currently, the only way to try Strata is by compiling it using the [Rust](https://rust-lang.org) compiler.
