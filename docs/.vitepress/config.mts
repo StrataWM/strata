@@ -13,8 +13,16 @@ export default defineConfig({
       {
         text: 'Get Started',
         items: [
-          { text: 'Binary Packages', link: '/get-started/binary' },
-          { text: 'Compiling', link: '/get-started/compiling' }
+          { text: 'Installing', link: '/get-started/installing' },
+          { text: 'Troubleshooting', link: '/get-started/troubleshooting' }
+        ]
+      },
+      {
+        text: 'Configuration',
+        items: [
+          { text: 'General', link: '/configuration/general' },
+          { text: 'Keybindings', link: '/configuration/keybindings' },
+          { text: 'Window rules', link: '/configuration/window-rules' },
         ]
       }
     ],
