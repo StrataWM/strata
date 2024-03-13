@@ -2,7 +2,9 @@
 Currently, the only way to try Strata is by compiling it using the [Rust](https://rust-lang.org) compiler.
 
 ## Installing Rust
-To build Strata, you need the Rust compiler and Cargo. These maybe available as specific packages in your distro's repository. For instructions to install these on some common distros, see below. If your distro is not listed, you can try the alternative method give afterwards.
+To build Strata, you need the Rust compiler and Cargo. These maybe available as specific packages in your distro's repository. For instructions to install these on some common distros, see the [distro-specific instructions](#distro-specific). If your distro is not listed, you can try [this](#using-the-rustup-script).
+
+### Distro-specific
 
 ::: code-group
 
@@ -30,3 +32,6 @@ sudo xbps-install -S rust cargo
 sudo emerge dev-lang/rust sys-devel/cargo
 ```
 :::
+
+### Using the `rustup` script
+If you are not on any of the above distros or that method didn't work for you, you can try using the official Rustup script
