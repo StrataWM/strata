@@ -6,7 +6,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Get Started', link: '/get-started/' }
+      { text: 'Get Started', link: '/get-started/installing' }
     ],
 
     sidebar: [
