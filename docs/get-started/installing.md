@@ -59,4 +59,16 @@ To compile and run Strata, you need some external dependencies. These are depend
 The package names vary across different distributions. The install instructions for Arch, Fedora and Debian have been given below:
 
 ::: code-group
+
+```bash [Arch Linux]
+sudo pacman -S udev wayland wayland-protocols libinput libxkbcommon libglvnd seatd dbus-glib mesa make
+```
+
+```bash [Fedora]
+sudo dnf install systemd-devel libgbm-devel libxkbcommon-devel Mesa-libEGL-devel wayland-devel libinput-devel dbus-glib-devel libseat-devel
+```
+
+```bash [Debian/Ubuntu/Pop!_OS]
+sudo apt-get install libudev-dev libgbm-dev libxkbcommon-dev libegl1-mesa-dev libwayland-dev libinput-dev libdbus-1-dev libsystemd-dev libseat-dev make
+```
 :::
