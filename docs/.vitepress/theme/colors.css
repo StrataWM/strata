@@ -1,15 +1,42 @@
 @import url('https://unpkg.com/@catppuccin/palette/css/catppuccin.css');
 
+/* Background Colors */
 :root {
     --vp-c-bg: var(--ctp-latte-mantle);
     --vp-c-bg-alt: var(--ctp-latte-crust);
     --vp-c-bg-elv: var(--ctp-latte-base);
     --vp-c-bg-soft: var(--ctp-latte-surface0);
-  }
+}
   
-  .dark {
+.dark {
     --vp-c-bg: var(--ctp-mocha-mantle);
     --vp-c-bg-alt: var(--ctp-mocha-crust);
     --vp-c-bg-elv: var(--ctp-mocha-base);
     --vp-c-bg-soft: var(--ctp-mocha-surface0);
+}
+
+/* Border Colors */
+:root {
+    --vp-c-border: var(--ctp-latte-surface0);
+    --vp-c-divider: var(--ctp-latte-surface0);
+    --vp-c-gutter: var(--ctp-latte-surface1);
+}
+
+.dark {
+    --vp-c-border: var(--ctp-mocha-surface0);
+    --vp-c-divider: var(--ctp-mocha-surface0);
+    --vp-c-gutter: var(--ctp-mocha-surface1);
+}
+
+/* Text Colors */
+:root {
+    --vp-c-text-1: var(--ctp-latte-text);
+    --vp-c-text-2: var(--ctp-latte-subtext1);
+    --vp-c-text-3: var(--ctp-latte-subtext0);
+  }
+  
+  .dark {
+    --vp-c-text-1: var(--ctp-mocha-text);
+    --vp-c-text-2: var(--ctp-mocha-subtext1);
+    --vp-c-text-3: var(--ctp-mocha-subtext0);
   }
