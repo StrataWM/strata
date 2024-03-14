@@ -43,4 +43,20 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Now just follow the prompts. You should be okay with the defaults.
 
 ## Installing other dependencies
-To compile and run Strata, you need some external dependencies. These are dependencies mostly used by the [Smithay](https://github.com/smithay/smithay) library.
+To compile and run Strata, you need some external dependencies. These are dependencies mostly used by the [Smithay](https://github.com/smithay/smithay) library. The required dependencies are:
+
+* `udev`
+* `wayland` 
+* `wayland-protocols` 
+* `libinput` 
+* `libxkbcommon` 
+* `libglvnd` 
+* `seatd` 
+* `dbus-glib `
+* `mesa`
+* `make` (for compiling and linking)
+
+The package names vary across different distributions. The install instructions for Arch, Fedora and Debian have been given below:
+
+::: code-group
+:::
