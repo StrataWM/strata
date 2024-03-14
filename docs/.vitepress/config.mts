@@ -28,7 +28,8 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/stratawm/strata' }
+      { icon: 'github', link: 'https://github.com/stratawm/strata' },
+      { icon: 'discord', link: 'https://discord.gg/tcb5cRW4ZQ' }
     ]
   }
 })

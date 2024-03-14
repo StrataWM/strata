@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /get-started/
+      link: /get-started/installing
     - theme: alt
       text: GitHub
       link: https://github.com/stratawm/strata
