@@ -34,12 +34,8 @@ sudo emerge dev-lang/rust sys-devel/cargo
 :::
 
 ### Using the `rustup` script
-If you are not on any of the above distros or that method didn't work for you, you can try using the official [Rustup](https://rustup.rs) script. This script will work on virtually any GNU/Linux distro. To use this scripts, its recommended that you use `curl`.
+If you are not on any of the above distros or that method didn't work for you, you can try using the official [Rustup](https://rustup.rs) script. This script will work on virtually any GNU/Linux distro. To use this script, its recommended that you use `curl`. You probably already have it installed. If not, you can easily install it using your distro's package manager. Then run this command: 
 
-::: details Expand to see how to install `curl`
-
-::: code-group
-
-:::
-
-:::
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
