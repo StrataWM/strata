@@ -97,3 +97,34 @@ and run this command to install it:
 ```bash
 sudo make install
 ```
+
+If this command finishes without any errors, then Strata has been installed successfully :tada:!
+
+## Updating Strata
+Strata is being constantly updated. New features are added and bugs are fixed. To update your local installation, follow these steps.
+
+First `cd` into the directory where you initially clone the repo:
+
+```bash
+cd strata
+```
+
+Next, you need to configure Git to rebase the branch when pulling. To do this, run:
+
+```bash
+git config pull.rebase true
+```
+
+Now you can run:
+
+```bash
+git pull
+```
+
+This will fetch all the latest changes from the remote repo. Finally you can run
+
+```bash
+sudo make install
+```
+
+to recompile and install Strata with the latest changes
