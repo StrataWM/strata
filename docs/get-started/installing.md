@@ -72,3 +72,10 @@ sudo dnf install systemd-devel libgbm-devel libxkbcommon-devel Mesa-libEGL-devel
 sudo apt-get install libudev-dev libgbm-dev libxkbcommon-dev libegl1-mesa-dev libwayland-dev libinput-dev libdbus-1-dev libsystemd-dev libseat-dev make
 ```
 :::
+
+## Installing Strata
+Now, to install Strata, you first have to clone the Git repository. For this, using `git` is recommended. However, you can also just download the Zip archive and extract it. 
+
+::: details Why Git?
+Since Strata is being constantly updated, you'll often have to download the latest repository and re-compile it. Using `git` makes this significantly easier than downloading and extracting the Zip archive each time. Throughout this guide, it is assumed that you're using `git`.
+:::
