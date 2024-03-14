@@ -39,3 +39,8 @@ If you are not on any of the above distros or that method didn't work for you, y
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
+
+Now just follow the prompts. You should be okay with the defaults.
+
+## Installing other dependencies
+To compile and run Strata, you need some external dependencies. These are dependencies mostly used by the [Smithay](https://github.com/smithay/smithay) library.
