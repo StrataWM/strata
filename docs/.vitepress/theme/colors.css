@@ -33,10 +33,57 @@
     --vp-c-text-1: var(--ctp-latte-text);
     --vp-c-text-2: var(--ctp-latte-subtext1);
     --vp-c-text-3: var(--ctp-latte-subtext0);
-  }
+}
   
-  .dark {
+.dark {
     --vp-c-text-1: var(--ctp-mocha-text);
     --vp-c-text-2: var(--ctp-mocha-subtext1);
     --vp-c-text-3: var(--ctp-mocha-subtext0);
-  }
+}
+
+/* Brand Colors */
+:root {
+    --vp-c-brand-1: var(--ctp-latte-red);
+    --vp-c-brand-2: var(--ctp-latte-lavender);
+    --vp-c-brand-3: var(--ctp-latte-mauve);
+}
+
+.dark {
+    --vp-c-brand-1: var(--ctp-mocha-red);
+    --vp-c-brand-2: var(--ctp-mocha-mauve);
+    --vp-c-brand-3: var(--ctp-mocha-lavender);
+}
+
+/* Code Block */
+:root {
+    --vp-code-line-height: 2;
+    --vp-code-font-size: 0.875em;
+    --vp-code-color: var(--ctp-mocha-mauve);
+    --vp-code-lang-color: rgba(var(--ctp-mocha-text) 0.2);
+
+    --vp-code-copy-copied-text-content: 'Copied!';
+}
+
+/* Navbar */
+:root {
+    --vp-nav-height: 56px;
+    --vp-nav-bg-color: var(--vp-c-bg);
+    --vp-nav-screen-bg-color: var(--vp-c-bg);
+    --vp-nav-logo-height: 24px;
+}
+  
+.hide-nav {
+    --vp-nav-height: 0px;
+}
+  
+.hide-nav .VPSidebar {
+    --vp-nav-height: 22px;
+}
+
+/* Custom Block */
+:root {
+    --vp-custom-block-details-border: var(--ctp-mocha-surface0);
+    --vp-custom-block-details-text: var(--ctp-mocha-text);
+    --vp-custom-block-details-bg: var(--ctp-mocha-base);
+    --vp-custom-block-details-code-bg: var(--ctp-mocha-mantle);
+}

@@ -3,6 +3,9 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Strata",
   description: "A cutting-edge, robust and sleek Wayland compositor with batteries included.",
+  markdown: {
+    theme: { dark: 'catppuccin-mocha', light: 'catppuccin-latte' }
+  },
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
@@ -30,6 +33,11 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/stratawm/strata' },
       { icon: 'discord', link: 'https://discord.gg/tcb5cRW4ZQ' }
-    ]
+    ],
+
+    footer: {
+      copyright: "Copyright © 2023-present Anant Narayan",
+      message: "Licensed under the <a href='https://github.com/stratawm/strata/blob/main/LICENSE'>GPL v3 License</a>."
+    }
   }
 })
