@@ -79,3 +79,21 @@ Now, to install Strata, you first have to clone the Git repository. For this, us
 ::: details Why Git?
 Since Strata is being constantly updated, you'll often have to download the latest repository and re-compile it. Using `git` makes this significantly easier than downloading and extracting the Zip archive each time. Throughout this guide, it is assumed that you're using `git`.
 :::
+
+To clone the repo, run:
+
+```bash
+git clone https://github.com/stratawm/strata
+ ```
+
+Then to install Strata, `cd` into the cloned repo:
+
+```bash
+cd strata
+```
+
+and run this command to install it:
+
+```bash
+sudo make install
+```
