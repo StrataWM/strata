@@ -127,4 +127,6 @@ This will fetch all the latest changes from the remote repo. Finally you can run
 sudo make install
 ```
 
-to recompile and install Strata with the latest changes
+to recompile and install Strata with the latest changes.
+
+If you face any issues while installing Strata, checkout out the next page which has solutions for many common issues.
