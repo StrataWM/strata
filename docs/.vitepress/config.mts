@@ -23,7 +23,7 @@ export default defineConfig({
       {
         text: 'Configuration',
         items: [
-          { text: 'General', link: '/configuration/general' },
+          { text: 'Basics', link: '/configuration/basics' },
           { text: 'Keybindings', link: '/configuration/keybindings' },
           { text: 'Window rules', link: '/configuration/window-rules' },
         ]
