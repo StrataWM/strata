@@ -14,4 +14,3 @@ hero:
   image:
     src: "https://raw.githubusercontent.com/StrataWM/.github/main/assets/strata_logo.png"
 ---
-
