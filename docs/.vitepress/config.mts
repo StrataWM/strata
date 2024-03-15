@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Strata",
   description: "A cutting-edge, robust and sleek Wayland compositor with batteries included.",
+  base: "/strata/",
   markdown: {
     theme: { dark: 'catppuccin-mocha', light: 'catppuccin-latte' }
   },
