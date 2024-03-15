@@ -2,9 +2,8 @@
 layout: home
 
 hero:
-  name: ""
-  text: "A cutting-edge, robust and sleek Wayland compositor with batteries included."
-  tagline: 
+  name: "Strata"
+  tagline: "A cutting-edge, robust and sleek Wayland compositor."
   actions:
     - theme: brand
       text: Get Started
@@ -12,5 +11,7 @@ hero:
     - theme: alt
       text: GitHub
       link: https://github.com/stratawm/strata
+  image:
+    src: "https://raw.githubusercontent.com/StrataWM/.github/main/assets/strata_logo.png"
 ---
 
