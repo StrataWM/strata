@@ -34,6 +34,10 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/stratawm/strata' },
       { icon: 'discord', link: 'https://discord.gg/tcb5cRW4ZQ' }
     ],
+    
+    search: {
+      provider: "local",
+    },
 
     footer: {
       copyright: "Copyright © 2023-present Anant Narayan",
