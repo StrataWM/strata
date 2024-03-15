@@ -1,0 +1,19 @@
+@media (min-width: 640px) {
+    .VPNavBarMenu {
+        display: flex !important;
+    }
+    .VPNavBarSocialLinks {
+        display: flex !important;
+        align-items: center !important;
+    }
+    .VPNavBarAppearance {
+        display: flex !important;
+        align-items: center !important;
+    }
+    .VPNavBarExtra {
+        display: none !important;
+    }
+    .VPNavBarHamburger {
+        display: none !important;
+    }
+}
