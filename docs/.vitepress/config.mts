@@ -8,7 +8,7 @@ export default defineConfig({
   },
   themeConfig: {
     nav: [
-      { text: 'Home', link: '/' },
+      { text: 'Home', link: 'https://stratawm.github.io' },
       { text: 'Get Started', link: '/get-started/installing' }
     ],
 
