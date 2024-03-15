@@ -77,7 +77,7 @@ sudo apt-get install libudev-dev libgbm-dev libxkbcommon-dev libegl1-mesa-dev li
 Now, to install Strata, you first have to clone the Git repository. For this, using `git` is recommended. However, you can also just download the Zip archive and extract it. 
 
 ::: details Why Git?
-Since Strata is being constantly updated, you'll often have to download the latest repository and re-compile it. Using `git` makes this significantly easier than downloading and extracting the Zip archive each time. Throughout this guide, it is assumed that you're using `git`.
+Since Strata is being constantly updated, you'll often have to download the latest repository and re-compile it. Using `git` makes this significantly easier than downloading and extracting the Zip archive each time.
 :::
 
 To clone the repo, run:
