@@ -1,1 +1,1 @@
-<meta http-equiv="refresh" content="0;url=/get-started/installing">
+<meta http-equiv="refresh" content="0;url=/strata/get-started/installing">
