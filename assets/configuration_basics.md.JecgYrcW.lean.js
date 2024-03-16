@@ -1,0 +1,1 @@
+import{_ as t,c as a,o as e}from"./chunks/framework.Dk3Z31AC.js";const d=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"configuration/basics.md","filePath":"configuration/basics.md"}'),s={name:"configuration/basics.md"};function o(c,n,r,i,f,p){return e(),a("div")}const m=t(s,[["render",o]]);export{d as __pageData,m as default};
