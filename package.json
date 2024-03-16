@@ -2,10 +2,14 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "deploy": "npm run docs:build && gh-pages -d docs/.vitepress/dist -b docs"
   },
   "devDependencies": {
     "vitepress": "^1.0.0-rc.45",
     "vue": "^3.4.21"
+  },
+  "dependencies": {
+    "gh-pages": "^6.1.1"
   }
 }
