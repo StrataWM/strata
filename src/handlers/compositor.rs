@@ -67,13 +67,13 @@ use crate::{
 	handlers::xdg_shell::handle_commit,
 	state::{
 		ClientState,
-		StrataComp,
+		Compositor,
 	},
 	tiling::refresh_geometry,
 	workspaces::FocusTarget,
 };
 
-impl CompositorHandler for StrataComp {
+impl CompositorHandler for Compositor {
 	fn compositor_state(&mut self) -> &mut CompositorState {
 		&mut self.compositor_state
 	}
@@ -100,9 +100,9 @@ impl CompositorHandler for StrataComp {
 	}
 }
 
-delegate_compositor!(StrataComp);
+delegate_compositor!(Compositor);
 
-impl BufferHandler for StrataComp {
+impl BufferHandler for Compositor {
 	fn buffer_destroyed(
 		&mut self,
 		_buffer: &smithay::reexports::wayland_server::protocol::wl_buffer::WlBuffer,
@@ -110,19 +110,19 @@ impl BufferHandler for StrataComp {
 	}
 }
 
-impl ShmHandler for StrataComp {
+impl ShmHandler for Compositor {
 	fn shm_state(&self) -> &ShmState {
 		&self.shm_state
 	}
 }
 
-delegate_shm!(StrataComp);
+delegate_shm!(Compositor);
 
-impl SeatHandler for StrataComp {
+impl SeatHandler for Compositor {
 	type KeyboardFocus = FocusTarget;
 	type PointerFocus = FocusTarget;
 
-	fn seat_state(&mut self) -> &mut SeatState<StrataComp> {
+	fn seat_state(&mut self) -> &mut SeatState<Compositor> {
 		&mut self.seat_state
 	}
 
@@ -164,24 +164,24 @@ impl SeatHandler for StrataComp {
 	}
 }
 
-delegate_seat!(StrataComp);
+delegate_seat!(Compositor);
 
-impl SelectionHandler for StrataComp {
+impl SelectionHandler for Compositor {
 	type SelectionUserData = ();
 }
 
-impl DataDeviceHandler for StrataComp {
+impl DataDeviceHandler for Compositor {
 	fn data_device_state(&self) -> &smithay::wayland::selection::data_device::DataDeviceState {
 		&self.data_device_state
 	}
 }
 
-impl ClientDndGrabHandler for StrataComp {}
-impl ServerDndGrabHandler for StrataComp {}
+impl ClientDndGrabHandler for Compositor {}
+impl ServerDndGrabHandler for Compositor {}
 
-delegate_data_device!(StrataComp);
+delegate_data_device!(Compositor);
 
-impl PrimarySelectionHandler for StrataComp {
+impl PrimarySelectionHandler for Compositor {
 	fn primary_selection_state(
 		&self,
 	) -> &smithay::wayland::selection::primary_selection::PrimarySelectionState {
@@ -189,10 +189,10 @@ impl PrimarySelectionHandler for StrataComp {
 	}
 }
 
-delegate_primary_selection!(StrataComp);
-delegate_output!(StrataComp);
+delegate_primary_selection!(Compositor);
+delegate_output!(Compositor);
 
-impl WlrLayerShellHandler for StrataComp {
+impl WlrLayerShellHandler for Compositor {
 	fn shell_state(&mut self) -> &mut WlrLayerShellState {
 		&mut self.layer_shell_state
 	}
@@ -233,4 +233,4 @@ impl WlrLayerShellHandler for StrataComp {
 	}
 }
 
-delegate_layer_shell!(StrataComp);
+delegate_layer_shell!(Compositor);

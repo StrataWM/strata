@@ -1,11 +1,6 @@
 // Copyright 2023 the Strata authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::{
-	enum_table,
-	state::StrataComp,
-	workspaces::FocusTarget,
-};
 use bitflags::bitflags;
 use smithay::{
 	backend::input::{
@@ -31,6 +26,12 @@ use smithay::{
 		},
 	},
 	utils::SERIAL_COUNTER,
+};
+
+use crate::{
+	enum_table,
+	state::Compositor,
+	workspaces::FocusTarget,
 };
 
 #[derive(Debug)]
@@ -2630,7 +2631,7 @@ pub struct KeyPattern {
 	pub key: Key,
 }
 
-impl StrataComp {
+impl Compositor {
 	pub fn set_input_focus(&mut self, target: FocusTarget) {
 		let keyboard = self.seat.get_keyboard().unwrap();
 		let serial = SERIAL_COUNTER.next_serial();

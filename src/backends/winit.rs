@@ -1,25 +1,24 @@
 // Copyright 2023 the Strata authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::{
-	bindings,
-	decorations::BorderShader,
-	state::{
-		self,
-		StrataComp,
-		StrataState,
-	},
+use std::{
+	cell::RefCell,
+	rc::Rc,
+	time::Duration,
 };
-use piccolo::{
-	self as lua,
-};
+
+use piccolo as lua;
 use smithay::{
 	backend::{
-		renderer::damage::OutputDamageTracker,
+		renderer::{
+			damage::OutputDamageTracker,
+			glow::GlowRenderer,
+		},
 		winit::{
 			self,
 			WinitEvent,
 			WinitEventLoop,
+			WinitGraphicsBackend,
 		},
 	},
 	output::{
@@ -40,14 +39,25 @@ use smithay::{
 	},
 	utils::Transform,
 };
-use std::{
-	cell::RefCell,
-	rc::Rc,
-	time::Duration,
+
+use crate::{
+	backends::Backend,
+	bindings,
+	decorations::BorderShader,
+	state::{
+		self,
+		Compositor,
+		Strata,
+	},
 };
 
+pub struct WinitData {
+	pub backend: WinitGraphicsBackend<GlowRenderer>,
+	pub damage_tracker: OutputDamageTracker,
+}
+
 pub fn init_winit() {
-	let mut event_loop: EventLoop<StrataState> = EventLoop::try_new().unwrap();
+	let mut event_loop: EventLoop<Strata> = EventLoop::try_new().unwrap();
 	let (display, socket) = state::init_wayland_listener(&event_loop);
 	let display_handle = display.handle();
 	let (backend, mut winit) = winit::init().unwrap();
@@ -61,19 +71,18 @@ pub fn init_winit() {
 			model: "Winit".into(),
 		},
 	);
-	let _global = output.create_global::<StrataComp>(&display_handle);
+	let _global = output.create_global::<Compositor>(&display_handle);
 	output.change_current_state(Some(mode), Some(Transform::Flipped180), None, Some((0, 0).into()));
 	output.set_preferred(mode);
-	let damage_tracked_renderer = OutputDamageTracker::from_output(&output);
-	let mut comp = StrataComp::new(
+	let damage_tracker = OutputDamageTracker::from_output(&output);
+	let mut comp = Compositor::new(
 		&event_loop,
 		&display,
 		socket,
 		"winit".to_string(),
-		backend,
-		damage_tracked_renderer,
+		Backend::Winit(WinitData { backend, damage_tracker }),
 	);
-	BorderShader::init(comp.backend.renderer());
+	BorderShader::init(comp.backend.winit().backend.renderer());
 	for workspace in comp.workspaces.iter() {
 		workspace.add_output(output.clone());
 	}
@@ -106,11 +115,11 @@ pub fn init_winit() {
 				-- print(Mod.Super_L)
 				-- print(Key.Escape)
 
-				local _ = Key({ Mod.Control_L, Mod.Alt_L }, Key.Return, function()
+				local _ = Key({ Mod.Alt_L }, Key.Return, function()
 					strata.spawn('kitty')
 				end)
 
-				local _ = Key({ Mod.Control_L, Mod.Alt_L }, Key.Escape, function()
+				local _ = Key({ Mod.Alt_L }, Key.m, function()
 					strata:quit()
 				end)
 				"#
@@ -125,11 +134,11 @@ pub fn init_winit() {
 		println!("{:#?}", e);
 	}
 
-	let mut data = StrataState { lua: lua_vm, comp, display };
+	let mut data = Strata { lua: lua_vm, comp, display };
 	event_loop.run(None, &mut data, move |_| {}).unwrap();
 }
 
-pub fn winit_dispatch(winit: &mut WinitEventLoop, state: &mut StrataState, output: &Output) {
+pub fn winit_dispatch(winit: &mut WinitEventLoop, state: &mut Strata, output: &Output) {
 	// process winit events
 	let res = winit.dispatch_new_events(|event| {
 		match event {

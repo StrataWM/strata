@@ -48,14 +48,14 @@ use smithay::{
 };
 
 use crate::{
-	state::StrataComp,
+	state::Compositor,
 	workspaces::{
 		StrataWindow,
 		Workspaces,
 	},
 };
 
-impl XdgShellHandler for StrataComp {
+impl XdgShellHandler for Compositor {
 	fn xdg_shell_state(&mut self) -> &mut XdgShellState {
 		&mut self.xdg_shell_state
 	}
@@ -94,7 +94,7 @@ impl XdgShellHandler for StrataComp {
 	}
 }
 
-delegate_xdg_shell!(StrataComp);
+delegate_xdg_shell!(Compositor);
 
 pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager: &PopupManager) {
 	if let Some(window) = workspaces.all_windows().find(|w| w.toplevel().wl_surface() == surface) {
@@ -158,7 +158,7 @@ pub fn handle_commit(workspaces: &Workspaces, surface: &WlSurface, popup_manager
 	};
 }
 
-impl XdgDecorationHandler for StrataComp {
+impl XdgDecorationHandler for Compositor {
 	fn new_decoration(&mut self, toplevel: ToplevelSurface) {
 		toplevel.with_pending_state(|state| {
 			state.decoration_mode = Some(Mode::ServerSide);
@@ -175,4 +175,4 @@ impl XdgDecorationHandler for StrataComp {
 
 	fn unset_mode(&mut self, _toplevel: ToplevelSurface) {}
 }
-delegate_xdg_decoration!(StrataComp);
+delegate_xdg_decoration!(Compositor);

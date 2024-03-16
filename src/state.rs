@@ -16,20 +16,14 @@ use std::{
 };
 
 use piccolo as lua;
+use piccolo::Lua;
 use smithay::{
-	backend::{
-		input::{
-			Event,
-			InputBackend,
-			InputEvent,
-			KeyState,
-			KeyboardKeyEvent,
-		},
-		renderer::{
-			damage::OutputDamageTracker,
-			glow::GlowRenderer,
-		},
-		winit::WinitGraphicsBackend,
+	backend::input::{
+		Event,
+		InputBackend,
+		InputEvent,
+		KeyState,
+		KeyboardKeyEvent,
 	},
 	desktop::{
 		layer_map_for_output,
@@ -54,6 +48,7 @@ use smithay::{
 			},
 			EventLoop,
 			Interest,
+			LoopHandle,
 			LoopSignal,
 			Mode,
 			PostAction,
@@ -100,6 +95,7 @@ use smithay::{
 };
 
 use crate::{
+	backends::Backend,
 	decorations::BorderShader,
 	handlers::input::{
 		KeyPattern,
@@ -112,13 +108,30 @@ use crate::{
 	},
 };
 
-pub struct StrataState {
+pub struct Strata {
 	pub lua: lua::Lua,
-	pub comp: Rc<RefCell<StrataComp>>,
-	pub display: Display<StrataComp>,
+	pub comp: Rc<RefCell<Compositor>>,
+	pub display: Display<Compositor>,
+	pub backend: Backend,
 }
 
-impl StrataState {
+impl Strata {
+	pub fn new(
+		display: Display<Compositor>,
+		socket: OsString,
+		loop_signal: LoopSignal,
+		loop_handle: LoopHandle<Compositor>,
+	) -> Self {
+		let mut comp = Rc::new(RefCell::new(Compositor::new(
+			loop_handle,
+			loop_signal,
+			&display,
+			socket,
+			"Strata".to_string(),
+		)));
+		let lua = Lua::full();
+		Strata { lua, comp, display, backend: Backend::Unset }
+	}
 	pub fn process_input_event<I: InputBackend>(
 		&mut self,
 		event: InputEvent<I>,
@@ -247,10 +260,8 @@ impl StrataState {
 	}
 }
 
-pub struct StrataComp {
+pub struct Compositor {
 	pub dh: DisplayHandle,
-	pub backend: WinitGraphicsBackend<GlowRenderer>,
-	pub damage_tracker: OutputDamageTracker,
 	pub start_time: Instant,
 	pub loop_signal: LoopSignal,
 	pub compositor_state: CompositorState,
@@ -260,28 +271,26 @@ pub struct StrataComp {
 	pub output_manager_state: OutputManagerState,
 	pub data_device_state: DataDeviceState,
 	pub primary_selection_state: PrimarySelectionState,
-	pub seat_state: SeatState<StrataComp>,
+	pub seat_state: SeatState<Compositor>,
 	pub layer_shell_state: WlrLayerShellState,
 	pub popup_manager: PopupManager,
-	pub seat: Seat<StrataComp>,
+	pub seat: Seat<Compositor>,
 	pub socket_name: OsString,
 	pub workspaces: Workspaces,
 	pub mods: Mods,
 	pub config: StrataConfig,
 }
 
-impl StrataComp {
+impl Compositor {
 	pub fn new(
-		event_loop: &EventLoop<StrataState>,
-		display: &Display<StrataComp>,
+		loop_handle: LoopHandle<Compositor>,
+		loop_signal: LoopSignal,
+		display: &Display<Compositor>,
 		socket_name: OsString,
 		seat_name: String,
-		backend: WinitGraphicsBackend<GlowRenderer>,
-		damage_tracker: OutputDamageTracker,
 	) -> Self {
 		let start_time = Instant::now();
 		let dh = display.handle();
-		let loop_signal = event_loop.get_signal();
 		let compositor_state = CompositorState::new::<Self>(&dh);
 		let xdg_shell_state = XdgShellState::new::<Self>(&dh);
 		let xdg_decoration_state = XdgDecorationState::new::<Self>(&dh);
@@ -310,10 +319,8 @@ impl StrataComp {
 		let workspaces = Workspaces::new(config_workspace);
 		let mods_state = keyboard.modifier_state();
 
-		StrataComp {
+		Compositor {
 			dh,
-			backend,
-			damage_tracker,
 			start_time,
 			socket_name,
 			compositor_state,
@@ -335,9 +342,17 @@ impl StrataComp {
 	}
 
 	fn winit_render(&mut self) {
-		let render_elements = self.workspaces.current().render_elements(self.backend.renderer());
-		self.damage_tracker
-			.render_output(self.backend.renderer(), 0, &render_elements, [0.1, 0.1, 0.1, 1.0])
+		let render_elements =
+			self.workspaces.current().render_elements(self.backend.winit().backend.renderer());
+		self.backend
+			.winit()
+			.damage_tracker
+			.render_output(
+				self.backend.winit().backend.renderer(),
+				0,
+				&render_elements,
+				[0.1, 0.1, 0.1, 1.0],
+			)
 			.unwrap();
 	}
 	pub fn surface_under(&self) -> Option<(FocusTarget, Point<i32, Logical>)> {
@@ -373,10 +388,10 @@ impl StrataComp {
 		self.set_input_focus_auto();
 
 		// damage tracking
-		let size = self.backend.window_size();
+		let size = self.backend.winit().backend.window_size();
 		let damage = Rectangle::from_loc_and_size((0, 0), size);
-		self.backend.bind().unwrap();
-		self.backend.submit(Some(&[damage])).unwrap();
+		self.backend.winit().backend.bind().unwrap();
+		self.backend.winit().backend.submit(Some(&[damage])).unwrap();
 
 		// sync and cleanups
 		let output = self.workspaces.current().outputs().next().unwrap();
@@ -389,7 +404,7 @@ impl StrataComp {
 		});
 		self.dh.flush_clients().unwrap();
 		self.popup_manager.cleanup();
-		BorderShader::cleanup(self.backend.renderer());
+		BorderShader::cleanup(self.backend.winit().backend.renderer());
 	}
 
 	pub fn close_window(&mut self) {
@@ -490,11 +505,9 @@ pub struct StrataConfig {
 	pub keybinds: HashMap<KeyPattern, lua::StashedFunction>,
 }
 
-pub fn init_wayland_listener(
-	event_loop: &EventLoop<StrataState>,
-) -> (Display<StrataComp>, OsString) {
+pub fn init_wayland_listener(event_loop: &EventLoop<Strata>) -> (Display<Compositor>, OsString) {
 	let loop_handle = event_loop.handle();
-	let mut display: Display<StrataComp> = Display::new().unwrap();
+	let mut display: Display<Compositor> = Display::new().unwrap();
 	let listening_socket = ListeningSocketSource::new_auto().unwrap();
 	let socket_name = listening_socket.socket_name().to_os_string();
 

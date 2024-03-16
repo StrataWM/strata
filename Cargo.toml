@@ -13,12 +13,8 @@ keywords = [
     "compositor",
     "wayland",
     "linux",
-    "linux-utilities",
-    "wm",
-    "windows",
-    "manager",
+    "window-manager",
 ]
-categories = ["linux-utilities"]
 
 [profile.release]
 strip = true
@@ -27,27 +23,30 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-tracing-subscriber = { features = ["env-filter"], version = "0.3.17" }
-bitflags = "2.4.1"
-colored = "2.0.0"
-clap = { version = "4.3.11", features = ["derive"] }
-anyhow = "1.0.71"
-log = "0.4.19"
-tokio = { version = "1.29.1", features = ["full"] }
-chrono = "0.4.26"
-tracing-appender = "0.2.2"
-smithay-drm-extras = { git = "https://github.com/Smithay/smithay.git" }
+tracing-subscriber = { features = ["env-filter"], version = "0.3.18" }
+bitflags = "2.4.2"
+colored = "2.1.0"
+clap = { version = "4.5.1", features = ["derive"] }
+anyhow = "1.0.80"
+log = "0.4.21"
+tokio = { version = "1.36.0", features = ["full"] }
+chrono = "0.4.34"
+tracing-appender = "0.2.3"
+smithay-drm-extras = { git = "https://github.com/stratawm/smithay.git" }
 once_cell = "1.19.0"
 gc-arena = { version = "0.5.0", features = ["allocator-api2", "hashbrown"] }
 piccolo = { git = "https://github.com/kyren/piccolo.git" }
 piccolo-util = { git = "https://github.com/kyren/piccolo.git" }
-crossbeam-channel = "0.5.8"
+crossbeam-channel = "0.5.12"
 parking_lot = "0.12.1"
 xdg = "2.5.2"
 strata-derive = { path = "strata-derive" }
 strata-core = { path = "strata-core" }
 smart-default = "0.7.1"
-strum = { version = "0.25.0", features = ["derive"] }
+strum = { version = "0.26.1", features = ["derive"] }
+xcursor = "0.3.5"
+thiserror = "1.0.57"
+tracing = "0.1.40"
 
 [dependencies.smithay]
 default-features = false
@@ -55,11 +54,7 @@ git = "https://github.com/stratawm/smithay"
 version = "0.3.0"
 rev = "f1e7fc1"
 features = [
-    "backend_winit",
     "wayland_frontend",
-    "desktop",
-    "backend_session_libseat",
-    "backend_drm",
     "renderer_multi",
     "renderer_glow",
     "backend_drm",
@@ -73,8 +68,5 @@ features = [
     "backend_x11",
     "desktop",
     "use_system_lib",
-    "renderer_glow",
-    "renderer_multi",
-    "wayland_frontend",
     "xwayland",
 ]
