@@ -1,0 +1,1 @@
+import{_ as e,c as t,o}from"./chunks/framework.Dk3Z31AC.js";const p=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"configuration/window-rules.md","filePath":"configuration/window-rules.md"}'),n={name:"configuration/window-rules.md"};function r(a,i,s,c,d,f){return o(),t("div")}const u=e(n,[["render",r]]);export{p as __pageData,u as default};
